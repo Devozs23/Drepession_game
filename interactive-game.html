@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un Día con Propósito - Juego Terapéutico Interactivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 95%;
+        }
+
+        #game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #game-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #game-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .stat-bar {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-progress {
+            background: #dee2e6;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-fill.energy {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-fill.purpose {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-fill.care {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-fill.social {
+            background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+        }
+
+        #game-canvas {
+            display: block;
+            background: #e3f2fd;
+            width: 100%;
+            height: 500px;
+            border-bottom: 3px solid #dee2e6;
+        }
+
+        #game-info {
+            padding: 20px;
+            background: white;
+        }
+
+        #tasks-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .task-card {
+            background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .task-card.completed {
+            background: linear-gradient(135deg, #43e97b22 0%, #38f9d722 100%);
+            border-color: #43e97b;
+            opacity: 0.7;
+        }
+
+        .task-card.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #43e97b;
+        }
+
+        .task-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .task-description {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        #controls-hint {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #controls-hint h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        #controls-hint p {
+            color: #856404;
+            font-size: 13px;
+        }
+
+        #message-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #message-text {
+            color: #155724;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .crisis-banner {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .crisis-banner a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        #day-counter {
+            text-align: center;
+            font-size: 18px;
+            color: #495057;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .motivational-quote {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="crisis-banner">
+            🆘 ¿Necesitas ayuda inmediata? 🇺🇸 988 | 🇲🇽 800-290-0024 |
+            <a href="https://findahelpline.com" target="_blank">Líneas de ayuda internacional</a>
+        </div>
+
+        <div id="game-header">
+            <h1>🌟 Un Día con Propósito 🌟</h1>
+            <p>Cada pequeña acción importa. Tú importas.</p>
+        </div>
+
+        <div id="game-stats">
+            <div class="stat-bar">
+                <div class="stat-label">⚡ Energía</div>
+                <div class="stat-progress">
+                    <div class="stat-fill energy" id="energy-bar" style="width: 50%">50%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🎯 Propósito</div>
+                <div class="stat-progress">
+                    <div class="stat-fill purpose" id="purpose-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">💚 Autocuidado</div>
+                <div class="stat-progress">
+                    <div class="stat-fill care" id="care-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🤝 Conexión Social</div>
+                <div class="stat-progress">
+                    <div class="stat-fill social" id="social-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="game-canvas" width="800" height="500"></canvas>
+
+        <div id="game-info">
+            <div id="day-counter">📅 Día 1 - Un nuevo comienzo</div>
+
+            <div id="controls-hint">
+                <h3>🎮 Cómo jugar</h3>
+                <p>🔼🔽◀▶ Usa las FLECHAS o WASD para mover a tu personaje |
+                   ESPACIO para interactuar | E para lista de tareas</p>
+            </div>
+
+            <div id="tasks-container">
+                <div class="task-card" data-task="breakfast">
+                    <div class="task-title">🍳 Desayunar</div>
+                    <div class="task-description">Nutre tu cuerpo</div>
+                </div>
+                <div class="task-card" data-task="exercise">
+                    <div class="task-title">🏃 Hacer ejercicio</div>
+                    <div class="task-description">Mueve tu cuerpo</div>
+                </div>
+                <div class="task-card" data-task="friend">
+                    <div class="task-title">💬 Llamar a un amigo</div>
+                    <div class="task-description">Conecta con alguien</div>
+                </div>
+                <div class="task-card" data-task="hobby">
+                    <div class="task-title">🎨 Practicar hobby</div>
+                    <div class="task-description">Haz algo que disfrutas</div>
+                </div>
+                <div class="task-card" data-task="rest">
+                    <div class="task-title">😴 Descansar</div>
+                    <div class="task-description">Recupera energía</div>
+                </div>
+                <div class="task-card" data-task="gratitude">
+                    <div class="task-title">📝 Reflexionar</div>
+                    <div class="task-description">Encuentra gratitud</div>
+                </div>
+            </div>
+
+            <div id="message-box">
+                <div id="message-text"></div>
+            </div>
+
+            <div class="motivational-quote">
+                "No tienes que ser perfecto. Solo tienes que intentarlo. Y eso ya es suficiente."
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            day: 1,
+            energy: 50,
+            purpose: 0,
+            care: 0,
+            social: 0,
+            tasks: {
+                breakfast: false,
+                exercise: false,
+                friend: false,
+                hobby: false,
+                rest: false,
+                gratitude: false
+            },
+            playerX: 400,
+            playerY: 250,
+            playerSpeed: 3,
+            playerDirection: 'down',
+            playerAnimFrame: 0,
+            animCounter: 0
+        };
+
+        // Canvas setup
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game objects in the world
+        const gameObjects = [
+            { x: 100, y: 100, width: 60, height: 60, type: 'breakfast', emoji: '🍳', label: 'Cocina', color: '#FFE5B4' },
+            { x: 650, y: 100, width: 60, height: 60, type: 'exercise', emoji: '🏃', label: 'Ejercicio', color: '#B4E5FF' },
+            { x: 100, y: 380, width: 60, height: 60, type: 'friend', emoji: '💬', label: 'Teléfono', color: '#FFB4E5' },
+            { x: 650, y: 380, width: 60, height: 60, type: 'hobby', emoji: '🎨', label: 'Arte', color: '#E5B4FF' },
+            { x: 300, y: 100, width: 60, height: 60, type: 'rest', emoji: '😴', label: 'Cama', color: '#B4FFE5' },
+            { x: 450, y: 380, width: 60, height: 60, type: 'gratitude', emoji: '📝', label: 'Diario', color: '#FFE5E5' }
+        ];
+
+        // Keyboard state
+        const keys = {};
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+
+            if (e.key === ' ') {
+                e.preventDefault();
+                checkInteraction();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Update player position
+        function updatePlayer() {
+            let moving = false;
+            let newX = gameState.playerX;
+            let newY = gameState.playerY;
+
+            // Movement controls
+            if (keys['arrowup'] || keys['w']) {
+                newY -= gameState.playerSpeed;
+                gameState.playerDirection = 'up';
+                moving = true;
+            }
+            if (keys['arrowdown'] || keys['s']) {
+                newY += gameState.playerSpeed;
+                gameState.playerDirection = 'down';
+                moving = true;
+            }
+            if (keys['arrowleft'] || keys['a']) {
+                newX -= gameState.playerSpeed;
+                gameState.playerDirection = 'left';
+                moving = true;
+            }
+            if (keys['arrowright'] || keys['d']) {
+                newX += gameState.playerSpeed;
+                gameState.playerDirection = 'right';
+                moving = true;
+            }
+
+            // Boundary checking
+            const playerSize = 40;
+            if (newX >= playerSize/2 && newX <= canvas.width - playerSize/2) {
+                gameState.playerX = newX;
+            }
+            if (newY >= playerSize/2 && newY <= canvas.height - playerSize/2) {
+                gameState.playerY = newY;
+            }
+
+            // Animation
+            if (moving) {
+                gameState.animCounter++;
+                if (gameState.animCounter % 10 === 0) {
+                    gameState.playerAnimFrame = (gameState.playerAnimFrame + 1) % 4;
+                }
+            } else {
+                gameState.playerAnimFrame = 0;
+            }
+        }
+
+        // Draw player (animated character)
+        function drawPlayer() {
+            const playerSize = 40;
+            const x = gameState.playerX;
+            const y = gameState.playerY;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + playerSize/2, playerSize/3, playerSize/6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Body
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(x, y - 5, playerSize/2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face
+            ctx.fillStyle = '#FFD1B3';
+            ctx.beginPath();
+            ctx.arc(x, y - 10, playerSize/3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            const eyeOffset = 5;
+            const eyeY = y - 13;
+            ctx.fillStyle = '#000';
+
+            // Blink animation
+            if (gameState.playerAnimFrame === 2) {
+                ctx.fillRect(x - eyeOffset, eyeY, 3, 1);
+                ctx.fillRect(x + eyeOffset - 3, eyeY, 3, 1);
+            } else {
+                ctx.beginPath();
+                ctx.arc(x - eyeOffset, eyeY, 2, 0, Math.PI * 2);
+                ctx.arc(x + eyeOffset, eyeY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Smile
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x, y - 5, 8, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Arms (animated)
+            const armOffset = Math.sin(gameState.playerAnimFrame * 0.5) * 3;
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+
+            // Left arm
+            ctx.beginPath();
+            ctx.moveTo(x - 15, y);
+            ctx.lineTo(x - 20, y + 10 + armOffset);
+            ctx.stroke();
+
+            // Right arm
+            ctx.beginPath();
+            ctx.moveTo(x + 15, y);
+            ctx.lineTo(x + 20, y + 10 - armOffset);
+            ctx.stroke();
+
+            // Legs (animated)
+            const legOffset = Math.sin(gameState.playerAnimFrame * 0.5) * 5;
+            ctx.lineWidth = 4;
+
+            // Left leg
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + 15);
+            ctx.lineTo(x - 8, y + 25 + legOffset);
+            ctx.stroke();
+
+            // Right leg
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y + 15);
+            ctx.lineTo(x + 8, y + 25 - legOffset);
+            ctx.stroke();
+        }
+
+        // Draw game objects
+        function drawObjects() {
+            gameObjects.forEach(obj => {
+                // Object background
+                ctx.fillStyle = obj.color;
+                ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+
+                // Border
+                ctx.strokeStyle = '#495057';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+
+                // Emoji
+                ctx.font = '35px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(obj.emoji, obj.x + obj.width/2, obj.y + obj.height/2);
+
+                // Label
+                ctx.font = '11px Arial';
+                ctx.fillStyle = '#000';
+                ctx.fillText(obj.label, obj.x + obj.width/2, obj.y + obj.height + 12);
+
+                // Highlight if near player
+                const distance = Math.hypot(
+                    gameState.playerX - (obj.x + obj.width/2),
+                    gameState.playerY - (obj.y + obj.height/2)
+                );
+
+                if (distance < 80) {
+                    ctx.strokeStyle = '#ffc107';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(obj.x - 2, obj.y - 2, obj.width + 4, obj.height + 4);
+
+                    // "Press SPACE" hint
+                    if (!gameState.tasks[obj.type]) {
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillStyle = '#ffc107';
+                        ctx.fillText('ESPACIO', obj.x + obj.width/2, obj.y - 15);
+                    }
+                }
+
+                // Checkmark if completed
+                if (gameState.tasks[obj.type]) {
+                    ctx.font = '25px Arial';
+                    ctx.fillStyle = '#28a745';
+                    ctx.fillText('✓', obj.x + obj.width - 10, obj.y + 10);
+                }
+            });
+        }
+
+        // Draw background
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+
+            // Clouds
+            drawCloud(100, 50, 40);
+            drawCloud(300, 80, 50);
+            drawCloud(550, 60, 45);
+
+            // Sun
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(700, 70, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Grass details
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = canvas.height - Math.random() * 80;
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(x, y, 2, 10);
+            }
+        }
+
+        function drawCloud(x, y, size) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.arc(x + size/2, y, size * 0.8, 0, Math.PI * 2);
+            ctx.arc(x - size/2, y, size * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Check for interactions
+        function checkInteraction() {
+            gameObjects.forEach(obj => {
+                const distance = Math.hypot(
+                    gameState.playerX - (obj.x + obj.width/2),
+                    gameState.playerY - (obj.y + obj.height/2)
+                );
+
+                if (distance < 80 && !gameState.tasks[obj.type]) {
+                    completeTask(obj.type);
+                }
+            });
+        }
+
+        // Complete a task
+        function completeTask(taskType) {
+            if (gameState.tasks[taskType]) return;
+
+            gameState.tasks[taskType] = true;
+
+            // Update task card
+            const taskCard = document.querySelector(`[data-task="${taskType}"]`);
+            if (taskCard) {
+                taskCard.classList.add('completed');
+            }
+
+            // Update stats based on task
+            const taskEffects = {
+                breakfast: { energy: 10, care: 15, purpose: 10, message: '¡Excelente! Nutriste tu cuerpo. Cada comida es un acto de amor propio.' },
+                exercise: { energy: -5, care: 20, purpose: 15, message: '¡Increíble! Moviste tu cuerpo. El ejercicio libera endorfinas que mejoran tu ánimo.' },
+                friend: { social: 25, purpose: 15, energy: 5, message: '¡Genial! Conectaste con alguien. Las relaciones son esenciales para nuestro bienestar.' },
+                hobby: { purpose: 20, care: 10, energy: -3, message: '¡Maravilloso! Hiciste algo que disfrutas. Tus pasiones dan sentido a la vida.' },
+                rest: { energy: 20, care: 15, purpose: 5, message: '¡Bien hecho! Descansaste. El descanso no es pereza, es necesario para recuperarte.' },
+                gratitude: { purpose: 25, care: 10, social: 10, message: '¡Hermoso! Reflexionaste sobre lo bueno. La gratitud transforma nuestra perspectiva.' }
+            };
+
+            const effect = taskEffects[taskType];
+
+            // Apply stat changes
+            gameState.energy = Math.max(0, Math.min(100, gameState.energy + (effect.energy || 0)));
+            gameState.purpose = Math.min(100, gameState.purpose + (effect.purpose || 0));
+            gameState.care = Math.min(100, gameState.care + (effect.care || 0));
+            gameState.social = Math.min(100, gameState.social + (effect.social || 0));
+
+            // Update UI
+            updateStats();
+            showMessage(effect.message);
+
+            // Check if all tasks completed
+            if (Object.values(gameState.tasks).every(t => t)) {
+                setTimeout(() => {
+                    completeDay();
+                }, 2000);
+            }
+        }
+
+        // Update stat bars
+        function updateStats() {
+            updateStatBar('energy-bar', gameState.energy);
+            updateStatBar('purpose-bar', gameState.purpose);
+            updateStatBar('care-bar', gameState.care);
+            updateStatBar('social-bar', gameState.social);
+        }
+
+        function updateStatBar(id, value) {
+            const bar = document.getElementById(id);
+            bar.style.width = value + '%';
+            bar.textContent = Math.round(value) + '%';
+        }
+
+        // Show message
+        function showMessage(text) {
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+
+            messageText.textContent = text;
+            messageBox.style.display = 'block';
+            messageBox.style.background = '#d4edda';
+            messageBox.style.borderColor = '#28a745';
+
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 4000);
+        }
+
+        // Complete day
+        function completeDay() {
+            const avgScore = (gameState.purpose + gameState.care + gameState.social) / 3;
+
+            let message = '';
+            if (avgScore >= 80) {
+                message = '🌟 ¡DÍA INCREÍBLE! Completaste todas tus tareas. Cada paso que das importa. Estás construyendo una vida con propósito. ¡Mañana será otro día lleno de oportunidades!';
+            } else if (avgScore >= 60) {
+                message = '💫 ¡BUEN TRABAJO! Hiciste lo mejor que pudiste hoy. No tienes que ser perfecto. El progreso, no la perfección, es lo que cuenta.';
+            } else {
+                message = '💚 ¡LO LOGRASTE! Completaste el día. Eso ya es una victoria. Cada día es una nueva oportunidad para intentarlo.';
+            }
+
+            showMessage(message);
+
+            setTimeout(() => {
+                if (confirm(message + '\n\n¿Quieres comenzar un nuevo día?')) {
+                    startNewDay();
+                }
+            }, 3000);
+        }
+
+        // Start new day
+        function startNewDay() {
+            gameState.day++;
+            gameState.energy = 50;
+            gameState.purpose = 0;
+            gameState.care = 0;
+            gameState.social = 0;
+
+            // Reset tasks
+            for (let task in gameState.tasks) {
+                gameState.tasks[task] = false;
+            }
+
+            // Reset task cards
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.classList.remove('completed');
+            });
+
+            // Update day counter
+            document.getElementById('day-counter').textContent = `📅 Día ${gameState.day} - Sigue adelante`;
+
+            // Update stats
+            updateStats();
+
+            // Show new day message
+            showMessage(`🌅 ¡Bienvenido al Día ${gameState.day}! Cada día es una nueva oportunidad para cuidarte y encontrar propósito.`);
+
+            // Change motivational quote
+            const quotes = [
+                '"No tienes que ser perfecto. Solo tienes que intentarlo. Y eso ya es suficiente."',
+                '"Cada pequeño paso cuenta. Tu progreso importa, sin importar cuán pequeño sea."',
+                '"Está bien tener días difíciles. Lo importante es que sigas aquí."',
+                '"Tu vida tiene valor. Tu existencia importa. Eres importante."',
+                '"El autocuidado no es egoísmo. Es necesario para tu bienestar."',
+                '"No estás solo. Hay personas que se preocupan por ti."',
+                '"Celebra tus pequeñas victorias. Todas ellas cuentan."'
+            ];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.querySelector('.motivational-quote').textContent = randomQuote;
+        }
+
+        // Main game loop
+        function gameLoop() {
+            updatePlayer();
+
+            // Draw everything
+            drawBackground();
+            drawObjects();
+            drawPlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize game
+        function initGame() {
+            updateStats();
+            showMessage('¡Bienvenido! Usa las flechas del teclado para moverte. Acércate a los objetos y presiona ESPACIO para interactuar. Cada tarea que completes te acerca a una vida con más propósito. 💙');
+            gameLoop();
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>

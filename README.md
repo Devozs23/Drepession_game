@@ -2,7 +2,12 @@
 
 ## A Mental Health Awareness Game About Hope and Recovery
 
-**Pathways to Light** is an interactive narrative game designed to help people struggling with depression understand that **death is never the only option**. Through an evidence-based, compassionate journey, players discover multiple pathways toward healing, support, and hope.
+Este proyecto contiene **DOS JUEGOS TERAPÉUTICOS INTERACTIVOS**:
+
+1. **🎮 Un Día con Propósito** (NUEVO) - Juego interactivo 2D con personaje animado, tareas y movimiento
+2. **📖 Pathways to Light** - Juego narrativo basado en texto con múltiples caminos de recuperación
+
+Ambos juegos están diseñados para ayudar a personas que luchan con la depresión a entender que **la muerte nunca es la única opción**. A través de experiencias compasivas y basadas en evidencia, los jugadores descubren múltiples caminos hacia la sanación, el apoyo y la esperanza.
 
 ---
 
@@ -44,7 +49,78 @@ If you're struggling with depression or suicidal thoughts, please know:
 
 ---
 
-## 🎮 About The Game
+## 🎮 UN DÍA CON PROPÓSITO - Juego Interactivo 2D (NUEVO)
+
+### ¿Qué es?
+
+**Un Día con Propósito** es un juego interactivo en tiempo real donde controlas a un personaje animado que debe completar tareas diarias para mejorar su bienestar. A diferencia del juego narrativo, este juego te permite:
+
+- 🚶 **Moverte libremente** con las flechas del teclado o WASD
+- 🎯 **Completar tareas interactivas** acercándote a objetos y presionando ESPACIO
+- 📊 **Ver tu progreso en tiempo real** con 4 barras de estadísticas
+- 🌟 **Sentir el impacto** de cada acción con mensajes motivacionales
+- 🎨 **Disfrutar gráficos animados** con un personaje que se mueve, pestañea y responde
+
+### Características Principales
+
+#### Personaje Animado (Muñequito)
+- Movimiento suave en 4 direcciones
+- Animación de caminar con brazos y piernas
+- Expresiones faciales (pestañeo, sonrisa)
+- Responde a tus comandos en tiempo real
+
+#### Sistema de Tareas Diarias
+Completa 6 tareas esenciales para el bienestar:
+1. 🍳 **Desayunar** - Nutre tu cuerpo
+2. 🏃 **Hacer ejercicio** - Libera endorfinas
+3. 💬 **Llamar a un amigo** - Conecta socialmente
+4. 🎨 **Practicar hobby** - Encuentra alegría
+5. 😴 **Descansar** - Recupera energía
+6. 📝 **Reflexionar** - Practica gratitud
+
+#### Sistema de Estadísticas
+- ⚡ **Energía**: Tu vitalidad física
+- 🎯 **Propósito**: Sentido de dirección en la vida
+- 💚 **Autocuidado**: Qué tan bien te cuidas
+- 🤝 **Conexión Social**: Tus relaciones con otros
+
+#### Mensajes Terapéuticos
+Cada tarea completada incluye:
+- Validación de tu esfuerzo
+- Explicación del beneficio científico
+- Refuerzo positivo
+- Recordatorio de que cada paso cuenta
+
+### Cómo Jugar
+
+1. Abre `interactive-game.html` en tu navegador
+2. Usa **FLECHAS** o **WASD** para mover al personaje
+3. Acércate a objetos (se resaltarán en amarillo)
+4. Presiona **ESPACIO** para interactuar
+5. Observa cómo tus estadísticas mejoran
+6. Completa todas las tareas para terminar el día
+7. ¡Comienza un nuevo día y sigue progresando!
+
+### Filosofía del Juego
+
+El juego enseña que:
+- ✨ **Cada acción pequeña importa** - No necesitas hacer grandes cosas
+- 💙 **El autocuidado no es egoísmo** - Es necesario para tu bienestar
+- 🌱 **El progreso > perfección** - No tienes que ser perfecto
+- 🎯 **La vida tiene propósito** - Incluso en las tareas simples
+- 🤝 **No estás solo** - Las conexiones son medicina
+
+### Beneficios Terapéuticos
+
+Basado en principios de:
+- **Terapia Conductual Cognitiva**: Pequeñas acciones cambian pensamientos
+- **Activación Conductual**: El movimiento combate la depresión
+- **Gamificación de Salud Mental**: El juego motiva comportamientos positivos
+- **Refuerzo Positivo**: Cada éxito se celebra
+
+---
+
+## 📖 PATHWAYS TO LIGHT - Juego Narrativo Original
 
 ### Therapeutic Framework
 
@@ -79,13 +155,23 @@ This game incorporates evidence-based mental health principles:
 
 ## 🚀 How to Use
 
-### Playing the Game
+### Playing the Games
 
-1. Open `index.html` in any modern web browser
-2. Read each scene carefully
-3. Make choices that feel right for you
-4. Remember: This is a game about possibilities, not prescriptions
-5. Use the "💙 I Need Support Right Now" button anytime for immediate crisis resources
+#### Opción 1: Un Día con Propósito (Juego Interactivo - RECOMENDADO PARA PRINCIPIANTES)
+
+1. Abre `interactive-game.html` en cualquier navegador web moderno
+2. Usa las flechas del teclado o WASD para moverte
+3. Presiona ESPACIO cerca de objetos para interactuar
+4. Completa tareas diarias y observa tu progreso
+5. Disfruta de las animaciones y mensajes motivacionales
+
+#### Opción 2: Pathways to Light (Juego Narrativo - MÁS PROFUNDO)
+
+1. Abre `index.html` en cualquier navegador web moderno
+2. Lee cada escena cuidadosamente
+3. Haz elecciones que se sientan correctas para ti
+4. Recuerda: Este es un juego sobre posibilidades, no prescripciones
+5. Usa el botón "💙 I Need Support Right Now" en cualquier momento para recursos de crisis inmediatos
 
 ### For Educators & Counselors
 
@@ -98,11 +184,33 @@ This game can be used as:
 
 ### For Developers
 
-The game is built with:
-- **HTML5** - Semantic, accessible structure
-- **CSS3** - Calming visual design with gradient progression
-- **Vanilla JavaScript** - No dependencies, easy to modify
-- **Responsive Design** - Works on desktop and mobile
+#### Archivos del Proyecto
+
+- `interactive-game.html` - **Juego interactivo 2D completo** (HTML, CSS y JS en un solo archivo)
+- `index.html` - Juego narrativo principal
+- `game-complete.html` - Versión standalone del juego narrativo
+- `game.js` - Lógica del juego narrativo
+- `style.css` - Estilos del juego narrativo
+- `README.md` - Esta documentación
+
+#### Tecnologías Utilizadas
+
+Ambos juegos están construidos con:
+- **HTML5** - Estructura semántica y accesible
+- **CSS3** - Diseño visual calmante con gradientes y animaciones
+- **Vanilla JavaScript** - Sin dependencias, fácil de modificar
+- **Canvas API** - Para el juego interactivo 2D
+- **RequestAnimationFrame** - Para animaciones suaves
+- **Diseño Responsive** - Funciona en desktop y móvil
+
+#### Características Técnicas del Juego Interactivo
+
+- 🎨 **Canvas 2D Rendering** - Gráficos dibujados en tiempo real
+- ⌨️ **Event-driven Input** - Responde al teclado inmediatamente
+- 🔄 **Game Loop Optimizado** - 60 FPS con requestAnimationFrame
+- 📊 **State Management** - Sistema de estado simple pero efectivo
+- 🎭 **Sprite Animation** - Animaciones fluidas del personaje
+- 💾 **No requiere servidor** - Funciona directamente desde el sistema de archivos
 
 ---
 
