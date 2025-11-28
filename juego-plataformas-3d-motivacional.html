@@ -97,7 +97,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            background: linear-gradient(to bottom, #4a5568, #2d3748);
+            background: linear-gradient(to bottom, #667eea 0%, #764ba2 50%, #f093fb 100%);
             transition: background 3s ease;
         }
 
@@ -528,23 +528,30 @@
                 const screenX = platform.x - gameState.camera.x;
                 const screenY = platform.y - gameState.camera.y;
 
-                // Color basado en progreso
-                if (platform.index < 10) {
-                    ctx.fillStyle = '#4a5568';
-                } else if (platform.index < 15) {
-                    ctx.fillStyle = '#667eea';
-                } else {
-                    ctx.fillStyle = '#ff6b9d';
-                }
+                // Colores variados y bonitos desde el inicio
+                const colors = [
+                    '#667eea', // Morado azulado
+                    '#764ba2', // Morado oscuro
+                    '#f093fb', // Rosa morado
+                    '#4facfe', // Azul cielo
+                    '#43e97b', // Verde menta
+                    '#fa709a', // Rosa
+                    '#fee140', // Amarillo
+                    '#30cfd0'  // Turquesa
+                ];
+
+                // Asignar color basado en el índice de la plataforma
+                const colorIndex = platform.index % colors.length;
+                ctx.fillStyle = colors[colorIndex];
 
                 // Plataforma con efecto 3D
                 ctx.fillRect(screenX, screenY, platform.width, platform.height);
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.fillRect(screenX, screenY + platform.height - 5, platform.width, 5);
 
-                // Borde
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                ctx.lineWidth = 2;
+                // Borde brillante
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 3;
                 ctx.strokeRect(screenX, screenY, platform.width, platform.height);
 
                 // Checkpoint estrella
