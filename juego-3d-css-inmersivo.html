@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un Día con Propósito 3D - Terapéutico Inmersivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Contenedor de perspectiva 3D */
+        #world {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 800px;
+            perspective-origin: 50% 50%;
+            overflow: hidden;
+        }
+
+        /* Escena 3D */
+        #scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease-out;
+        }
+
+        /* Habitación 3D */
+        .room {
+            position: absolute;
+            transform-style: preserve-3d;
+            width: 1000px;
+            height: 1000px;
+            left: 50%;
+            top: 50%;
+            margin-left: -500px;
+            margin-top: -500px;
+        }
+
+        /* Paredes, piso, techo */
+        .wall {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Piso */
+        .floor {
+            width: 1000px;
+            height: 1000px;
+            background: linear-gradient(45deg, #4a5568 0%, #2d3748 100%);
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255,255,255,0.1) 50px, rgba(255,255,255,0.1) 51px),
+                repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255,255,255,0.1) 50px, rgba(255,255,255,0.1) 51px);
+            transform: rotateX(90deg) translateZ(-300px);
+            box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Techo */
+        .ceiling {
+            width: 1000px;
+            height: 1000px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
+            transform: rotateX(90deg) translateZ(300px);
+            box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Paredes laterales */
+        .wall-front {
+            width: 1000px;
+            height: 600px;
+            transform: translateZ(500px) translateY(-300px);
+        }
+
+        .wall-back {
+            width: 1000px;
+            height: 600px;
+            transform: translateZ(-500px) rotateY(180deg) translateY(-300px);
+        }
+
+        .wall-left {
+            width: 1000px;
+            height: 600px;
+            transform: rotateY(90deg) translateZ(500px) translateY(-300px);
+        }
+
+        .wall-right {
+            width: 1000px;
+            height: 600px;
+            transform: rotateY(-90deg) translateZ(500px) translateY(-300px);
+        }
+
+        /* Objetos 3D interactivos */
+        .object-3d {
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .object-3d:hover {
+            transform: translateY(-20px) scale(1.1);
+            filter: brightness(1.3);
+        }
+
+        .object-3d.active {
+            animation: pulse3d 1s infinite;
+        }
+
+        @keyframes pulse3d {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.15); }
+        }
+
+        /* Mesa */
+        .table {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #8B4513, #654321);
+            border: 3px solid #654321;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateZ(100px) translateY(100px);
+        }
+
+        .table::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to bottom, #654321, #8B4513);
+            bottom: -20px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Silla */
+        .chair {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border: 2px solid #2c5f8d;
+            border-radius: 10px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            transform: translateZ(50px) translateY(150px);
+        }
+
+        .chair::after {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 100px;
+            background: linear-gradient(to bottom, #4a90e2, transparent);
+            top: -100px;
+            left: 10%;
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Planta */
+        .plant {
+            width: 80px;
+            height: 150px;
+            background: linear-gradient(to top, #8B4513, #228B22);
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateZ(80px) translateY(80px);
+            position: relative;
+        }
+
+        .plant::before {
+            content: '🌿';
+            position: absolute;
+            font-size: 60px;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Ventana */
+        .window {
+            width: 180px;
+            height: 250px;
+            background: linear-gradient(135deg, rgba(135, 206, 250, 0.4), rgba(0, 191, 255, 0.3));
+            border: 5px solid #fff;
+            box-shadow:
+                inset 0 0 50px rgba(255, 255, 255, 0.3),
+                0 0 50px rgba(135, 206, 250, 0.5);
+            transform: translateZ(498px) translateY(-80px);
+        }
+
+        .window::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: white;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .window::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: white;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Libro */
+        .book {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            border: 2px solid #c92a2a;
+            box-shadow:
+                5px 5px 15px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: translateZ(130px) translateY(90px) rotateX(90deg);
+        }
+
+        .book::before {
+            content: '📚';
+            position: absolute;
+            font-size: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(-90deg);
+        }
+
+        /* HUD - Interfaz */
+        #hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px;
+            pointer-events: none;
+        }
+
+        .stat-bar {
+            margin-bottom: 10px;
+            pointer-events: all;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .stat-bar-bg {
+            width: 100%;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            border-radius: 15px;
+            box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Panel de instrucciones */
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #instructions p {
+            margin: 8px 0;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Panel de interacción */
+        #interaction-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.95);
+            padding: 30px 50px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            max-width: 500px;
+        }
+
+        #interaction-prompt.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        #interaction-prompt h2 {
+            margin-bottom: 15px;
+            font-size: 28px;
+            color: #fff;
+        }
+
+        #interaction-prompt p {
+            margin-bottom: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: all;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Contador de tareas */
+        #task-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 30px;
+            border-radius: 15px;
+            z-index: 1000;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        #task-counter h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        #task-list {
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .task-item {
+            margin: 5px 0;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .task-item.completed {
+            opacity: 1;
+            color: #4ade80;
+            text-decoration: line-through;
+        }
+
+        /* Mensaje motivacional */
+        #motivational-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.95);
+            padding: 40px 60px;
+            border-radius: 25px;
+            text-align: center;
+            z-index: 3000;
+            display: none;
+            box-shadow: 0 15px 60px rgba(0, 0, 0, 0.6);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            max-width: 600px;
+        }
+
+        #motivational-message.show {
+            display: block;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Pantalla de inicio */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #start-screen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #start-screen p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        /* Crosshair - punto de mira */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        #crosshair.active {
+            width: 30px;
+            height: 30px;
+            border-color: #4ade80;
+            box-shadow: 0 0 20px #4ade80;
+        }
+
+        /* Partículas de celebración */
+        .particle {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFall 2s ease-out forwards;
+        }
+
+        @keyframes particleFall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de inicio -->
+    <div id="start-screen">
+        <h1>🌟 Un Día con Propósito 3D</h1>
+        <p>
+            Experiencia inmersiva en 3D para descubrir que cada pequeña acción tiene valor.<br>
+            Mueve el mouse para mirar alrededor y usa WASD para moverte.<br>
+            Interactúa con los objetos para completar tareas que mejoran tu bienestar.
+        </p>
+        <button class="btn" onclick="startGame()">✨ Comenzar tu Día</button>
+    </div>
+
+    <!-- Mundo 3D -->
+    <div id="world">
+        <div id="scene">
+            <div class="room">
+                <!-- Piso y techo -->
+                <div class="wall floor"></div>
+                <div class="wall ceiling"></div>
+
+                <!-- Paredes -->
+                <div class="wall wall-front">
+                    <div class="window" style="left: 100px;"></div>
+                    <div class="window" style="right: 100px;"></div>
+                </div>
+                <div class="wall wall-back"></div>
+                <div class="wall wall-left"></div>
+                <div class="wall wall-right"></div>
+
+                <!-- Objetos interactivos -->
+                <div class="object-3d table" data-task="breakfast" style="left: 300px; top: 300px;">
+                    <div style="position: absolute; top: -60px; left: 50%; transform: translateX(-50%); font-size: 40px;">🍳</div>
+                </div>
+
+                <div class="object-3d chair" data-task="rest" style="left: 550px; top: 400px;">
+                    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: 30px;">😴</div>
+                </div>
+
+                <div class="object-3d book" data-task="read" style="left: 320px; top: 250px;">
+                </div>
+
+                <div class="object-3d plant" data-task="hobby" style="left: 700px; top: 200px;">
+                </div>
+
+                <div class="object-3d table" data-task="exercise" style="left: 200px; top: 600px;">
+                    <div style="position: absolute; top: -60px; left: 50%; transform: translateX(-50%); font-size: 40px;">🏃</div>
+                </div>
+
+                <div class="object-3d chair" data-task="social" style="left: 650px; top: 650px;">
+                    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: 30px;">💬</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div id="crosshair"></div>
+
+    <!-- HUD - Estadísticas -->
+    <div id="hud">
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>⚡ Energía</span>
+                <span id="energy-value">50%</span>
+            </div>
+            <div class="stat-bar-bg">
+                <div class="stat-bar-fill" id="energy-bar" style="width: 50%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
+            </div>
+        </div>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>🎯 Propósito</span>
+                <span id="purpose-value">40%</span>
+            </div>
+            <div class="stat-bar-bg">
+                <div class="stat-bar-fill" id="purpose-bar" style="width: 40%; background: linear-gradient(90deg, #8b5cf6, #7c3aed);"></div>
+            </div>
+        </div>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>💚 Autocuidado</span>
+                <span id="selfcare-value">45%</span>
+            </div>
+            <div class="stat-bar-bg">
+                <div class="stat-bar-fill" id="selfcare-bar" style="width: 45%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+            </div>
+        </div>
+
+        <div class="stat-bar">
+            <div class="stat-label">
+                <span>🤝 Conexión Social</span>
+                <span id="social-value">35%</span>
+            </div>
+            <div class="stat-bar-bg">
+                <div class="stat-bar-fill" id="social-bar" style="width: 35%; background: linear-gradient(90deg, #3b82f6, #2563eb);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contador de tareas -->
+    <div id="task-counter">
+        <h3>📋 Tareas del Día</h3>
+        <div id="task-list">
+            <div class="task-item" data-task="breakfast">🍳 Desayunar</div>
+            <div class="task-item" data-task="exercise">🏃 Hacer ejercicio</div>
+            <div class="task-item" data-task="social">💬 Conectar con alguien</div>
+            <div class="task-item" data-task="hobby">🌿 Cuidar tu hobby</div>
+            <div class="task-item" data-task="rest">😴 Descansar</div>
+            <div class="task-item" data-task="read">📚 Leer algo inspirador</div>
+        </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div id="instructions">
+        <p><strong>🖱️ MOUSE:</strong> Mirar alrededor</p>
+        <p><strong>⌨️ WASD:</strong> Moverte</p>
+        <p><strong>E:</strong> Interactuar con objetos resaltados</p>
+    </div>
+
+    <!-- Panel de interacción -->
+    <div id="interaction-prompt">
+        <h2 id="prompt-title">Título</h2>
+        <p id="prompt-message">Mensaje</p>
+        <button class="btn" onclick="closePrompt()">Continuar</button>
+    </div>
+
+    <!-- Mensaje motivacional -->
+    <div id="motivational-message">
+        <h2>🎉 ¡Día Completado!</h2>
+        <p id="final-message">Mensaje final</p>
+        <button class="btn" onclick="resetDay()">Comenzar Nuevo Día</button>
+    </div>
+
+    <script>
+        // Estado del juego
+        const gameState = {
+            cameraRotationX: 0,
+            cameraRotationY: 0,
+            cameraZ: 0,
+            cameraX: 0,
+            stats: {
+                energy: 50,
+                purpose: 40,
+                selfcare: 45,
+                social: 35
+            },
+            completedTasks: new Set(),
+            isPlaying: false,
+            mouseX: 0,
+            mouseY: 0,
+            keys: {}
+        };
+
+        // Tareas y sus efectos
+        const tasks = {
+            breakfast: {
+                title: '🍳 Desayunar',
+                message: '¡Excelente! Has nutrido tu cuerpo. Un buen desayuno da energía para el día y mejora tu concentración. Cada vez que comes, le dices a tu cuerpo que mereces cuidado.',
+                stats: { energy: 15, selfcare: 10 }
+            },
+            exercise: {
+                title: '🏃 Hacer Ejercicio',
+                message: '¡Increíble! El movimiento libera endorfinas, las hormonas de la felicidad. Incluso 10 minutos de actividad pueden mejorar tu estado de ánimo. Tu cuerpo te lo agradece.',
+                stats: { energy: 20, purpose: 15 }
+            },
+            social: {
+                title: '💬 Conectar con Alguien',
+                message: '¡Qué valiente! Conectar con otros combate el aislamiento. Cada conversación es un recordatorio de que no estás solo. Las relaciones son medicina para el alma.',
+                stats: { social: 25, purpose: 10 }
+            },
+            hobby: {
+                title: '🌿 Cuidar tu Hobby',
+                message: '¡Hermoso! Dedicar tiempo a lo que disfrutas no es egoísmo, es necesario. Los hobbies dan sentido, alegría y una razón para levantarte mañana.',
+                stats: { purpose: 20, selfcare: 10 }
+            },
+            rest: {
+                title: '😴 Descansar',
+                message: '¡Bien hecho! El descanso no es pereza, es autocuidado esencial. Tu mente y cuerpo necesitan recuperarse. Darte permiso para descansar es un acto de amor propio.',
+                stats: { energy: -10, selfcare: 20 }
+            },
+            read: {
+                title: '📚 Leer Algo Inspirador',
+                message: '¡Fantástico! Nutrir tu mente con palabras positivas cambia tu perspectiva. La lectura te conecta con ideas más grandes que tu dolor actual.',
+                stats: { purpose: 15, social: 5 }
+            }
+        };
+
+        // Elementos DOM
+        const scene = document.getElementById('scene');
+        const crosshair = document.getElementById('crosshair');
+        const interactionPrompt = document.getElementById('interaction-prompt');
+        const motivationalMessage = document.getElementById('motivational-message');
+
+        // Iniciar juego
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            gameState.isPlaying = true;
+            updateCamera();
+            gameLoop();
+        }
+
+        // Actualizar cámara
+        function updateCamera() {
+            const rotateX = gameState.cameraRotationX;
+            const rotateY = gameState.cameraRotationY;
+            const translateZ = gameState.cameraZ;
+            const translateX = gameState.cameraX;
+
+            scene.style.transform = `
+                translateZ(${translateZ}px)
+                translateX(${translateX}px)
+                rotateX(${rotateX}deg)
+                rotateY(${rotateY}deg)
+            `;
+        }
+
+        // Control del mouse
+        document.addEventListener('mousemove', (e) => {
+            if (!gameState.isPlaying) return;
+
+            gameState.mouseX = e.clientX;
+            gameState.mouseY = e.clientY;
+
+            // Rotar cámara basado en posición del mouse
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            const deltaX = (e.clientX - centerX) / centerX;
+            const deltaY = (e.clientY - centerY) / centerY;
+
+            gameState.cameraRotationY = deltaX * 45; // Rotación horizontal
+            gameState.cameraRotationX = -deltaY * 30; // Rotación vertical
+
+            updateCamera();
+        });
+
+        // Control del teclado
+        document.addEventListener('keydown', (e) => {
+            gameState.keys[e.key.toLowerCase()] = true;
+
+            // Interactuar con E
+            if (e.key.toLowerCase() === 'e') {
+                checkInteraction();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            gameState.keys[e.key.toLowerCase()] = false;
+        });
+
+        // Movimiento
+        function handleMovement() {
+            const speed = 10;
+
+            if (gameState.keys['w']) {
+                gameState.cameraZ += speed;
+            }
+            if (gameState.keys['s']) {
+                gameState.cameraZ -= speed;
+            }
+            if (gameState.keys['a']) {
+                gameState.cameraX += speed;
+            }
+            if (gameState.keys['d']) {
+                gameState.cameraX -= speed;
+            }
+
+            // Límites de movimiento
+            gameState.cameraZ = Math.max(-400, Math.min(400, gameState.cameraZ));
+            gameState.cameraX = Math.max(-400, Math.min(400, gameState.cameraX));
+
+            updateCamera();
+        }
+
+        // Verificar interacción con objetos
+        function checkInteraction() {
+            const objects = document.querySelectorAll('.object-3d');
+            let nearestObject = null;
+            let minDistance = Infinity;
+
+            objects.forEach(obj => {
+                const task = obj.dataset.task;
+                if (gameState.completedTasks.has(task)) return;
+
+                const rect = obj.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const distance = Math.sqrt(
+                    Math.pow(centerX - window.innerWidth / 2, 2) +
+                    Math.pow(centerY - window.innerHeight / 2, 2)
+                );
+
+                if (distance < 200 && distance < minDistance) {
+                    minDistance = distance;
+                    nearestObject = obj;
+                }
+            });
+
+            if (nearestObject) {
+                completeTask(nearestObject.dataset.task);
+            }
+        }
+
+        // Completar tarea
+        function completeTask(taskId) {
+            if (gameState.completedTasks.has(taskId)) return;
+
+            const task = tasks[taskId];
+            gameState.completedTasks.add(taskId);
+
+            // Actualizar estadísticas
+            for (const [stat, value] of Object.entries(task.stats)) {
+                gameState.stats[stat] = Math.max(0, Math.min(100, gameState.stats[stat] + value));
+            }
+
+            updateStatsDisplay();
+
+            // Marcar tarea como completada
+            const taskItem = document.querySelector(`.task-item[data-task="${taskId}"]`);
+            if (taskItem) {
+                taskItem.classList.add('completed');
+            }
+
+            // Mostrar mensaje
+            showPrompt(task.title, task.message);
+
+            // Crear partículas de celebración
+            createParticles();
+
+            // Ocultar objeto
+            const obj = document.querySelector(`.object-3d[data-task="${taskId}"]`);
+            if (obj) {
+                obj.style.opacity = '0.3';
+                obj.style.pointerEvents = 'none';
+            }
+
+            // Verificar si completó todo
+            if (gameState.completedTasks.size === Object.keys(tasks).length) {
+                setTimeout(showCompletionMessage, 2000);
+            }
+        }
+
+        // Actualizar visualización de estadísticas
+        function updateStatsDisplay() {
+            const stats = ['energy', 'purpose', 'selfcare', 'social'];
+
+            stats.forEach(stat => {
+                const value = gameState.stats[stat];
+                const bar = document.getElementById(`${stat}-bar`);
+                const valueText = document.getElementById(`${stat}-value`);
+
+                bar.style.width = `${value}%`;
+                valueText.textContent = `${Math.round(value)}%`;
+            });
+        }
+
+        // Mostrar prompt de interacción
+        function showPrompt(title, message) {
+            document.getElementById('prompt-title').textContent = title;
+            document.getElementById('prompt-message').textContent = message;
+            interactionPrompt.classList.add('active');
+        }
+
+        // Cerrar prompt
+        function closePrompt() {
+            interactionPrompt.classList.remove('active');
+        }
+
+        // Crear partículas de celebración
+        function createParticles() {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = '0';
+                particle.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                particle.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(particle);
+
+                setTimeout(() => particle.remove(), 2000);
+            }
+        }
+
+        // Mostrar mensaje de completación
+        function showCompletionMessage() {
+            const avgStat = (gameState.stats.energy + gameState.stats.purpose +
+                           gameState.stats.selfcare + gameState.stats.social) / 4;
+
+            let message = '';
+            if (avgStat >= 80) {
+                message = '¡Extraordinario! Has completado todas las tareas con dedicación. Tu bienestar ha mejorado significativamente. Recuerda: cada día que eliges cuidarte es una victoria contra la oscuridad. ¡Mereces celebrar este logro!';
+            } else if (avgStat >= 60) {
+                message = '¡Excelente trabajo! Has hecho un gran progreso hoy. No importa que no sea perfecto - lo importante es que te presentaste y lo intentaste. Eso es valentía real.';
+            } else {
+                message = '¡Lo lograste! Completaste todas las tareas, y eso es lo que cuenta. Algunos días son más difíciles que otros, pero seguiste adelante. Esa es la definición de fuerza.';
+            }
+
+            document.getElementById('final-message').textContent = message;
+            motivationalMessage.classList.add('show');
+        }
+
+        // Reiniciar día
+        function resetDay() {
+            gameState.completedTasks.clear();
+            gameState.stats = {
+                energy: 50,
+                purpose: 40,
+                selfcare: 45,
+                social: 35
+            };
+
+            // Reiniciar objetos
+            document.querySelectorAll('.object-3d').forEach(obj => {
+                obj.style.opacity = '1';
+                obj.style.pointerEvents = 'all';
+            });
+
+            // Reiniciar tareas
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.classList.remove('completed');
+            });
+
+            updateStatsDisplay();
+            motivationalMessage.classList.remove('show');
+        }
+
+        // Detectar objetos bajo el crosshair
+        function checkObjectsUnderCrosshair() {
+            const objects = document.querySelectorAll('.object-3d');
+            let hasNearObject = false;
+
+            objects.forEach(obj => {
+                const task = obj.dataset.task;
+                if (gameState.completedTasks.has(task)) return;
+
+                const rect = obj.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const distance = Math.sqrt(
+                    Math.pow(centerX - window.innerWidth / 2, 2) +
+                    Math.pow(centerY - window.innerHeight / 2, 2)
+                );
+
+                if (distance < 150) {
+                    obj.classList.add('active');
+                    hasNearObject = true;
+                } else {
+                    obj.classList.remove('active');
+                }
+            });
+
+            // Cambiar crosshair
+            if (hasNearObject) {
+                crosshair.classList.add('active');
+            } else {
+                crosshair.classList.remove('active');
+            }
+        }
+
+        // Loop del juego
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+
+            handleMovement();
+            checkObjectsUnderCrosshair();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Inicializar estadísticas
+        updateStatsDisplay();
+    </script>
+</body>
+</html>

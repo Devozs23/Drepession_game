@@ -2,12 +2,13 @@
 
 ## A Mental Health Awareness Game About Hope and Recovery
 
-Este proyecto contiene **DOS JUEGOS TERAPÉUTICOS INTERACTIVOS**:
+Este proyecto contiene **TRES JUEGOS TERAPÉUTICOS INTERACTIVOS**:
 
-1. **🎮 Un Día con Propósito** (NUEVO) - Juego interactivo 2D con personaje animado, tareas y movimiento
-2. **📖 Pathways to Light** - Juego narrativo basado en texto con múltiples caminos de recuperación
+1. **🎮 Un Día con Propósito 3D** (NUEVO INMERSIVO) - Experiencia 3D en primera persona con CSS 3D Transforms
+2. **🎮 Un Día con Propósito 2D** - Juego interactivo 2D con personaje animado, tareas y movimiento
+3. **📖 Pathways to Light** - Juego narrativo basado en texto con múltiples caminos de recuperación
 
-Ambos juegos están diseñados para ayudar a personas que luchan con la depresión a entender que **la muerte nunca es la única opción**. A través de experiencias compasivas y basadas en evidencia, los jugadores descubren múltiples caminos hacia la sanación, el apoyo y la esperanza.
+Todos los juegos están diseñados para ayudar a personas que luchan con la depresión a entender que **la muerte nunca es la única opción**. A través de experiencias compasivas y basadas en evidencia, los jugadores descubren múltiples caminos hacia la sanación, el apoyo y la esperanza.
 
 ---
 
@@ -49,7 +50,127 @@ If you're struggling with depression or suicidal thoughts, please know:
 
 ---
 
-## 🎮 UN DÍA CON PROPÓSITO - Juego Interactivo 2D (NUEVO)
+## 🌌 UN DÍA CON PROPÓSITO 3D - Experiencia Inmersiva (NUEVO)
+
+### ¿Qué es?
+
+**Un Día con Propósito 3D** es una experiencia terapéutica inmersiva en primera persona que usa **CSS 3D Transforms** para crear un mundo 3D navegable sin dependencias externas. Este juego revolucionario te permite:
+
+- 🎥 **Perspectiva en primera persona** - Mira alrededor con el mouse como en juegos profesionales
+- 🚶 **Navegación 3D real** - Muévete libremente en un espacio tridimensional con WASD
+- 🏠 **Habitación 3D completa** - Paredes, piso, techo con perspectiva y profundidad reales
+- 🎯 **Objetos 3D interactivos** - Mesas, sillas, plantas, ventanas con volumen y sombras
+- ⚡ **Carga instantánea** - Sin dependencias de CDN, usa solo CSS y JavaScript nativo
+- 📊 **Sistema de estadísticas completo** - 4 métricas de bienestar en tiempo real
+- 🎨 **Gráficos modernos** - Gradientes, sombras, efectos de iluminación y partículas
+
+### Características Técnicas 3D
+
+#### Sistema de Perspectiva CSS
+- **perspective: 800px** - Profundidad visual realista
+- **transform-style: preserve-3d** - Mantiene las transformaciones 3D en elementos hijo
+- **Rotaciones en 3 ejes** - rotateX, rotateY, rotateZ para crear volumen real
+- **translateZ** - Posicionamiento en el eje de profundidad
+
+#### Habitación 3D Completa
+- **6 superficies** - Piso, techo, 4 paredes con diferentes rotaciones
+- **1000x1000x600px** - Espacio navegable amplio
+- **Texturas con gradientes** - Efectos visuales profesionales
+- **Ventanas con reflejo** - Simulación de luz natural
+- **Grid en el piso** - Referencia visual de profundidad
+
+#### Objetos Interactivos 3D
+Cada objeto tiene:
+- **Volumen real** con múltiples caras transformadas
+- **Sombras proyectadas** con CSS box-shadow
+- **Hover effect** - Se elevan y brillan al pasar el cursor cerca
+- **Animación de pulso** cuando están activos
+- **Emojis 3D** para identificación rápida
+
+### Tareas del Día (6 Interacciones)
+
+1. **🍳 Desayunar** - Mesa con comida (Energía +15, Autocuidado +10)
+2. **🏃 Hacer Ejercicio** - Mesa con equipo deportivo (Energía +20, Propósito +15)
+3. **💬 Conectar Socialmente** - Silla con teléfono (Social +25, Propósito +10)
+4. **🌿 Cuidar Hobby** - Planta decorativa (Propósito +20, Autocuidado +10)
+5. **😴 Descansar** - Silla cómoda (Energía -10, Autocuidado +20)
+6. **📚 Leer** - Libro en mesa (Propósito +15, Social +5)
+
+### Sistema de Interacción
+
+#### Crosshair Inteligente
+- **Punto de mira central** que cambia de color cuando detecta objetos cercanos
+- **Detección por proximidad** - No necesitas clickear exactamente sobre el objeto
+- **Feedback visual** - El objeto pulsa cuando está en rango de interacción
+- **Tecla E** para confirmar interacción
+
+#### Mensajes Terapéuticos
+Cada tarea muestra:
+- **Título emotivo** con emoji
+- **Mensaje de validación** - "¡Excelente!", "¡Increíble!", "¡Qué valiente!"
+- **Explicación científica** - Por qué esta acción ayuda
+- **Refuerzo positivo** - Recordatorio de tu valor y progreso
+- **Partículas de celebración** - Explosión de colores al completar
+
+### Controles
+
+```
+🖱️ MOUSE        → Mirar alrededor (rotación de cámara 3D)
+⌨️ W            → Avanzar (aumenta translateZ)
+⌨️ S            → Retroceder (disminuye translateZ)
+⌨️ A            → Izquierda (aumenta translateX)
+⌨️ D            → Derecha (disminuye translateX)
+⌨️ E            → Interactuar con objeto cercano
+```
+
+### Cómo Jugar
+
+1. Abre `juego-3d-css-inmersivo.html` en tu navegador
+2. Haz clic en **"✨ Comenzar tu Día"**
+3. Mueve el **mouse** para mirar alrededor de la habitación
+4. Usa **WASD** para caminar por el espacio 3D
+5. Acércate a los objetos hasta que el **crosshair se vuelva verde**
+6. Presiona **E** para interactuar
+7. Lee los mensajes motivacionales
+8. Observa cómo tus **4 estadísticas** mejoran
+9. Completa las **6 tareas** para terminar el día
+10. ¡Comienza un **nuevo día** y sigue creciendo!
+
+### Beneficios de la Experiencia 3D
+
+#### Inmersión Profunda
+- **Presencia espacial** - Te sientes realmente dentro del espacio
+- **Exploración activa** - Buscas y descubres objetos por ti mismo
+- **Agencia personal** - Tú controlas tu perspectiva y movimiento
+- **Engagement aumentado** - La 3D mantiene tu atención enfocada
+
+#### Metáfora Terapéutica
+- **Cambio de perspectiva** - Literalmente puedes ver las cosas desde diferentes ángulos
+- **Movimiento hacia objetivos** - Caminas físicamente hacia tus metas
+- **Espacio seguro** - Una habitación tranquila donde practicar autocuidado
+- **Control en primera persona** - Tú decides qué hacer y cuándo
+
+### Filosofía del Diseño 3D
+
+- 🎯 **Sin dependencias** - No requiere Three.js, Babylon.js ni bibliotecas externas
+- ⚡ **Carga instantánea** - Todo el código está en un solo archivo HTML
+- 🌐 **Funciona offline** - No necesita conexión a internet
+- 🔧 **Fácil de modificar** - CSS y JavaScript vanilla, legible y bien comentado
+- 📱 **Compatible** - Funciona en navegadores modernos (Chrome, Firefox, Edge, Safari)
+- 🎨 **Rendimiento óptimo** - Usa aceleración por GPU nativa del navegador
+
+### Ventajas Técnicas sobre Three.js
+
+1. **No depende de CDN** - No se queda cargando si el CDN falla
+2. **Más liviano** - Solo ~15KB vs ~500KB de Three.js
+3. **Más simple** - No necesitas aprender una API compleja
+4. **CSS nativo** - Usa características estándar del navegador
+5. **Debuggable** - Puedes inspeccionar todo en DevTools
+6. **Garantizado** - Si el navegador soporta CSS, funcionará
+
+---
+
+## 🎮 UN DÍA CON PROPÓSITO 2D - Juego Interactivo
 
 ### ¿Qué es?
 
@@ -157,15 +278,24 @@ This game incorporates evidence-based mental health principles:
 
 ### Playing the Games
 
-#### Opción 1: Un Día con Propósito (Juego Interactivo - RECOMENDADO PARA PRINCIPIANTES)
+#### Opción 1: Un Día con Propósito 3D (Experiencia Inmersiva - RECOMENDADO)
 
-1. Abre `interactive-game.html` en cualquier navegador web moderno
+1. Abre `juego-3d-css-inmersivo.html` en cualquier navegador web moderno
+2. Haz clic en "Comenzar tu Día"
+3. Usa el MOUSE para mirar alrededor
+4. Usa WASD para moverte por el espacio 3D
+5. Presiona E para interactuar con objetos cercanos
+6. Completa tareas y experimenta la inmersión 3D
+
+#### Opción 2: Un Día con Propósito 2D (Juego Interactivo - ACCESIBLE)
+
+1. Abre `interactive-game.html` o `juego-premium-con-personaje.html` en cualquier navegador web moderno
 2. Usa las flechas del teclado o WASD para moverte
 3. Presiona ESPACIO cerca de objetos para interactuar
 4. Completa tareas diarias y observa tu progreso
-5. Disfruta de las animaciones y mensajes motivacionales
+5. Disfruta de las animaciones del personaje y mensajes motivacionales
 
-#### Opción 2: Pathways to Light (Juego Narrativo - MÁS PROFUNDO)
+#### Opción 3: Pathways to Light (Juego Narrativo - MÁS PROFUNDO)
 
 1. Abre `index.html` en cualquier navegador web moderno
 2. Lee cada escena cuidadosamente
@@ -186,7 +316,10 @@ This game can be used as:
 
 #### Archivos del Proyecto
 
-- `interactive-game.html` - **Juego interactivo 2D completo** (HTML, CSS y JS en un solo archivo)
+- `juego-3d-css-inmersivo.html` - **Juego 3D inmersivo en primera persona** (CSS 3D Transforms, todo en un archivo)
+- `juego-premium-con-personaje.html` - **Juego 2D premium completo** (versión más reciente con personaje animado)
+- `interactive-game.html` - Juego interactivo 2D (versión inicial)
+- `juego-completo-definitivo.html` - Versión 2D con 6 habitaciones y 25 tareas
 - `index.html` - Juego narrativo principal
 - `game-complete.html` - Versión standalone del juego narrativo
 - `game.js` - Lógica del juego narrativo
@@ -195,15 +328,26 @@ This game can be used as:
 
 #### Tecnologías Utilizadas
 
-Ambos juegos están construidos con:
+Todos los juegos están construidos con:
 - **HTML5** - Estructura semántica y accesible
 - **CSS3** - Diseño visual calmante con gradientes y animaciones
+- **CSS 3D Transforms** - Para el juego 3D (perspective, rotateX/Y/Z, translateZ)
 - **Vanilla JavaScript** - Sin dependencias, fácil de modificar
-- **Canvas API** - Para el juego interactivo 2D
+- **Canvas API** - Para los juegos interactivos 2D
 - **RequestAnimationFrame** - Para animaciones suaves
 - **Diseño Responsive** - Funciona en desktop y móvil
 
-#### Características Técnicas del Juego Interactivo
+#### Características Técnicas del Juego 3D
+
+- 🌌 **CSS 3D Transforms** - Perspectiva y volumen real sin bibliotecas
+- 🎮 **Primera Persona** - Control de cámara con mouse y WASD
+- 🏗️ **Geometría 3D** - Habitación completa con 6 superficies transformadas
+- 🎯 **Detección de proximidad** - Sistema de interacción inteligente
+- ✨ **Partículas** - Sistema de celebración con animaciones CSS
+- ⚡ **GPU Acelerado** - Usa la aceleración nativa del navegador
+- 💾 **Cero dependencias** - Todo en un solo archivo HTML
+
+#### Características Técnicas del Juego 2D
 
 - 🎨 **Canvas 2D Rendering** - Gráficos dibujados en tiempo real
 - ⌨️ **Event-driven Input** - Responde al teclado inmediatamente
