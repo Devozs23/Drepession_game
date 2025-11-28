@@ -108,17 +108,16 @@
         /* Frases motivacionales */
         #motivational-quote {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 80px;
+            right: 20px;
             background: rgba(102, 126, 234, 0.95);
-            padding: 40px 60px;
-            border-radius: 25px;
-            text-align: center;
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: left;
             z-index: 9000;
-            max-width: 600px;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 350px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease;
@@ -129,13 +128,13 @@
         }
 
         #motivational-quote h2 {
-            font-size: 32px;
-            margin-bottom: 20px;
+            font-size: 18px;
+            margin-bottom: 8px;
         }
 
         #motivational-quote p {
-            font-size: 20px;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
         /* HUD */
@@ -384,6 +383,148 @@
 
         let currentQuoteIndex = 0;
 
+        // Sistema de sonido con Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'jump':
+                    oscillator.frequency.value = 400;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'land':
+                    oscillator.frequency.value = 200;
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'checkpoint':
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
+        }
+
+        // Nubes flotantes
+        const clouds = [];
+        function createClouds() {
+            for (let i = 0; i < 8; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width * 3,
+                    y: Math.random() * canvas.height * 0.4,
+                    width: 80 + Math.random() * 60,
+                    speed: 0.3 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function drawClouds() {
+            clouds.forEach(cloud => {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(cloud.x - gameState.camera.x * 0.3, cloud.y, cloud.width / 3, 0, Math.PI * 2);
+                ctx.arc(cloud.x - gameState.camera.x * 0.3 + cloud.width / 3, cloud.y - 10, cloud.width / 2.5, 0, Math.PI * 2);
+                ctx.arc(cloud.x - gameState.camera.x * 0.3 + cloud.width / 1.5, cloud.y, cloud.width / 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Mover nube
+                cloud.x += cloud.speed;
+                if (cloud.x - gameState.camera.x * 0.3 > canvas.width + 200) {
+                    cloud.x = -200;
+                }
+            });
+        }
+
+        // Trail del personaje
+        const trails = [];
+        function addTrail() {
+            if (Math.abs(gameState.player.velocityX) > 0 || Math.abs(gameState.player.velocityY) > 2) {
+                trails.push({
+                    x: gameState.player.x + gameState.player.width / 2,
+                    y: gameState.player.y + gameState.player.height / 2,
+                    alpha: 0.5,
+                    size: 20
+                });
+            }
+
+            // Limitar cantidad de trails
+            if (trails.length > 15) {
+                trails.shift();
+            }
+        }
+
+        function drawTrails() {
+            trails.forEach((trail, index) => {
+                const screenX = trail.x - gameState.camera.x;
+                const screenY = trail.y - gameState.camera.y;
+
+                ctx.fillStyle = `rgba(102, 126, 234, ${trail.alpha})`;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, trail.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Desvanecer trail
+                trail.alpha *= 0.9;
+                trail.size *= 0.95;
+            });
+
+            // Remover trails invisibles
+            trails.splice(0, trails.filter(t => t.alpha < 0.01).length);
+        }
+
+        // Partículas de salto
+        const jumpParticles = [];
+        function createJumpParticles() {
+            for (let i = 0; i < 5; i++) {
+                jumpParticles.push({
+                    x: gameState.player.x + gameState.player.width / 2,
+                    y: gameState.player.y + gameState.player.height,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: Math.random() * 2,
+                    alpha: 1,
+                    size: 4 + Math.random() * 4,
+                    color: `hsl(${Math.random() * 60 + 240}, 70%, 60%)`
+                });
+            }
+        }
+
+        function drawJumpParticles() {
+            jumpParticles.forEach((particle, index) => {
+                const screenX = particle.x - gameState.camera.x;
+                const screenY = particle.y - gameState.camera.y;
+
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.alpha;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Actualizar partícula
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.2; // Gravedad
+                particle.alpha *= 0.96;
+                particle.size *= 0.98;
+            });
+
+            // Remover partículas invisibles
+            jumpParticles.splice(0, jumpParticles.filter(p => p.alpha < 0.01).length);
+        }
+
         // Seleccionar personaje
         function selectCharacter(type) {
             gameState.character = type;
@@ -397,6 +538,7 @@
         // Iniciar juego
         function startGame() {
             createPlatforms();
+            createClouds();
             gameLoop();
 
             // Mostrar primera frase motivacional después de 2 segundos
@@ -588,6 +730,8 @@
             if ((gameState.keys[' '] || gameState.keys['arrowup']) && p.onGround) {
                 p.velocityY = gameState.jumpPower;
                 p.onGround = false;
+                playSound('jump');
+                createJumpParticles();
             }
 
             // Colisión con plataformas
@@ -598,6 +742,11 @@
                     p.y + p.height > platform.y &&
                     p.y + p.height < platform.y + platform.height + 20 &&
                     p.velocityY >= 0) {
+
+                    // Solo tocar sonido de aterrizaje si estaba en el aire
+                    if (!p.onGround && p.velocityY > 5) {
+                        playSound('land');
+                    }
 
                     p.y = platform.y - p.height;
                     p.velocityY = 0;
@@ -610,6 +759,7 @@
 
                         // Checkpoint alcanzado
                         if (platform.hasCheckpoint) {
+                            playSound('checkpoint');
                             showMotivationalQuote();
                             createParticles(30);
                         }
@@ -716,8 +866,14 @@
             // Actualizar física
             updatePhysics();
 
-            // Dibujar todo
+            // Añadir trail
+            addTrail();
+
+            // Dibujar todo en orden (fondo a frente)
+            drawClouds();
+            drawTrails();
             drawPlatforms();
+            drawJumpParticles();
             drawPlayer();
 
             // Continuar loop
