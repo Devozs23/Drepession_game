@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathways to Light - A Journey of Hope</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Crisis Resources Banner -->
+    <div id="crisis-banner">
+        <div class="crisis-content">
+            <strong>🆘 Need immediate help?</strong>
+            <div class="crisis-links">
+                <span>🇺🇸 988 Suicide & Crisis Lifeline</span>
+                <span>📱 Text "HELLO" to 741741 (Crisis Text Line)</span>
+                <span>🌍 <a href="https://findahelpline.com" target="_blank">International Helplines</a></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <!-- Hope Meter -->
+        <div id="hope-meter-container">
+            <div class="meter-label">Your Inner Light</div>
+            <div id="hope-meter-bar">
+                <div id="hope-meter-fill"></div>
+            </div>
+            <div class="meter-value"><span id="hope-value">0</span>%</div>
+        </div>
+
+        <!-- Coping Skills Collected -->
+        <div id="skills-container">
+            <div class="skills-label">Coping Tools Discovered</div>
+            <div id="skills-list"></div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="game-screen">
+            <div id="story-text"></div>
+            <div id="choices-container"></div>
+        </div>
+
+        <!-- Support Button (Always Visible) -->
+        <button id="support-button" class="support-btn">💙 I Need Support Right Now</button>
+    </div>
+
+    <!-- Support Modal -->
+    <div id="support-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>You Are Not Alone 💙</h2>
+            <p>It takes strength to reach out. Here are people who want to help:</p>
+
+            <div class="support-resources">
+                <div class="resource-card">
+                    <h3>🇺🇸 United States</h3>
+                    <p><strong>988 Suicide & Crisis Lifeline</strong></p>
+                    <p>Call or text 988 (Available 24/7)</p>
+                    <p><strong>Crisis Text Line:</strong> Text "HELLO" to 741741</p>
+                </div>
+
+                <div class="resource-card">
+                    <h3>🇬🇧 United Kingdom</h3>
+                    <p><strong>Samaritans:</strong> 116 123 (Free 24/7)</p>
+                    <p><strong>Crisis Text Line:</strong> Text "SHOUT" to 85258</p>
+                </div>
+
+                <div class="resource-card">
+                    <h3>🇨🇦 Canada</h3>
+                    <p><strong>Talk Suicide Canada:</strong> 1-833-456-4566</p>
+                    <p><strong>Crisis Text Line:</strong> Text "TALK" to 686868</p>
+                </div>
+
+                <div class="resource-card">
+                    <h3>🇦🇺 Australia</h3>
+                    <p><strong>Lifeline:</strong> 13 11 14</p>
+                    <p><strong>Beyond Blue:</strong> 1300 22 4636</p>
+                </div>
+
+                <div class="resource-card">
+                    <h3>🌍 Other Countries</h3>
+                    <p><a href="https://findahelpline.com" target="_blank">Find A Helpline</a></p>
+                    <p>International directory of crisis support</p>
+                </div>
+            </div>
+
+            <div class="reminder-box">
+                <p><strong>Remember:</strong> Depression lies. It tells you there's no way out, but that's not true. These feelings are temporary. Help is available. You deserve support.</p>
+            </div>
+
+            <button class="modal-close">Continue When Ready</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
