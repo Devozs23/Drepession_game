@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un Día con Propósito - Juego Terapéutico Interactivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 95%;
+        }
+
+        #game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        #game-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #music-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        #music-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        #room-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .room-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .room-btn:hover, .room-btn.active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.05);
+        }
+
+        #game-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .stat-bar {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-progress {
+            background: #dee2e6;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-fill.energy {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-fill.purpose {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-fill.care {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-fill.social {
+            background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+        }
+
+        #game-canvas {
+            display: block;
+            background: #e3f2fd;
+            width: 100%;
+            height: 500px;
+            border-bottom: 3px solid #dee2e6;
+        }
+
+        #game-info {
+            padding: 20px;
+            background: white;
+        }
+
+        #achievements-container {
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffd89b22 0%, #19547b22 100%);
+            border: 2px solid #ffd89b;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        #achievements-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #achievements-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .achievement {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            opacity: 0.4;
+        }
+
+        .achievement.unlocked {
+            opacity: 1;
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #ffd70022 0%, #ffed4e22 100%);
+        }
+
+        .achievement-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .achievement-name {
+            font-size: 11px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        #achievement-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: 3px solid #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            animation: slideInRight 0.5s ease, pulse 2s infinite;
+            z-index: 1000;
+            max-width: 250px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .notification-content {
+            font-size: 14px;
+            color: #856404;
+        }
+
+        #tasks-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .task-card {
+            background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .task-card.completed {
+            background: linear-gradient(135deg, #43e97b22 0%, #38f9d722 100%);
+            border-color: #43e97b;
+            opacity: 0.7;
+        }
+
+        .task-card.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #43e97b;
+        }
+
+        .task-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .task-description {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        #controls-hint {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #controls-hint h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        #controls-hint p {
+            color: #856404;
+            font-size: 13px;
+        }
+
+        #message-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #message-text {
+            color: #155724;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .crisis-banner {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .crisis-banner a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        #day-counter {
+            text-align: center;
+            font-size: 18px;
+            color: #495057;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .motivational-quote {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(-10deg); }
+            75% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="crisis-banner">
+            🆘 ¿Necesitas ayuda inmediata? 🇺🇸 988 | 🇲🇽 800-290-0024 |
+            <a href="https://findahelpline.com" target="_blank">Líneas de ayuda internacional</a>
+        </div>
+
+        <div id="game-header">
+            <button id="music-toggle">🔊 Música ON</button>
+            <h1>🌟 Un Día con Propósito 🌟</h1>
+            <p>Cada pequeña acción importa. Tú importas. <strong style="color: #ffd700;">✨ VERSIÓN MEJORADA ✨</strong></p>
+            <div id="room-selector">
+                <button class="room-btn active" data-room="living">🛋️ Sala</button>
+                <button class="room-btn" data-room="bedroom">🛏️ Dormitorio</button>
+                <button class="room-btn" data-room="garden">🌳 Jardín</button>
+            </div>
+        </div>
+
+        <div id="game-stats">
+            <div class="stat-bar">
+                <div class="stat-label">⚡ Energía</div>
+                <div class="stat-progress">
+                    <div class="stat-fill energy" id="energy-bar" style="width: 50%">50%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🎯 Propósito</div>
+                <div class="stat-progress">
+                    <div class="stat-fill purpose" id="purpose-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">💚 Autocuidado</div>
+                <div class="stat-progress">
+                    <div class="stat-fill care" id="care-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🤝 Conexión Social</div>
+                <div class="stat-progress">
+                    <div class="stat-fill social" id="social-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="game-canvas" width="800" height="500"></canvas>
+
+        <div id="game-info">
+            <div id="day-counter">📅 Día 1 - Un nuevo comienzo</div>
+
+            <div id="achievements-container">
+                <div id="achievements-title">🏆 Logros Desbloqueados</div>
+                <div id="achievements-list">
+                    <div class="achievement" data-achievement="first-step">
+                        <div class="achievement-icon">👣</div>
+                        <div class="achievement-name">Primer Paso</div>
+                    </div>
+                    <div class="achievement" data-achievement="self-care">
+                        <div class="achievement-icon">💚</div>
+                        <div class="achievement-name">Autocuidado</div>
+                    </div>
+                    <div class="achievement" data-achievement="social">
+                        <div class="achievement-icon">🤝</div>
+                        <div class="achievement-name">Conexión</div>
+                    </div>
+                    <div class="achievement" data-achievement="complete-day">
+                        <div class="achievement-icon">⭐</div>
+                        <div class="achievement-name">Día Completo</div>
+                    </div>
+                    <div class="achievement" data-achievement="week">
+                        <div class="achievement-icon">📅</div>
+                        <div class="achievement-name">Una Semana</div>
+                    </div>
+                    <div class="achievement" data-achievement="explorer">
+                        <div class="achievement-icon">🗺️</div>
+                        <div class="achievement-name">Explorador</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="controls-hint">
+                <h3>🎮 Cómo jugar</h3>
+                <p>🔼🔽◀▶ FLECHAS o WASD para mover | ESPACIO para interactuar | 1/2/3 para cambiar habitaciones</p>
+            </div>
+
+            <div id="tasks-container">
+                <div class="task-card" data-task="breakfast">
+                    <div class="task-title">🍳 Desayunar</div>
+                    <div class="task-description">Nutre tu cuerpo</div>
+                </div>
+                <div class="task-card" data-task="exercise">
+                    <div class="task-title">🏃 Hacer ejercicio</div>
+                    <div class="task-description">Mueve tu cuerpo</div>
+                </div>
+                <div class="task-card" data-task="friend">
+                    <div class="task-title">💬 Llamar a un amigo</div>
+                    <div class="task-description">Conecta con alguien</div>
+                </div>
+                <div class="task-card" data-task="hobby">
+                    <div class="task-title">🎨 Practicar hobby</div>
+                    <div class="task-description">Haz algo que disfrutas</div>
+                </div>
+                <div class="task-card" data-task="rest">
+                    <div class="task-title">😴 Descansar</div>
+                    <div class="task-description">Recupera energía</div>
+                </div>
+                <div class="task-card" data-task="gratitude">
+                    <div class="task-title">📝 Reflexionar</div>
+                    <div class="task-description">Encuentra gratitud</div>
+                </div>
+                <div class="task-card" data-task="water">
+                    <div class="task-title">💧 Beber agua</div>
+                    <div class="task-description">Hidrata tu cuerpo</div>
+                </div>
+                <div class="task-card" data-task="meditate">
+                    <div class="task-title">🧘 Meditar</div>
+                    <div class="task-description">Calma tu mente</div>
+                </div>
+                <div class="task-card" data-task="music">
+                    <div class="task-title">🎵 Escuchar música</div>
+                    <div class="task-description">Disfruta melodías</div>
+                </div>
+                <div class="task-card" data-task="read">
+                    <div class="task-title">📚 Leer</div>
+                    <div class="task-description">Expande tu mente</div>
+                </div>
+            </div>
+
+            <div id="message-box">
+                <div id="message-text"></div>
+            </div>
+
+            <div class="motivational-quote">
+                "No tienes que ser perfecto. Solo tienes que intentarlo. Y eso ya es suficiente."
+            </div>
+        </div>
+    </div>
+
+    <div id="achievement-notification">
+        <div class="notification-title">🏆 ¡Logro Desbloqueado!</div>
+        <div class="notification-content" id="notification-text"></div>
+    </div>
+
+    <script>
+        // Audio Context for background music
+        let audioContext;
+        let musicGain;
+        let musicPlaying = false;
+        let oscillators = [];
+
+        // Initialize audio
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            musicGain = audioContext.createGain();
+            musicGain.gain.value = 0.1;
+            musicGain.connect(audioContext.destination);
+        }
+
+        // Play relaxing background music (ambient tones)
+        function playMusic() {
+            if (!audioContext) initAudio();
+
+            // Clear existing oscillators
+            stopMusic();
+
+            // Create ambient music with multiple oscillators
+            const frequencies = [261.63, 329.63, 392.00, 523.25]; // C major chord
+
+            frequencies.forEach((freq, index) => {
+                const osc = audioContext.createOscillator();
+                const oscGain = audioContext.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                oscGain.gain.value = 0.05;
+                oscGain.gain.setValueAtTime(0, audioContext.currentTime);
+                oscGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 2);
+
+                osc.connect(oscGain);
+                oscGain.connect(musicGain);
+
+                osc.start(audioContext.currentTime + index * 0.1);
+                oscillators.push({ osc, gain: oscGain });
+            });
+
+            musicPlaying = true;
+        }
+
+        function stopMusic() {
+            oscillators.forEach(({ osc, gain }) => {
+                gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+                osc.stop(audioContext.currentTime + 1);
+            });
+            oscillators = [];
+            musicPlaying = false;
+        }
+
+        // Play success sound
+        function playSuccessSound() {
+            if (!audioContext) initAudio();
+
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.frequency.value = 523.25; // C5
+            osc.type = 'sine';
+
+            gain.gain.value = 0.3;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Game State
+        const gameState = {
+            day: 1,
+            energy: 50,
+            purpose: 0,
+            care: 0,
+            social: 0,
+            currentRoom: 'living',
+            tasks: {
+                breakfast: false,
+                exercise: false,
+                friend: false,
+                hobby: false,
+                rest: false,
+                gratitude: false,
+                water: false,
+                meditate: false,
+                music: false,
+                read: false
+            },
+            achievements: {
+                'first-step': false,
+                'self-care': false,
+                'social': false,
+                'complete-day': false,
+                'week': false,
+                'explorer': false
+            },
+            playerX: 400,
+            playerY: 250,
+            playerSpeed: 3,
+            playerDirection: 'down',
+            playerAnimFrame: 0,
+            animCounter: 0,
+            celebrating: false,
+            roomsVisited: new Set(['living'])
+        };
+
+        // Canvas setup
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Room configurations
+        const rooms = {
+            living: {
+                name: '🛋️ Sala',
+                background: '#FFF8DC',
+                objects: [
+                    { x: 100, y: 100, width: 60, height: 60, type: 'breakfast', emoji: '🍳', label: 'Cocina', color: '#FFE5B4' },
+                    { x: 650, y: 100, width: 60, height: 60, type: 'water', emoji: '💧', label: 'Agua', color: '#B4E5FF' },
+                    { x: 100, y: 380, width: 60, height: 60, type: 'friend', emoji: '💬', label: 'Teléfono', color: '#FFB4E5' },
+                    { x: 650, y: 380, width: 60, height: 60, type: 'hobby', emoji: '🎨', label: 'Arte', color: '#E5B4FF' },
+                    { x: 400, y: 100, width: 60, height: 60, type: 'music', emoji: '🎵', label: 'Radio', color: '#FFD1B3' }
+                ]
+            },
+            bedroom: {
+                name: '🛏️ Dormitorio',
+                background: '#E6E6FA',
+                objects: [
+                    { x: 150, y: 150, width: 60, height: 60, type: 'rest', emoji: '😴', label: 'Cama', color: '#B4FFE5' },
+                    { x: 600, y: 150, width: 60, height: 60, type: 'gratitude', emoji: '📝', label: 'Diario', color: '#FFE5E5' },
+                    { x: 150, y: 350, width: 60, height: 60, type: 'meditate', emoji: '🧘', label: 'Yoga', color: '#E5D4FF' },
+                    { x: 600, y: 350, width: 60, height: 60, type: 'read', emoji: '📚', label: 'Libros', color: '#FFF4B4' }
+                ]
+            },
+            garden: {
+                name: '🌳 Jardín',
+                background: '#E8F5E9',
+                objects: [
+                    { x: 200, y: 200, width: 60, height: 60, type: 'exercise', emoji: '🏃', label: 'Ejercicio', color: '#B4FFB4' },
+                    { x: 550, y: 200, width: 60, height: 60, type: 'meditate', emoji: '🧘', label: 'Meditación', color: '#D4FFE5' },
+                    { x: 375, y: 350, width: 60, height: 60, type: 'water', emoji: '💧', label: 'Fuente', color: '#B4E5FF' }
+                ]
+            }
+        };
+
+        // Keyboard state
+        const keys = {};
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+
+            if (e.key === ' ') {
+                e.preventDefault();
+                checkInteraction();
+            }
+
+            // Room shortcuts
+            if (e.key === '1') changeRoom('living');
+            if (e.key === '2') changeRoom('bedroom');
+            if (e.key === '3') changeRoom('garden');
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Music toggle
+        document.getElementById('music-toggle').addEventListener('click', function() {
+            if (musicPlaying) {
+                stopMusic();
+                this.textContent = '🔇 Música OFF';
+            } else {
+                playMusic();
+                this.textContent = '🔊 Música ON';
+            }
+        });
+
+        // Room selector buttons
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const room = this.dataset.room;
+                changeRoom(room);
+            });
+        });
+
+        // Change room function
+        function changeRoom(roomName) {
+            gameState.currentRoom = roomName;
+            gameState.playerX = 400;
+            gameState.playerY = 250;
+
+            gameState.roomsVisited.add(roomName);
+
+            // Update active button
+            document.querySelectorAll('.room-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.room === roomName) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Check explorer achievement
+            if (gameState.roomsVisited.size >= 3 && !gameState.achievements.explorer) {
+                unlockAchievement('explorer', '¡Exploraste todas las habitaciones!');
+            }
+        }
+
+        // Update player position
+        function updatePlayer() {
+            if (gameState.celebrating) return;
+
+            let moving = false;
+            let newX = gameState.playerX;
+            let newY = gameState.playerY;
+
+            // Movement controls
+            if (keys['arrowup'] || keys['w']) {
+                newY -= gameState.playerSpeed;
+                gameState.playerDirection = 'up';
+                moving = true;
+            }
+            if (keys['arrowdown'] || keys['s']) {
+                newY += gameState.playerSpeed;
+                gameState.playerDirection = 'down';
+                moving = true;
+            }
+            if (keys['arrowleft'] || keys['a']) {
+                newX -= gameState.playerSpeed;
+                gameState.playerDirection = 'left';
+                moving = true;
+            }
+            if (keys['arrowright'] || keys['d']) {
+                newX += gameState.playerSpeed;
+                gameState.playerDirection = 'right';
+                moving = true;
+            }
+
+            // Boundary checking
+            const playerSize = 40;
+            if (newX >= playerSize/2 && newX <= canvas.width - playerSize/2) {
+                gameState.playerX = newX;
+            }
+            if (newY >= playerSize/2 && newY <= canvas.height - playerSize/2) {
+                gameState.playerY = newY;
+            }
+
+            // Animation
+            if (moving) {
+                gameState.animCounter++;
+                if (gameState.animCounter % 10 === 0) {
+                    gameState.playerAnimFrame = (gameState.playerAnimFrame + 1) % 4;
+                }
+            } else {
+                gameState.playerAnimFrame = 0;
+            }
+        }
+
+        // Draw player (animated character with more animations)
+        function drawPlayer() {
+            const playerSize = 40;
+            const x = gameState.playerX;
+            const y = gameState.playerY;
+
+            ctx.save();
+
+            // Celebration animation
+            if (gameState.celebrating) {
+                const bounce = Math.sin(gameState.animCounter * 0.2) * 15;
+                ctx.translate(0, bounce);
+            }
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + playerSize/2, playerSize/3, playerSize/6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Body
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(x, y - 5, playerSize/2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face
+            ctx.fillStyle = '#FFD1B3';
+            ctx.beginPath();
+            ctx.arc(x, y - 10, playerSize/3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            const eyeOffset = 5;
+            const eyeY = y - 13;
+            ctx.fillStyle = '#000';
+
+            // Blink animation
+            if (gameState.playerAnimFrame === 2) {
+                ctx.fillRect(x - eyeOffset, eyeY, 3, 1);
+                ctx.fillRect(x + eyeOffset - 3, eyeY, 3, 1);
+            } else {
+                ctx.beginPath();
+                ctx.arc(x - eyeOffset, eyeY, 2, 0, Math.PI * 2);
+                ctx.arc(x + eyeOffset, eyeY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Smile (bigger when celebrating)
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = gameState.celebrating ? 2 : 1.5;
+            ctx.beginPath();
+            const smileSize = gameState.celebrating ? 10 : 8;
+            ctx.arc(x, y - 5, smileSize, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Arms (animated)
+            const armOffset = Math.sin(gameState.playerAnimFrame * 0.5) * 3;
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+
+            if (gameState.celebrating) {
+                // Arms up when celebrating
+                ctx.beginPath();
+                ctx.moveTo(x - 15, y);
+                ctx.lineTo(x - 20, y - 15);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x + 15, y);
+                ctx.lineTo(x + 20, y - 15);
+                ctx.stroke();
+            } else {
+                // Normal arm movement
+                ctx.beginPath();
+                ctx.moveTo(x - 15, y);
+                ctx.lineTo(x - 20, y + 10 + armOffset);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x + 15, y);
+                ctx.lineTo(x + 20, y + 10 - armOffset);
+                ctx.stroke();
+            }
+
+            // Legs (animated)
+            const legOffset = Math.sin(gameState.playerAnimFrame * 0.5) * 5;
+            ctx.lineWidth = 4;
+
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + 15);
+            ctx.lineTo(x - 8, y + 25 + legOffset);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y + 15);
+            ctx.lineTo(x + 8, y + 25 - legOffset);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Draw game objects
+        function drawObjects() {
+            const currentRoomObjects = rooms[gameState.currentRoom].objects;
+
+            currentRoomObjects.forEach(obj => {
+                // Object background
+                ctx.fillStyle = obj.color;
+                ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+
+                // Border
+                ctx.strokeStyle = '#495057';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+
+                // Emoji
+                ctx.font = '35px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(obj.emoji, obj.x + obj.width/2, obj.y + obj.height/2);
+
+                // Label
+                ctx.font = '11px Arial';
+                ctx.fillStyle = '#000';
+                ctx.fillText(obj.label, obj.x + obj.width/2, obj.y + obj.height + 12);
+
+                // Highlight if near player
+                const distance = Math.hypot(
+                    gameState.playerX - (obj.x + obj.width/2),
+                    gameState.playerY - (obj.y + obj.height/2)
+                );
+
+                if (distance < 80) {
+                    ctx.strokeStyle = '#ffc107';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(obj.x - 2, obj.y - 2, obj.width + 4, obj.height + 4);
+
+                    // "Press SPACE" hint
+                    if (!gameState.tasks[obj.type]) {
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillStyle = '#ffc107';
+                        ctx.fillText('ESPACIO', obj.x + obj.width/2, obj.y - 15);
+                    }
+                }
+
+                // Checkmark if completed
+                if (gameState.tasks[obj.type]) {
+                    ctx.font = '25px Arial';
+                    ctx.fillStyle = '#28a745';
+                    ctx.fillText('✓', obj.x + obj.width - 10, obj.y + 10);
+                }
+            });
+        }
+
+        // Draw background
+        function drawBackground() {
+            const room = rooms[gameState.currentRoom];
+
+            // Room background
+            ctx.fillStyle = room.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Floor pattern
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Room name
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.textAlign = 'center';
+            ctx.fillText(room.name, canvas.width/2, 30);
+        }
+
+        // Check for interactions
+        function checkInteraction() {
+            const currentRoomObjects = rooms[gameState.currentRoom].objects;
+
+            currentRoomObjects.forEach(obj => {
+                const distance = Math.hypot(
+                    gameState.playerX - (obj.x + obj.width/2),
+                    gameState.playerY - (obj.y + obj.height/2)
+                );
+
+                if (distance < 80 && !gameState.tasks[obj.type]) {
+                    completeTask(obj.type);
+                }
+            });
+        }
+
+        // Complete a task
+        function completeTask(taskType) {
+            if (gameState.tasks[taskType]) return;
+
+            gameState.tasks[taskType] = true;
+
+            // Play success sound
+            playSuccessSound();
+
+            // Celebrate animation
+            gameState.celebrating = true;
+            setTimeout(() => {
+                gameState.celebrating = false;
+            }, 1500);
+
+            // Update task card
+            const taskCard = document.querySelector(`[data-task="${taskType}"]`);
+            if (taskCard) {
+                taskCard.classList.add('completed');
+            }
+
+            // Task effects
+            const taskEffects = {
+                breakfast: { energy: 10, care: 15, purpose: 10, message: '¡Excelente! Nutriste tu cuerpo. Cada comida es un acto de amor propio.' },
+                exercise: { energy: -5, care: 20, purpose: 15, message: '¡Increíble! Moviste tu cuerpo. El ejercicio libera endorfinas que mejoran tu ánimo.' },
+                friend: { social: 25, purpose: 15, energy: 5, message: '¡Genial! Conectaste con alguien. Las relaciones son esenciales para nuestro bienestar.' },
+                hobby: { purpose: 20, care: 10, energy: -3, message: '¡Maravilloso! Hiciste algo que disfrutas. Tus pasiones dan sentido a la vida.' },
+                rest: { energy: 20, care: 15, purpose: 5, message: '¡Bien hecho! Descansaste. El descanso no es pereza, es necesario para recuperarte.' },
+                gratitude: { purpose: 25, care: 10, social: 10, message: '¡Hermoso! Reflexionaste sobre lo bueno. La gratitud transforma nuestra perspectiva.' },
+                water: { energy: 8, care: 12, purpose: 5, message: '¡Perfecto! Te hidrataste. El agua es esencial para tu cuerpo y mente.' },
+                meditate: { energy: 5, care: 18, purpose: 20, message: '¡Bien! Calmaste tu mente. La meditación reduce el estrés y aumenta la claridad.' },
+                music: { purpose: 15, care: 12, social: 8, message: '¡Genial! La música sana el alma. Las melodías pueden cambiar nuestro estado de ánimo.' },
+                read: { purpose: 18, care: 10, energy: -2, message: '¡Excelente! Expandiste tu mente. La lectura nos lleva a nuevos mundos y perspectivas.' }
+            };
+
+            const effect = taskEffects[taskType];
+
+            // Apply stat changes
+            gameState.energy = Math.max(0, Math.min(100, gameState.energy + (effect.energy || 0)));
+            gameState.purpose = Math.min(100, gameState.purpose + (effect.purpose || 0));
+            gameState.care = Math.min(100, gameState.care + (effect.care || 0));
+            gameState.social = Math.min(100, gameState.social + (effect.social || 0));
+
+            // Update UI
+            updateStats();
+            showMessage(effect.message);
+
+            // Check achievements
+            checkAchievements();
+
+            // Check if all tasks completed
+            if (Object.values(gameState.tasks).every(t => t)) {
+                setTimeout(() => {
+                    completeDay();
+                }, 2000);
+            }
+        }
+
+        // Check and unlock achievements
+        function checkAchievements() {
+            const completedTasks = Object.values(gameState.tasks).filter(t => t).length;
+
+            // First step
+            if (completedTasks >= 1 && !gameState.achievements['first-step']) {
+                unlockAchievement('first-step', '¡Completaste tu primera tarea!');
+            }
+
+            // Self care
+            if (gameState.care >= 50 && !gameState.achievements['self-care']) {
+                unlockAchievement('self-care', '¡Alcanzaste 50% en autocuidado!');
+            }
+
+            // Social
+            if (gameState.social >= 50 && !gameState.achievements.social) {
+                unlockAchievement('social', '¡Hiciste una conexión social importante!');
+            }
+
+            // Week
+            if (gameState.day >= 7 && !gameState.achievements.week) {
+                unlockAchievement('week', '¡Completaste una semana entera!');
+            }
+        }
+
+        // Unlock achievement
+        function unlockAchievement(achievementId, message) {
+            gameState.achievements[achievementId] = true;
+
+            // Update UI
+            const achievementEl = document.querySelector(`[data-achievement="${achievementId}"]`);
+            if (achievementEl) {
+                achievementEl.classList.add('unlocked');
+            }
+
+            // Show notification
+            const notification = document.getElementById('achievement-notification');
+            const notificationText = document.getElementById('notification-text');
+
+            notificationText.textContent = message;
+            notification.style.display = 'block';
+
+            playSuccessSound();
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Update stat bars
+        function updateStats() {
+            updateStatBar('energy-bar', gameState.energy);
+            updateStatBar('purpose-bar', gameState.purpose);
+            updateStatBar('care-bar', gameState.care);
+            updateStatBar('social-bar', gameState.social);
+        }
+
+        function updateStatBar(id, value) {
+            const bar = document.getElementById(id);
+            bar.style.width = value + '%';
+            bar.textContent = Math.round(value) + '%';
+        }
+
+        // Show message
+        function showMessage(text) {
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+
+            messageText.textContent = text;
+            messageBox.style.display = 'block';
+            messageBox.style.background = '#d4edda';
+            messageBox.style.borderColor = '#28a745';
+
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 4000);
+        }
+
+        // Complete day
+        function completeDay() {
+            const avgScore = (gameState.purpose + gameState.care + gameState.social) / 3;
+
+            // Unlock complete day achievement
+            if (!gameState.achievements['complete-day']) {
+                unlockAchievement('complete-day', '¡Completaste un día entero de autocuidado!');
+            }
+
+            let message = '';
+            if (avgScore >= 80) {
+                message = '🌟 ¡DÍA INCREÍBLE! Completaste todas tus tareas. Cada paso que das importa. Estás construyendo una vida con propósito. ¡Mañana será otro día lleno de oportunidades!';
+            } else if (avgScore >= 60) {
+                message = '💫 ¡BUEN TRABAJO! Hiciste lo mejor que pudiste hoy. No tienes que ser perfecto. El progreso, no la perfección, es lo que cuenta.';
+            } else {
+                message = '💚 ¡LO LOGRASTE! Completaste el día. Eso ya es una victoria. Cada día es una nueva oportunidad para intentarlo.';
+            }
+
+            showMessage(message);
+
+            setTimeout(() => {
+                if (confirm(message + '\n\n¿Quieres comenzar un nuevo día?')) {
+                    startNewDay();
+                }
+            }, 3000);
+        }
+
+        // Start new day
+        function startNewDay() {
+            gameState.day++;
+            gameState.energy = 50;
+            gameState.purpose = 0;
+            gameState.care = 0;
+            gameState.social = 0;
+
+            // Reset tasks
+            for (let task in gameState.tasks) {
+                gameState.tasks[task] = false;
+            }
+
+            // Reset task cards
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.classList.remove('completed');
+            });
+
+            // Update day counter
+            document.getElementById('day-counter').textContent = `📅 Día ${gameState.day} - Sigue adelante`;
+
+            // Update stats
+            updateStats();
+
+            // Show new day message
+            showMessage(`🌅 ¡Bienvenido al Día ${gameState.day}! Cada día es una nueva oportunidad para cuidarte y encontrar propósito.`);
+
+            // Change motivational quote
+            const quotes = [
+                '"No tienes que ser perfecto. Solo tienes que intentarlo. Y eso ya es suficiente."',
+                '"Cada pequeño paso cuenta. Tu progreso importa, sin importar cuán pequeño sea."',
+                '"Está bien tener días difíciles. Lo importante es que sigas aquí."',
+                '"Tu vida tiene valor. Tu existencia importa. Eres importante."',
+                '"El autocuidado no es egoísmo. Es necesario para tu bienestar."',
+                '"No estás solo. Hay personas que se preocupan por ti."',
+                '"Celebra tus pequeñas victorias. Todas ellas cuentan."',
+                '"Cada habitación que exploras es un paso hacia el bienestar."',
+                '"La música, el arte, la lectura... todo lo que disfrutas importa."',
+                '"Hidrátate, descansa, conéctate. Eres digno de cuidado."'
+            ];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.querySelector('.motivational-quote').textContent = randomQuote;
+        }
+
+        // Main game loop
+        function gameLoop() {
+            updatePlayer();
+
+            // Draw everything
+            drawBackground();
+            drawObjects();
+            drawPlayer();
+
+            gameState.animCounter++;
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize game
+        function initGame() {
+            updateStats();
+            showMessage('¡Bienvenido! Usa las flechas del teclado para moverte. Acércate a los objetos y presiona ESPACIO para interactuar. Explora diferentes habitaciones con los botones o teclas 1, 2, 3. ¡Cada tarea que completes te acerca a una vida con más propósito! 💙');
+            gameLoop();
+
+            // Auto-start music after 2 seconds
+            setTimeout(() => {
+                if (!musicPlaying) {
+                    playMusic();
+                    document.getElementById('music-toggle').textContent = '🔊 Música ON';
+                }
+            }, 2000);
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
