@@ -2,11 +2,12 @@
 
 ## A Mental Health Awareness Game About Hope and Recovery
 
-Este proyecto contiene **TRES JUEGOS TERAPÉUTICOS INTERACTIVOS**:
+Este proyecto contiene **CUATRO JUEGOS TERAPÉUTICOS INTERACTIVOS**:
 
-1. **🎮 Un Día con Propósito 3D** (NUEVO INMERSIVO) - Experiencia 3D en primera persona con CSS 3D Transforms
-2. **🎮 Un Día con Propósito 2D** - Juego interactivo 2D con personaje animado, tareas y movimiento
-3. **📖 Pathways to Light** - Juego narrativo basado en texto con múltiples caminos de recuperación
+1. **🎮 Caminos de Esperanza** (NUEVO - PLATAFORMAS 3D) - Juego de plataformas con selección de personaje y mensaje motivacional
+2. **🌌 Un Día con Propósito 3D** (INMERSIVO) - Experiencia 3D en primera persona con CSS 3D Transforms
+3. **🎮 Un Día con Propósito 2D** - Juego interactivo 2D con personaje animado, tareas y movimiento
+4. **📖 Pathways to Light** - Juego narrativo basado en texto con múltiples caminos de recuperación
 
 Todos los juegos están diseñados para ayudar a personas que luchan con la depresión a entender que **la muerte nunca es la única opción**. A través de experiencias compasivas y basadas en evidencia, los jugadores descubren múltiples caminos hacia la sanación, el apoyo y la esperanza.
 
@@ -50,7 +51,123 @@ If you're struggling with depression or suicidal thoughts, please know:
 
 ---
 
-## 🌌 UN DÍA CON PROPÓSITO 3D - Experiencia Inmersiva (NUEVO)
+## 🎮 CAMINOS DE ESPERANZA - Juego de Plataformas 3D Motivacional (NUEVO)
+
+### ¿Qué es?
+
+**Caminos de Esperanza** es un juego de plataformas 3D terapéutico donde eliges tu personaje (niña o niño) y saltas entre plataformas superando obstáculos mientras recibes mensajes motivacionales. El juego representa metafóricamente el viaje de la depresión a la esperanza: comienzas en un mundo gris y, conforme avanzas, el ambiente se transforma en un hermoso atardecer.
+
+### 🌟 Características Principales
+
+#### Selección de Personaje
+- **👧 Niña Valiente** - Personaje femenino con cabello castaño y ropa rosa
+- **👦 Niño Valiente** - Personaje masculino con cabello oscuro y ropa azul
+- Cada personaje tiene animaciones propias de movimiento, salto y aterrizaje
+
+#### Sistema de Plataformas 3D
+- **20 plataformas** para alcanzar, cada una más desafiante
+- **Física realista** - Gravedad, salto, colisiones
+- **Obstáculos** - Bloques rojos que debes evitar
+- **Huecos** - Distancias que debes saltar con precisión
+- **Checkpoints** - Estrellas 🌟 que desbloquean mensajes motivacionales
+
+#### Transformación Visual
+El juego tiene una poderosa metáfora visual:
+- **Inicio**: Mundo gris, oscuro, representando la depresión
+- **Progreso**: Los colores gradualmente se vuelven más brillantes
+- **Victoria**: Hermoso atardecer con cielo naranja, amarillo y azul
+
+Esta transformación representa que **no siempre el día es gris, también puede tener un lindo atardecer**.
+
+### 💬 Frases Motivacionales
+
+Durante el juego, aparecen 6 mensajes poderosos en momentos clave:
+
+1. **💪 Primer Paso**
+   > "¡Felicidades por dar el primer paso! A veces lo más difícil es comenzar. Pero lo hiciste. Ya eres más fuerte de lo que crees."
+
+2. **🌱 Crecimiento**
+   > "Cada obstáculo que superas te hace más resiliente. No importa cuántas veces caigas, lo que importa es que te levantes una vez más."
+
+3. **☁️ Días Grises**
+   > "Los días grises son temporales. Como las nubes que pasan, tus dificultades también pasarán. Sigue caminando, el sol está esperándote."
+
+4. **🎯 Un Paso a la Vez**
+   > "No necesitas ver todo el camino. Solo da el siguiente paso. La vida no se trata de grandes saltos, sino de pequeños pasos constantes."
+
+5. **🌟 Tu Brillo Único**
+   > "Incluso en la oscuridad, tu luz interior brilla. Puede que no la veas ahora, pero otros la ven. Y pronto tú también la verás."
+
+6. **🌈 Después de la Tormenta**
+   > "Has superado tormentas antes y lo harás de nuevo. Cada desafío que enfrentas te acerca más al arcoíris que viene después."
+
+### 🎮 Controles
+
+```
+⬅️ A / FLECHA IZQ    → Moverse a la izquierda
+➡️ D / FLECHA DER    → Moverse a la derecha
+ESPACIO / FLECHA ARR → Saltar
+```
+
+### 📊 Sistema de Progreso
+
+- **Barra de progreso** que muestra tu avance (0-100%)
+- **Contador de plataformas** alcanzadas
+- **4 Checkpoints** (plataformas 5, 10, 15, 20) que activan mensajes
+- **Partículas de celebración** al recolectar estrellas
+
+### 🎯 Objetivo del Juego
+
+Llegar a la plataforma 20 saltando, evitando obstáculos y sin caer al vacío. Cada plataforma representa un paso en tu viaje de recuperación. Al completar el juego, verás:
+
+> "Has completado el viaje. Has demostrado que incluso cuando todo parece oscuro, puedes dar un paso a la vez y encontrar la luz. El atardecer que ves ahora es el resultado de tu valentía. Recuerda: cada día puede tener momentos difíciles, pero también puede tener su propio atardecer hermoso."
+
+### 💡 Metáforas Terapéuticas
+
+- **Saltar entre plataformas** = Dar pasos hacia adelante en la vida
+- **Caer y respawnear** = Los errores no son finales, siempre puedes volver a intentar
+- **Mundo gris → atardecer** = La transformación de la depresión a la esperanza
+- **Obstáculos** = Desafíos de la vida que puedes superar
+- **Checkpoints con estrellas** = Momentos de logro y validación
+- **Mensajes motivacionales** = El apoyo que necesitas escuchar
+
+### 🌈 Filosofía del Juego
+
+Este juego enseña que:
+- ✨ **La vida es difícil, pero es dar un paso a la vez** - No necesitas saltar todo de una vez
+- 🌤️ **No siempre el día es gris** - El atardecer te espera
+- 💪 **No te rindas** - Cada caída es una oportunidad para levantarte más fuerte
+- 🎯 **Continúa avanzando** - Incluso cuando no veas el final, sigue moviéndote
+- 🌟 **Eres valiente** - El simple hecho de jugar demuestra tu valentía
+
+### 🎨 Características Técnicas
+
+- **CSS 3D Transforms** para plataformas y mundo 3D
+- **Física de plataformas** - Gravedad, salto, colisiones
+- **Cámara en tercera persona** que sigue al jugador
+- **Personaje 3D animado** con 6 partes del cuerpo
+- **Sistema de partículas** para celebraciones
+- **Transiciones de color** del ambiente
+- **Sin dependencias externas** - Todo en un solo archivo HTML
+
+### 🚀 Cómo Jugar
+
+1. Abre `juego-plataformas-3d-motivacional.html` en tu navegador
+2. Elige tu personaje (Niña Valiente o Niño Valiente)
+3. Usa **A/D** para moverte y **ESPACIO** para saltar
+4. Salta de plataforma en plataforma
+5. Recolecta las estrellas 🌟 en los checkpoints
+6. Lee los mensajes motivacionales que aparecen
+7. Observa cómo el mundo se vuelve más colorido
+8. ¡Alcanza la plataforma 20 y completa tu viaje hacia la esperanza!
+
+### 💙 Mensaje Central
+
+**"No te rindas. Continúa. La vida es difícil pero es solo dar un paso a la vez. No siempre el día es gris, también puede tener un lindo atardecer."**
+
+---
+
+## 🌌 UN DÍA CON PROPÓSITO 3D - Experiencia Inmersiva
 
 ### ¿Qué es?
 
@@ -278,7 +395,17 @@ This game incorporates evidence-based mental health principles:
 
 ### Playing the Games
 
-#### Opción 1: Un Día con Propósito 3D (Experiencia Inmersiva - RECOMENDADO)
+#### Opción 1: Caminos de Esperanza (Juego de Plataformas - MÁS DIVERTIDO 🌟)
+
+1. Abre `juego-plataformas-3d-motivacional.html` en cualquier navegador web moderno
+2. Elige tu personaje (👧 Niña Valiente o 👦 Niño Valiente)
+3. Usa **A/D** o **flechas** para moverte
+4. Presiona **ESPACIO** para saltar entre plataformas
+5. Recolecta estrellas y lee mensajes motivacionales
+6. Observa cómo el mundo cambia de gris a atardecer
+7. ¡Completa las 20 plataformas!
+
+#### Opción 2: Un Día con Propósito 3D (Experiencia Inmersiva - EXPLORACIÓN)
 
 1. Abre `juego-3d-css-inmersivo.html` en cualquier navegador web moderno
 2. Haz clic en "Comenzar tu Día"
@@ -287,7 +414,7 @@ This game incorporates evidence-based mental health principles:
 5. Presiona E para interactuar con objetos cercanos
 6. Completa tareas y experimenta la inmersión 3D
 
-#### Opción 2: Un Día con Propósito 2D (Juego Interactivo - ACCESIBLE)
+#### Opción 3: Un Día con Propósito 2D (Juego Interactivo - ACCESIBLE)
 
 1. Abre `interactive-game.html` o `juego-premium-con-personaje.html` en cualquier navegador web moderno
 2. Usa las flechas del teclado o WASD para moverte
@@ -295,7 +422,7 @@ This game incorporates evidence-based mental health principles:
 4. Completa tareas diarias y observa tu progreso
 5. Disfruta de las animaciones del personaje y mensajes motivacionales
 
-#### Opción 3: Pathways to Light (Juego Narrativo - MÁS PROFUNDO)
+#### Opción 4: Pathways to Light (Juego Narrativo - MÁS PROFUNDO)
 
 1. Abre `index.html` en cualquier navegador web moderno
 2. Lee cada escena cuidadosamente
@@ -316,7 +443,8 @@ This game can be used as:
 
 #### Archivos del Proyecto
 
-- `juego-3d-css-inmersivo.html` - **Juego 3D inmersivo en primera persona** (CSS 3D Transforms, todo en un archivo)
+- `juego-plataformas-3d-motivacional.html` - **🌟 Juego de plataformas 3D con mensajes motivacionales** (RECOMENDADO - MÁS DIVERTIDO)
+- `juego-3d-css-inmersivo.html` - **Juego 3D inmersivo en primera persona** (CSS 3D Transforms, exploración)
 - `juego-premium-con-personaje.html` - **Juego 2D premium completo** (versión más reciente con personaje animado)
 - `interactive-game.html` - Juego interactivo 2D (versión inicial)
 - `juego-completo-definitivo.html` - Versión 2D con 6 habitaciones y 25 tareas
@@ -331,13 +459,25 @@ This game can be used as:
 Todos los juegos están construidos con:
 - **HTML5** - Estructura semántica y accesible
 - **CSS3** - Diseño visual calmante con gradientes y animaciones
-- **CSS 3D Transforms** - Para el juego 3D (perspective, rotateX/Y/Z, translateZ)
+- **CSS 3D Transforms** - Para los juegos 3D (perspective, rotateX/Y/Z, translateZ)
 - **Vanilla JavaScript** - Sin dependencias, fácil de modificar
 - **Canvas API** - Para los juegos interactivos 2D
 - **RequestAnimationFrame** - Para animaciones suaves
+- **Física de juegos** - Gravedad, colisiones, saltos para el juego de plataformas
 - **Diseño Responsive** - Funciona en desktop y móvil
 
-#### Características Técnicas del Juego 3D
+#### Características Técnicas del Juego de Plataformas
+
+- 🎮 **Física de Plataformas** - Sistema completo de gravedad, salto y colisiones
+- 🌈 **Transformación visual** - Cambio gradual de ambiente gris a atardecer
+- 👤 **Selección de personaje** - 2 personajes con animaciones únicas
+- 📊 **Sistema de progreso** - Barra visual y contador de plataformas
+- 💬 **6 mensajes motivacionales** - Aparecen en momentos clave del juego
+- 🌟 **Checkpoints y recompensas** - Estrellas coleccionables con partículas
+- 🎥 **Cámara tercera persona** - Sigue al jugador automáticamente
+- 💾 **Cero dependencias** - Todo en un solo archivo HTML
+
+#### Características Técnicas del Juego 3D Inmersivo
 
 - 🌌 **CSS 3D Transforms** - Perspectiva y volumen real sin bibliotecas
 - 🎮 **Primera Persona** - Control de cámara con mouse y WASD

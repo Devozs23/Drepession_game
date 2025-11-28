@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caminos de Esperanza - Juego de Plataformas Motivacional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        /* Pantalla de selección de personaje */
+        #character-selection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+
+        #character-selection.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #character-selection h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #character-selection p {
+            font-size: 20px;
+            margin-bottom: 50px;
+            max-width: 700px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .character-options {
+            display: flex;
+            gap: 60px;
+        }
+
+        .character-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            backdrop-filter: blur(10px);
+        }
+
+        .character-option:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: white;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .character-preview {
+            width: 200px;
+            height: 250px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            margin-bottom: 20px;
+        }
+
+        .character-name {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        /* Mundo 3D */
+        #world {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1200px;
+            perspective-origin: 50% 50%;
+            overflow: hidden;
+            transition: background 3s ease;
+        }
+
+        #world.gray {
+            background: linear-gradient(to bottom, #4a5568, #2d3748);
+        }
+
+        #world.sunset {
+            background: linear-gradient(to bottom, #ff6b6b, #feca57, #48dbfb);
+        }
+
+        #scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Plataformas */
+        .platform {
+            position: absolute;
+            transform-style: preserve-3d;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .platform.gray {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+        }
+
+        /* Personaje 3D */
+        #player {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        .player-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* Cabeza */
+        .player-head {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #FFD1B3;
+            border-radius: 50%;
+            top: 0;
+            left: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Cabello niña */
+        .player-head.girl::before {
+            content: '';
+            position: absolute;
+            width: 45px;
+            height: 30px;
+            background: #8B4513;
+            border-radius: 50% 50% 0 0;
+            top: -5px;
+            left: -2.5px;
+        }
+
+        /* Cabello niño */
+        .player-head.boy::before {
+            content: '';
+            position: absolute;
+            width: 42px;
+            height: 20px;
+            background: #2d3748;
+            border-radius: 50% 50% 0 0;
+            top: -3px;
+            left: -1px;
+        }
+
+        /* Ojos */
+        .player-head::after {
+            content: '👁️👁️';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+
+        /* Cuerpo */
+        .player-torso {
+            position: absolute;
+            width: 50px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px 10px 0 0;
+            top: 35px;
+            left: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-torso.girl {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        }
+
+        /* Brazos */
+        .player-arm {
+            position: absolute;
+            width: 15px;
+            height: 35px;
+            background: #FFD1B3;
+            border-radius: 8px;
+            top: 38px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-arm.left {
+            left: -8px;
+        }
+
+        .player-arm.right {
+            right: -8px;
+        }
+
+        /* Piernas */
+        .player-leg {
+            position: absolute;
+            width: 18px;
+            height: 30px;
+            background: #4a5568;
+            border-radius: 5px 5px 8px 8px;
+            top: 75px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-leg.left {
+            left: 10px;
+        }
+
+        .player-leg.right {
+            right: 10px;
+        }
+
+        /* Frases motivacionales */
+        #motivational-quote {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.95);
+            padding: 40px 60px;
+            border-radius: 25px;
+            text-align: center;
+            z-index: 9000;
+            max-width: 600px;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #motivational-quote.show {
+            opacity: 1;
+        }
+
+        #motivational-quote h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        #motivational-quote p {
+            font-size: 20px;
+            line-height: 1.6;
+        }
+
+        /* HUD */
+        #hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        #progress-bar {
+            width: 300px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #48dbfb);
+            width: 0%;
+            transition: width 1s ease;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(72, 219, 251, 0.5);
+        }
+
+        /* Instrucciones */
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #instructions p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        /* Mensaje de victoria */
+        #victory-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #victory-message.show {
+            display: flex;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #victory-message h1 {
+            font-size: 64px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #victory-message p {
+            font-size: 24px;
+            max-width: 800px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Partículas de celebración */
+        .particle {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFall 3s ease-out forwards;
+        }
+
+        @keyframes particleFall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Obstáculo */
+        .obstacle {
+            position: absolute;
+            transform-style: preserve-3d;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Punto de control */
+        .checkpoint {
+            position: absolute;
+            width: 80px;
+            height: 150px;
+            transform-style: preserve-3d;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .checkpoint::before {
+            content: '🌟';
+            position: absolute;
+            font-size: 60px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 20px gold);
+        }
+    </style>
+</head>
+<body>
+    <!-- Selección de personaje -->
+    <div id="character-selection">
+        <h1>🌟 Caminos de Esperanza</h1>
+        <p>
+            Tu viaje comienza aquí. Cada paso que des, por pequeño que sea, es una victoria.<br>
+            La vida puede parecer gris ahora, pero juntos encontraremos el atardecer.<br>
+            <strong>Elige tu personaje y comienza a caminar hacia la luz.</strong>
+        </p>
+        <div class="character-options">
+            <div class="character-option" onclick="selectCharacter('girl')">
+                <div class="character-preview">👧</div>
+                <div class="character-name">Niña Valiente</div>
+            </div>
+            <div class="character-option" onclick="selectCharacter('boy')">
+                <div class="character-preview">👦</div>
+                <div class="character-name">Niño Valiente</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mundo 3D -->
+    <div id="world" class="gray">
+        <div id="scene">
+            <!-- Las plataformas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Frase motivacional -->
+    <div id="motivational-quote">
+        <h2 id="quote-title">💙 Mensaje de Esperanza</h2>
+        <p id="quote-text">Texto motivacional</p>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+        <h3>Progreso del Viaje</h3>
+        <div id="progress-bar">
+            <div id="progress-fill"></div>
+        </div>
+        <p style="margin-top: 10px; font-size: 14px;">Plataformas: <span id="platform-count">0</span>/20</p>
+    </div>
+
+    <!-- Instrucciones -->
+    <div id="instructions">
+        <p><strong>⬅️ A / ➡️ D</strong> - Moverse | <strong>ESPACIO</strong> - Saltar</p>
+        <p>Salta entre plataformas, evita caer, alcanza las estrellas 🌟</p>
+    </div>
+
+    <!-- Mensaje de victoria -->
+    <div id="victory-message">
+        <h1>🌅 ¡Lo Lograste!</h1>
+        <p id="victory-text">Has completado el viaje. Has demostrado que incluso cuando todo parece oscuro, puedes dar un paso a la vez y encontrar la luz. El atardecer que ves ahora es el resultado de tu valentía. Recuerda: cada día puede tener momentos difíciles, pero también puede tener su propio atardecer hermoso.</p>
+        <button class="btn" onclick="restartGame()">Comenzar Nuevo Viaje</button>
+    </div>
+
+    <script>
+        // Estado del juego
+        const gameState = {
+            character: null,
+            playerX: 0,
+            playerY: 0,
+            playerZ: 0,
+            velocityY: 0,
+            isJumping: false,
+            isOnPlatform: false,
+            cameraX: 0,
+            cameraY: 200,
+            cameraZ: 600,
+            keys: {},
+            currentPlatform: 0,
+            totalPlatforms: 20,
+            checkpoints: [5, 10, 15, 20],
+            platformsReached: 0,
+            gravity: -0.8,
+            jumpPower: 15,
+            moveSpeed: 8
+        };
+
+        // Frases motivacionales
+        const motivationalQuotes = [
+            {
+                title: "💪 Primer Paso",
+                text: "¡Felicidades por dar el primer paso! A veces lo más difícil es comenzar. Pero lo hiciste. Ya eres más fuerte de lo que crees."
+            },
+            {
+                title: "🌱 Crecimiento",
+                text: "Cada obstáculo que superas te hace más resiliente. No importa cuántas veces caigas, lo que importa es que te levantes una vez más."
+            },
+            {
+                title: "☁️ Días Grises",
+                text: "Los días grises son temporales. Como las nubes que pasan, tus dificultades también pasarán. Sigue caminando, el sol está esperándote."
+            },
+            {
+                title: "🎯 Un Paso a la Vez",
+                text: "No necesitas ver todo el camino. Solo da el siguiente paso. La vida no se trata de grandes saltos, sino de pequeños pasos constantes."
+            },
+            {
+                title: "🌟 Tu Brillo Único",
+                text: "Incluso en la oscuridad, tu luz interior brilla. Puede que no la veas ahora, pero otros la ven. Y pronto tú también la verás."
+            },
+            {
+                title: "🌈 Después de la Tormenta",
+                text: "Has superado tormentas antes y lo harás de nuevo. Cada desafío que enfrentas te acerca más al arcoíris que viene después."
+            }
+        ];
+
+        let currentQuoteIndex = 0;
+
+        // Seleccionar personaje
+        function selectCharacter(type) {
+            gameState.character = type;
+            document.getElementById('character-selection').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('character-selection').style.display = 'none';
+                startGame();
+            }, 500);
+        }
+
+        // Iniciar juego
+        function startGame() {
+            createPlatforms();
+            createPlayer();
+            updateCamera();
+            gameLoop();
+
+            // Mostrar primera frase motivacional después de 2 segundos
+            setTimeout(showMotivationalQuote, 2000);
+        }
+
+        // Crear plataformas
+        function createPlatforms() {
+            const scene = document.getElementById('scene');
+            const world = document.getElementById('world');
+
+            for (let i = 0; i < gameState.totalPlatforms; i++) {
+                const platform = document.createElement('div');
+                platform.className = 'platform';
+
+                // Dimensiones aleatorias
+                const width = 150 + Math.random() * 100;
+                const depth = 150 + Math.random() * 100;
+                const height = 20;
+
+                // Posición
+                const x = i * 300 + (Math.random() - 0.5) * 150;
+                const y = -200 + Math.random() * 100;
+                const z = -i * 200;
+
+                platform.style.width = width + 'px';
+                platform.style.height = depth + 'px';
+                platform.style.transform = `
+                    translate3d(${x}px, ${y}px, ${z}px)
+                    rotateX(90deg)
+                `;
+
+                // Color gris al inicio, cambia a colorido después
+                if (i < 10) {
+                    platform.classList.add('gray');
+                }
+
+                platform.dataset.x = x;
+                platform.dataset.y = y;
+                platform.dataset.z = z;
+                platform.dataset.width = width;
+                platform.dataset.depth = depth;
+                platform.dataset.height = height;
+                platform.dataset.index = i;
+
+                scene.appendChild(platform);
+
+                // Añadir checkpoint en ciertas plataformas
+                if (gameState.checkpoints.includes(i)) {
+                    const checkpoint = document.createElement('div');
+                    checkpoint.className = 'checkpoint';
+                    checkpoint.style.transform = `
+                        translate3d(${x}px, ${y - 100}px, ${z}px)
+                    `;
+                    checkpoint.dataset.index = i;
+                    scene.appendChild(checkpoint);
+                }
+
+                // Algunos obstáculos
+                if (i > 2 && Math.random() > 0.7) {
+                    const obstacle = document.createElement('div');
+                    obstacle.className = 'obstacle';
+                    const obsWidth = 60;
+                    const obsHeight = 80;
+                    const obsDepth = 60;
+
+                    obstacle.style.width = obsWidth + 'px';
+                    obstacle.style.height = obsHeight + 'px';
+                    obstacle.style.transform = `
+                        translate3d(${x + width/2}px, ${y - obsHeight}px, ${z}px)
+                        rotateX(0deg)
+                    `;
+
+                    scene.appendChild(obstacle);
+                }
+            }
+
+            // Plataforma inicial
+            gameState.playerX = 0;
+            gameState.playerY = -200;
+            gameState.playerZ = 0;
+        }
+
+        // Crear jugador
+        function createPlayer() {
+            const scene = document.getElementById('scene');
+            const player = document.createElement('div');
+            player.id = 'player';
+
+            const isGirl = gameState.character === 'girl';
+
+            player.innerHTML = `
+                <div class="player-body">
+                    <div class="player-head ${isGirl ? 'girl' : 'boy'}"></div>
+                    <div class="player-torso ${isGirl ? 'girl' : 'boy'}"></div>
+                    <div class="player-arm left"></div>
+                    <div class="player-arm right"></div>
+                    <div class="player-leg left"></div>
+                    <div class="player-leg right"></div>
+                </div>
+            `;
+
+            scene.appendChild(player);
+        }
+
+        // Actualizar posición del jugador
+        function updatePlayer() {
+            const player = document.getElementById('player');
+            if (!player) return;
+
+            player.style.transform = `
+                translate3d(
+                    ${gameState.playerX}px,
+                    ${gameState.playerY - 100}px,
+                    ${gameState.playerZ}px
+                )
+            `;
+        }
+
+        // Actualizar cámara
+        function updateCamera() {
+            const scene = document.getElementById('scene');
+
+            // La cámara sigue al jugador
+            gameState.cameraX = -gameState.playerX;
+            gameState.cameraZ = -gameState.playerZ + 600;
+
+            scene.style.transform = `
+                translateX(${gameState.cameraX}px)
+                translateY(${gameState.cameraY}px)
+                translateZ(${gameState.cameraZ}px)
+                rotateX(-20deg)
+            `;
+        }
+
+        // Física del jugador
+        function updatePhysics() {
+            // Gravedad
+            gameState.velocityY += gameState.gravity;
+            gameState.playerY += gameState.velocityY;
+
+            // Movimiento horizontal
+            if (gameState.keys['a'] || gameState.keys['arrowleft']) {
+                gameState.playerX -= gameState.moveSpeed;
+            }
+            if (gameState.keys['d'] || gameState.keys['arrowright']) {
+                gameState.playerX += gameState.moveSpeed;
+            }
+
+            // Salto
+            if ((gameState.keys[' '] || gameState.keys['arrowup']) && !gameState.isJumping && gameState.isOnPlatform) {
+                gameState.velocityY = gameState.jumpPower;
+                gameState.isJumping = true;
+                gameState.isOnPlatform = false;
+            }
+
+            // Colisión con plataformas
+            checkPlatformCollision();
+
+            // Caída fuera del mundo
+            if (gameState.playerY < -1000) {
+                respawnPlayer();
+            }
+        }
+
+        // Verificar colisión con plataformas
+        function checkPlatformCollision() {
+            const platforms = document.querySelectorAll('.platform');
+            gameState.isOnPlatform = false;
+
+            platforms.forEach(platform => {
+                const px = parseFloat(platform.dataset.x);
+                const py = parseFloat(platform.dataset.y);
+                const pz = parseFloat(platform.dataset.z);
+                const width = parseFloat(platform.dataset.width);
+                const depth = parseFloat(platform.dataset.depth);
+                const height = parseFloat(platform.dataset.height);
+
+                // Verificar si el jugador está sobre la plataforma
+                if (gameState.playerX > px - width/2 &&
+                    gameState.playerX < px + width/2 &&
+                    gameState.playerZ > pz - depth/2 &&
+                    gameState.playerZ < pz + depth/2) {
+
+                    // Si está cayendo y está cerca de la plataforma
+                    if (gameState.velocityY <= 0 &&
+                        gameState.playerY <= py - height &&
+                        gameState.playerY > py - height - 50) {
+
+                        gameState.playerY = py - height;
+                        gameState.velocityY = 0;
+                        gameState.isJumping = false;
+                        gameState.isOnPlatform = true;
+
+                        // Actualizar progreso
+                        const platformIndex = parseInt(platform.dataset.index);
+                        if (platformIndex > gameState.platformsReached) {
+                            gameState.platformsReached = platformIndex;
+                            updateProgress();
+
+                            // Verificar checkpoints
+                            if (gameState.checkpoints.includes(platformIndex)) {
+                                showMotivationalQuote();
+                                collectCheckpoint(platformIndex);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Recolectar checkpoint
+        function collectCheckpoint(index) {
+            const checkpoints = document.querySelectorAll('.checkpoint');
+            checkpoints.forEach(cp => {
+                if (parseInt(cp.dataset.index) === index) {
+                    cp.style.animation = 'none';
+                    cp.style.opacity = '0';
+                    createParticles(30);
+                }
+            });
+        }
+
+        // Actualizar barra de progreso
+        function updateProgress() {
+            const progress = (gameState.platformsReached / gameState.totalPlatforms) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('platform-count').textContent = gameState.platformsReached;
+
+            // Cambiar ambiente gradualmente
+            const world = document.getElementById('world');
+            if (progress > 50) {
+                world.classList.remove('gray');
+                world.classList.add('sunset');
+            }
+
+            // Victoria
+            if (gameState.platformsReached >= gameState.totalPlatforms - 1) {
+                setTimeout(showVictory, 1000);
+            }
+        }
+
+        // Respawn del jugador
+        function respawnPlayer() {
+            gameState.playerX = 0;
+            gameState.playerY = -200;
+            gameState.playerZ = 0;
+            gameState.velocityY = 0;
+            gameState.isJumping = false;
+
+            // Mostrar mensaje motivacional
+            showMotivationalQuote();
+        }
+
+        // Mostrar frase motivacional
+        function showMotivationalQuote() {
+            const quoteElement = document.getElementById('motivational-quote');
+            const quote = motivationalQuotes[currentQuoteIndex % motivationalQuotes.length];
+
+            document.getElementById('quote-title').textContent = quote.title;
+            document.getElementById('quote-text').textContent = quote.text;
+
+            quoteElement.classList.add('show');
+
+            setTimeout(() => {
+                quoteElement.classList.remove('show');
+            }, 5000);
+
+            currentQuoteIndex++;
+        }
+
+        // Crear partículas
+        function createParticles(count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = '0';
+                particle.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                particle.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(particle);
+
+                setTimeout(() => particle.remove(), 3000);
+            }
+        }
+
+        // Mostrar victoria
+        function showVictory() {
+            document.getElementById('victory-message').classList.add('show');
+            createParticles(50);
+        }
+
+        // Reiniciar juego
+        function restartGame() {
+            location.reload();
+        }
+
+        // Control del teclado
+        document.addEventListener('keydown', (e) => {
+            gameState.keys[e.key.toLowerCase()] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            gameState.keys[e.key.toLowerCase()] = false;
+        });
+
+        // Loop del juego
+        function gameLoop() {
+            updatePhysics();
+            updatePlayer();
+            updateCamera();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
