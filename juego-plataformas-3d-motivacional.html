@@ -92,162 +92,17 @@
             font-weight: 600;
         }
 
-        /* Mundo 3D */
-        #world {
+        /* Canvas del juego */
+        #gameCanvas {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            perspective: 1200px;
-            perspective-origin: 50% 50%;
-            overflow: hidden;
+            background: linear-gradient(to bottom, #4a5568, #2d3748);
             transition: background 3s ease;
         }
 
-        #world.gray {
-            background: linear-gradient(to bottom, #4a5568, #2d3748);
-        }
-
-        #world.sunset {
-            background: linear-gradient(to bottom, #ff6b6b, #feca57, #48dbfb);
-        }
-
-        #scene {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-        }
-
-        /* Plataformas */
-        .platform {
-            position: absolute;
-            transform-style: preserve-3d;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-
-        .platform.gray {
-            background: linear-gradient(135deg, #4a5568, #2d3748);
-        }
-
-        /* Personaje 3D */
-        #player {
-            position: absolute;
-            width: 60px;
-            height: 80px;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-        }
-
-        .player-body {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-        }
-
-        /* Cabeza */
-        .player-head {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: #FFD1B3;
-            border-radius: 50%;
-            top: 0;
-            left: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Cabello niña */
-        .player-head.girl::before {
-            content: '';
-            position: absolute;
-            width: 45px;
-            height: 30px;
-            background: #8B4513;
-            border-radius: 50% 50% 0 0;
-            top: -5px;
-            left: -2.5px;
-        }
-
-        /* Cabello niño */
-        .player-head.boy::before {
-            content: '';
-            position: absolute;
-            width: 42px;
-            height: 20px;
-            background: #2d3748;
-            border-radius: 50% 50% 0 0;
-            top: -3px;
-            left: -1px;
-        }
-
-        /* Ojos */
-        .player-head::after {
-            content: '👁️👁️';
-            position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-        }
-
-        /* Cuerpo */
-        .player-torso {
-            position: absolute;
-            width: 50px;
-            height: 45px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 10px 10px 0 0;
-            top: 35px;
-            left: 5px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-torso.girl {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-        }
-
-        /* Brazos */
-        .player-arm {
-            position: absolute;
-            width: 15px;
-            height: 35px;
-            background: #FFD1B3;
-            border-radius: 8px;
-            top: 38px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-arm.left {
-            left: -8px;
-        }
-
-        .player-arm.right {
-            right: -8px;
-        }
-
-        /* Piernas */
-        .player-leg {
-            position: absolute;
-            width: 18px;
-            height: 30px;
-            background: #4a5568;
-            border-radius: 5px 5px 8px 8px;
-            top: 75px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-leg.left {
-            left: 10px;
-        }
-
-        .player-leg.right {
-            right: 10px;
+        #gameCanvas.sunset {
+            background: linear-gradient(to bottom, #ff6b6b 0%, #feca57 50%, #48dbfb 100%);
         }
 
         /* Frases motivacionales */
@@ -400,6 +255,7 @@
             border-radius: 50%;
             pointer-events: none;
             animation: particleFall 3s ease-out forwards;
+            z-index: 8000;
         }
 
         @keyframes particleFall {
@@ -407,39 +263,6 @@
                 transform: translateY(100vh) rotate(720deg);
                 opacity: 0;
             }
-        }
-
-        /* Obstáculo */
-        .obstacle {
-            position: absolute;
-            transform-style: preserve-3d;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Punto de control */
-        .checkpoint {
-            position: absolute;
-            width: 80px;
-            height: 150px;
-            transform-style: preserve-3d;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .checkpoint::before {
-            content: '🌟';
-            position: absolute;
-            font-size: 60px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            filter: drop-shadow(0 0 20px gold);
         }
     </style>
 </head>
@@ -464,12 +287,8 @@
         </div>
     </div>
 
-    <!-- Mundo 3D -->
-    <div id="world" class="gray">
-        <div id="scene">
-            <!-- Las plataformas se generarán dinámicamente -->
-        </div>
-    </div>
+    <!-- Canvas del juego -->
+    <canvas id="gameCanvas"></canvas>
 
     <!-- Frase motivacional -->
     <div id="motivational-quote">
@@ -495,31 +314,44 @@
     <!-- Mensaje de victoria -->
     <div id="victory-message">
         <h1>🌅 ¡Lo Lograste!</h1>
-        <p id="victory-text">Has completado el viaje. Has demostrado que incluso cuando todo parece oscuro, puedes dar un paso a la vez y encontrar la luz. El atardecer que ves ahora es el resultado de tu valentía. Recuerda: cada día puede tener momentos difíciles, pero también puede tener su propio atardecer hermoso.</p>
+        <p>Has completado el viaje. Has demostrado que incluso cuando todo parece oscuro, puedes dar un paso a la vez y encontrar la luz. El atardecer que ves ahora es el resultado de tu valentía. Recuerda: cada día puede tener momentos difíciles, pero también puede tener su propio atardecer hermoso.</p>
         <button class="btn" onclick="restartGame()">Comenzar Nuevo Viaje</button>
     </div>
 
     <script>
+        // Configuración del canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
         // Estado del juego
         const gameState = {
             character: null,
-            playerX: 0,
-            playerY: 0,
-            playerZ: 0,
-            velocityY: 0,
-            isJumping: false,
-            isOnPlatform: false,
-            cameraX: 0,
-            cameraY: 200,
-            cameraZ: 600,
+            player: {
+                x: 100,
+                y: 0,
+                width: 40,
+                height: 60,
+                velocityY: 0,
+                velocityX: 0,
+                onGround: false,
+                direction: 1
+            },
+            platforms: [],
+            camera: {
+                x: 0,
+                y: 0
+            },
             keys: {},
             currentPlatform: 0,
             totalPlatforms: 20,
             checkpoints: [5, 10, 15, 20],
             platformsReached: 0,
-            gravity: -0.8,
-            jumpPower: 15,
-            moveSpeed: 8
+            gravity: 0.6,
+            jumpPower: -15,
+            moveSpeed: 5,
+            animFrame: 0
         };
 
         // Frases motivacionales
@@ -565,8 +397,6 @@
         // Iniciar juego
         function startGame() {
             createPlatforms();
-            createPlayer();
-            updateCamera();
             gameLoop();
 
             // Mostrar primera frase motivacional después de 2 segundos
@@ -575,219 +405,219 @@
 
         // Crear plataformas
         function createPlatforms() {
-            const scene = document.getElementById('scene');
-            const world = document.getElementById('world');
+            // Plataforma inicial
+            gameState.platforms.push({
+                x: 50,
+                y: canvas.height - 100,
+                width: 200,
+                height: 20,
+                index: 0,
+                hasCheckpoint: false
+            });
 
-            for (let i = 0; i < gameState.totalPlatforms; i++) {
-                const platform = document.createElement('div');
-                platform.className = 'platform';
+            // Posicionar jugador en plataforma inicial
+            gameState.player.y = canvas.height - 100 - gameState.player.height;
 
-                // Dimensiones aleatorias
-                const width = 150 + Math.random() * 100;
-                const depth = 150 + Math.random() * 100;
+            // Crear 20 plataformas
+            let lastX = 50;
+            let lastY = canvas.height - 100;
+
+            for (let i = 1; i < gameState.totalPlatforms; i++) {
+                const width = 120 + Math.random() * 100;
                 const height = 20;
 
-                // Posición
-                const x = i * 300 + (Math.random() - 0.5) * 150;
-                const y = -200 + Math.random() * 100;
-                const z = -i * 200;
+                // Posicionar siguiente plataforma
+                const distX = 200 + Math.random() * 150;
+                const distY = -80 + Math.random() * 160; // Puede estar arriba o abajo
 
-                platform.style.width = width + 'px';
-                platform.style.height = depth + 'px';
-                platform.style.transform = `
-                    translate3d(${x}px, ${y}px, ${z}px)
-                    rotateX(90deg)
-                `;
+                const x = lastX + distX;
+                const y = Math.max(150, Math.min(canvas.height - 150, lastY + distY));
 
-                // Color gris al inicio, cambia a colorido después
-                if (i < 10) {
-                    platform.classList.add('gray');
-                }
+                gameState.platforms.push({
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    index: i,
+                    hasCheckpoint: gameState.checkpoints.includes(i)
+                });
 
-                platform.dataset.x = x;
-                platform.dataset.y = y;
-                platform.dataset.z = z;
-                platform.dataset.width = width;
-                platform.dataset.depth = depth;
-                platform.dataset.height = height;
-                platform.dataset.index = i;
+                lastX = x;
+                lastY = y;
+            }
+        }
 
-                scene.appendChild(platform);
+        // Dibujar jugador
+        function drawPlayer() {
+            const p = gameState.player;
+            const screenX = p.x - gameState.camera.x;
+            const screenY = p.y - gameState.camera.y;
 
-                // Añadir checkpoint en ciertas plataformas
-                if (gameState.checkpoints.includes(i)) {
-                    const checkpoint = document.createElement('div');
-                    checkpoint.className = 'checkpoint';
-                    checkpoint.style.transform = `
-                        translate3d(${x}px, ${y - 100}px, ${z}px)
-                    `;
-                    checkpoint.dataset.index = i;
-                    scene.appendChild(checkpoint);
-                }
+            ctx.save();
 
-                // Algunos obstáculos
-                if (i > 2 && Math.random() > 0.7) {
-                    const obstacle = document.createElement('div');
-                    obstacle.className = 'obstacle';
-                    const obsWidth = 60;
-                    const obsHeight = 80;
-                    const obsDepth = 60;
+            // Sombra
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(screenX + p.width/2, screenY + p.height + 5, p.width/2, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
 
-                    obstacle.style.width = obsWidth + 'px';
-                    obstacle.style.height = obsHeight + 'px';
-                    obstacle.style.transform = `
-                        translate3d(${x + width/2}px, ${y - obsHeight}px, ${z}px)
-                        rotateX(0deg)
-                    `;
+            // Cuerpo
+            if (gameState.character === 'girl') {
+                // Niña - Vestido rosa
+                ctx.fillStyle = '#ff6b9d';
+            } else {
+                // Niño - Camiseta azul
+                ctx.fillStyle = '#667eea';
+            }
+            ctx.fillRect(screenX + 8, screenY + 20, p.width - 16, 25);
 
-                    scene.appendChild(obstacle);
-                }
+            // Cabeza
+            ctx.fillStyle = '#FFD1B3';
+            ctx.beginPath();
+            ctx.arc(screenX + p.width/2, screenY + 12, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cabello
+            if (gameState.character === 'girl') {
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + 8, 13, Math.PI, 0, false);
+                ctx.fill();
+                // Coletas
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2 - 12, screenY + 12, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2 + 12, screenY + 12, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#2d3748';
+                ctx.fillRect(screenX + p.width/2 - 10, screenY + 2, 20, 8);
             }
 
-            // Plataforma inicial
-            gameState.playerX = 0;
-            gameState.playerY = -200;
-            gameState.playerZ = 0;
+            // Cara
+            ctx.fillStyle = '#000';
+            // Ojos
+            ctx.fillRect(screenX + p.width/2 - 6, screenY + 10, 3, 3);
+            ctx.fillRect(screenX + p.width/2 + 3, screenY + 10, 3, 3);
+            // Sonrisa
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(screenX + p.width/2, screenY + 14, 5, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Brazos
+            const armSwing = Math.sin(gameState.animFrame * 0.3) * 5;
+            ctx.fillStyle = '#FFD1B3';
+            ctx.fillRect(screenX + 4, screenY + 25 + armSwing, 6, 20);
+            ctx.fillRect(screenX + p.width - 10, screenY + 25 - armSwing, 6, 20);
+
+            // Piernas
+            const legSwing = Math.sin(gameState.animFrame * 0.3) * 5;
+            ctx.fillStyle = '#4a5568';
+            ctx.fillRect(screenX + 12, screenY + 45 + legSwing, 6, 20);
+            ctx.fillRect(screenX + p.width - 18, screenY + 45 - legSwing, 6, 20);
+
+            ctx.restore();
         }
 
-        // Crear jugador
-        function createPlayer() {
-            const scene = document.getElementById('scene');
-            const player = document.createElement('div');
-            player.id = 'player';
+        // Dibujar plataformas
+        function drawPlatforms() {
+            gameState.platforms.forEach(platform => {
+                const screenX = platform.x - gameState.camera.x;
+                const screenY = platform.y - gameState.camera.y;
 
-            const isGirl = gameState.character === 'girl';
+                // Color basado en progreso
+                if (platform.index < 10) {
+                    ctx.fillStyle = '#4a5568';
+                } else if (platform.index < 15) {
+                    ctx.fillStyle = '#667eea';
+                } else {
+                    ctx.fillStyle = '#ff6b9d';
+                }
 
-            player.innerHTML = `
-                <div class="player-body">
-                    <div class="player-head ${isGirl ? 'girl' : 'boy'}"></div>
-                    <div class="player-torso ${isGirl ? 'girl' : 'boy'}"></div>
-                    <div class="player-arm left"></div>
-                    <div class="player-arm right"></div>
-                    <div class="player-leg left"></div>
-                    <div class="player-leg right"></div>
-                </div>
-            `;
+                // Plataforma con efecto 3D
+                ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(screenX, screenY + platform.height - 5, platform.width, 5);
 
-            scene.appendChild(player);
-        }
+                // Borde
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenX, screenY, platform.width, platform.height);
 
-        // Actualizar posición del jugador
-        function updatePlayer() {
-            const player = document.getElementById('player');
-            if (!player) return;
-
-            player.style.transform = `
-                translate3d(
-                    ${gameState.playerX}px,
-                    ${gameState.playerY - 100}px,
-                    ${gameState.playerZ}px
-                )
-            `;
-        }
-
-        // Actualizar cámara
-        function updateCamera() {
-            const scene = document.getElementById('scene');
-
-            // La cámara sigue al jugador
-            gameState.cameraX = -gameState.playerX;
-            gameState.cameraZ = -gameState.playerZ + 600;
-
-            scene.style.transform = `
-                translateX(${gameState.cameraX}px)
-                translateY(${gameState.cameraY}px)
-                translateZ(${gameState.cameraZ}px)
-                rotateX(-20deg)
-            `;
+                // Checkpoint estrella
+                if (platform.hasCheckpoint) {
+                    ctx.font = '40px Arial';
+                    ctx.fillText('🌟', screenX + platform.width/2 - 20, screenY - 20);
+                }
+            });
         }
 
         // Física del jugador
         function updatePhysics() {
+            const p = gameState.player;
+
             // Gravedad
-            gameState.velocityY += gameState.gravity;
-            gameState.playerY += gameState.velocityY;
+            p.velocityY += gameState.gravity;
+            p.y += p.velocityY;
 
             // Movimiento horizontal
+            p.velocityX = 0;
             if (gameState.keys['a'] || gameState.keys['arrowleft']) {
-                gameState.playerX -= gameState.moveSpeed;
+                p.velocityX = -gameState.moveSpeed;
+                p.direction = -1;
+                gameState.animFrame++;
             }
             if (gameState.keys['d'] || gameState.keys['arrowright']) {
-                gameState.playerX += gameState.moveSpeed;
+                p.velocityX = gameState.moveSpeed;
+                p.direction = 1;
+                gameState.animFrame++;
             }
+            p.x += p.velocityX;
 
             // Salto
-            if ((gameState.keys[' '] || gameState.keys['arrowup']) && !gameState.isJumping && gameState.isOnPlatform) {
-                gameState.velocityY = gameState.jumpPower;
-                gameState.isJumping = true;
-                gameState.isOnPlatform = false;
+            if ((gameState.keys[' '] || gameState.keys['arrowup']) && p.onGround) {
+                p.velocityY = gameState.jumpPower;
+                p.onGround = false;
             }
 
             // Colisión con plataformas
-            checkPlatformCollision();
+            p.onGround = false;
+            gameState.platforms.forEach(platform => {
+                if (p.x + p.width > platform.x &&
+                    p.x < platform.x + platform.width &&
+                    p.y + p.height > platform.y &&
+                    p.y + p.height < platform.y + platform.height + 20 &&
+                    p.velocityY >= 0) {
 
-            // Caída fuera del mundo
-            if (gameState.playerY < -1000) {
-                respawnPlayer();
-            }
-        }
+                    p.y = platform.y - p.height;
+                    p.velocityY = 0;
+                    p.onGround = true;
 
-        // Verificar colisión con plataformas
-        function checkPlatformCollision() {
-            const platforms = document.querySelectorAll('.platform');
-            gameState.isOnPlatform = false;
+                    // Actualizar progreso
+                    if (platform.index > gameState.platformsReached) {
+                        gameState.platformsReached = platform.index;
+                        updateProgress();
 
-            platforms.forEach(platform => {
-                const px = parseFloat(platform.dataset.x);
-                const py = parseFloat(platform.dataset.y);
-                const pz = parseFloat(platform.dataset.z);
-                const width = parseFloat(platform.dataset.width);
-                const depth = parseFloat(platform.dataset.depth);
-                const height = parseFloat(platform.dataset.height);
-
-                // Verificar si el jugador está sobre la plataforma
-                if (gameState.playerX > px - width/2 &&
-                    gameState.playerX < px + width/2 &&
-                    gameState.playerZ > pz - depth/2 &&
-                    gameState.playerZ < pz + depth/2) {
-
-                    // Si está cayendo y está cerca de la plataforma
-                    if (gameState.velocityY <= 0 &&
-                        gameState.playerY <= py - height &&
-                        gameState.playerY > py - height - 50) {
-
-                        gameState.playerY = py - height;
-                        gameState.velocityY = 0;
-                        gameState.isJumping = false;
-                        gameState.isOnPlatform = true;
-
-                        // Actualizar progreso
-                        const platformIndex = parseInt(platform.dataset.index);
-                        if (platformIndex > gameState.platformsReached) {
-                            gameState.platformsReached = platformIndex;
-                            updateProgress();
-
-                            // Verificar checkpoints
-                            if (gameState.checkpoints.includes(platformIndex)) {
-                                showMotivationalQuote();
-                                collectCheckpoint(platformIndex);
-                            }
+                        // Checkpoint alcanzado
+                        if (platform.hasCheckpoint) {
+                            showMotivationalQuote();
+                            createParticles(30);
                         }
                     }
                 }
             });
-        }
 
-        // Recolectar checkpoint
-        function collectCheckpoint(index) {
-            const checkpoints = document.querySelectorAll('.checkpoint');
-            checkpoints.forEach(cp => {
-                if (parseInt(cp.dataset.index) === index) {
-                    cp.style.animation = 'none';
-                    cp.style.opacity = '0';
-                    createParticles(30);
-                }
-            });
+            // Caída fuera del mundo
+            if (p.y > canvas.height + 200) {
+                respawnPlayer();
+            }
+
+            // Actualizar cámara para seguir al jugador
+            gameState.camera.x = p.x - canvas.width / 3;
+            gameState.camera.y = p.y - canvas.height / 2;
         }
 
         // Actualizar barra de progreso
@@ -797,10 +627,8 @@
             document.getElementById('platform-count').textContent = gameState.platformsReached;
 
             // Cambiar ambiente gradualmente
-            const world = document.getElementById('world');
             if (progress > 50) {
-                world.classList.remove('gray');
-                world.classList.add('sunset');
+                canvas.classList.add('sunset');
             }
 
             // Victoria
@@ -811,13 +639,13 @@
 
         // Respawn del jugador
         function respawnPlayer() {
-            gameState.playerX = 0;
-            gameState.playerY = -200;
-            gameState.playerZ = 0;
-            gameState.velocityY = 0;
-            gameState.isJumping = false;
+            gameState.player.x = 100;
+            gameState.player.y = canvas.height - 100 - gameState.player.height;
+            gameState.player.velocityY = 0;
+            gameState.player.velocityX = 0;
+            gameState.camera.x = 0;
+            gameState.camera.y = 0;
 
-            // Mostrar mensaje motivacional
             showMotivationalQuote();
         }
 
@@ -875,11 +703,25 @@
 
         // Loop del juego
         function gameLoop() {
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Actualizar física
             updatePhysics();
-            updatePlayer();
-            updateCamera();
+
+            // Dibujar todo
+            drawPlatforms();
+            drawPlayer();
+
+            // Continuar loop
             requestAnimationFrame(gameLoop);
         }
+
+        // Ajustar canvas al cambiar tamaño de ventana
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
