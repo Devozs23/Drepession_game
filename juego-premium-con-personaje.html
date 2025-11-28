@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un Día con Propósito - Premium Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 95%;
+        }
+
+        #game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        #game-header h1 {
+            font-size: 26px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #856404;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 5px;
+            animation: glow 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 30px rgba(255,215,0,0.8); }
+        }
+
+        #audio-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .audio-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .audio-btn.active {
+            background: rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        #room-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+            padding: 0 20px;
+        }
+
+        .room-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .room-btn:hover, .room-btn.active {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        #game-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .stat-bar { min-width: 130px; }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .stat-progress {
+            background: #dee2e6;
+            height: 18px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-fill.energy { background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%); }
+        .stat-fill.purpose { background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-fill.care { background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-fill.social { background: linear-gradient(90deg, #fa709a 0%, #fee140 100%); }
+        .stat-fill.wellness { background: linear-gradient(90deg, #a18cd1 0%, #fbc2eb 100%); }
+        .stat-fill.productivity { background: linear-gradient(90deg, #ffecd2 0%, #fcb69f 100%); }
+
+        #game-canvas {
+            display: block;
+            background: #e3f2fd;
+            width: 100%;
+            height: 550px;
+            border-bottom: 3px solid #dee2e6;
+        }
+
+        #game-info {
+            padding: 15px;
+            background: white;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        #day-counter {
+            text-align: center;
+            font-size: 16px;
+            color: #495057;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #message-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #message-text {
+            color: #155724;
+            font-weight: 500;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .controls-hint {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe5b4 100%);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .controls-hint h3 {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .controls-hint p {
+            color: #856404;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .crisis-banner {
+            background: #dc3545;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .crisis-banner a { color: white; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="crisis-banner">
+            🆘 Ayuda inmediata: 🇺🇸 988 | 🇲🇽 800-290-0024 | <a href="https://findahelpline.com" target="_blank">Internacional</a>
+        </div>
+
+        <div id="game-header">
+            <div id="audio-controls">
+                <button class="audio-btn" id="music-toggle" title="Música">🎵</button>
+                <button class="audio-btn" id="rain-toggle" title="Lluvia">🌧️</button>
+                <button class="audio-btn" id="birds-toggle" title="Pájaros">🐦</button>
+            </div>
+            <h1>🌟 Un Día con Propósito 🌟</h1>
+            <div class="premium-badge">⭐ PREMIUM EDITION - PERSONAJE MEJORADO ⭐</div>
+            <div id="room-selector">
+                <button class="room-btn active" data-room="living">🛋️ Sala</button>
+                <button class="room-btn" data-room="kitchen">🍽️ Cocina</button>
+                <button class="room-btn" data-room="bedroom">🛏️ Dormitorio</button>
+                <button class="room-btn" data-room="bathroom">🚿 Baño</button>
+                <button class="room-btn" data-room="office">💼 Oficina</button>
+                <button class="room-btn" data-room="garden">🌳 Jardín</button>
+            </div>
+        </div>
+
+        <div id="game-stats">
+            <div class="stat-bar">
+                <div class="stat-label">⚡ Energía</div>
+                <div class="stat-progress"><div class="stat-fill energy" id="energy-bar" style="width: 50%">50%</div></div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🎯 Propósito</div>
+                <div class="stat-progress"><div class="stat-fill purpose" id="purpose-bar" style="width: 0%">0%</div></div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">💚 Autocuidado</div>
+                <div class="stat-progress"><div class="stat-fill care" id="care-bar" style="width: 0%">0%</div></div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🤝 Social</div>
+                <div class="stat-progress"><div class="stat-fill social" id="social-bar" style="width: 0%">0%</div></div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">🧘 Bienestar</div>
+                <div class="stat-progress"><div class="stat-fill wellness" id="wellness-bar" style="width: 0%">0%</div></div>
+            </div>
+            <div class="stat-bar">
+                <div class="stat-label">💼 Productividad</div>
+                <div class="stat-progress"><div class="stat-fill productivity" id="productivity-bar" style="width: 0%">0%</div></div>
+            </div>
+        </div>
+
+        <canvas id="game-canvas" width="900" height="550"></canvas>
+
+        <div id="game-info">
+            <div id="day-counter">📅 Día 1 - Un nuevo comienzo</div>
+
+            <div class="controls-hint">
+                <h3>🎮 Controles del Juego</h3>
+                <p>
+                    <strong>Mover:</strong> Flechas o WASD |
+                    <strong>Interactuar:</strong> ESPACIO |
+                    <strong>Habitaciones:</strong> Click o teclas 1-6<br>
+                    <strong>Sonidos:</strong> 🎵 Música | 🌧️ Lluvia | 🐦 Pájaros
+                </p>
+            </div>
+
+            <div id="message-box">
+                <div id="message-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================
+        // AUDIO SYSTEM
+        // ===================
+        let audioContext, musicGain;
+        let musicOscillators = [], rainNoise, birdsPlaying = false;
+        let musicPlaying = false, rainPlaying = false;
+
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            musicGain = audioContext.createGain();
+            musicGain.gain.value = 0.1;
+            musicGain.connect(audioContext.destination);
+        }
+
+        document.getElementById('music-toggle').addEventListener('click', function() {
+            if (!audioContext) initAudio();
+            if (musicPlaying) {
+                stopMusic();
+                this.classList.remove('active');
+            } else {
+                playMusic();
+                this.classList.add('active');
+            }
+        });
+
+        document.getElementById('rain-toggle').addEventListener('click', function() {
+            if (!audioContext) initAudio();
+            if (rainPlaying) {
+                stopRain();
+                this.classList.remove('active');
+            } else {
+                playRain();
+                this.classList.add('active');
+            }
+        });
+
+        document.getElementById('birds-toggle').addEventListener('click', function() {
+            if (!audioContext) initAudio();
+            if (birdsPlaying) {
+                birdsPlaying = false;
+                this.classList.remove('active');
+            } else {
+                playBirds();
+                this.classList.add('active');
+            }
+        });
+
+        function playMusic() {
+            const freqs = [261.63, 329.63, 392.00, 523.25, 659.25];
+            freqs.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.value = 0.03;
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start(audioContext.currentTime + i * 0.2);
+                musicOscillators.push({osc, gain});
+            });
+            musicPlaying = true;
+        }
+
+        function stopMusic() {
+            musicOscillators.forEach(({osc, gain}) => {
+                gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                osc.stop(audioContext.currentTime + 0.5);
+            });
+            musicOscillators = [];
+            musicPlaying = false;
+        }
+
+        function playRain() {
+            const bufferSize = 4096;
+            const whiteNoise = audioContext.createScriptProcessor(bufferSize, 1, 1);
+            whiteNoise.onaudioprocess = function(e) {
+                const output = e.outputBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = (Math.random() * 2 - 1) * 0.08;
+                }
+            };
+
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+
+            whiteNoise.connect(filter);
+            filter.connect(audioContext.destination);
+            rainNoise = whiteNoise;
+            rainPlaying = true;
+        }
+
+        function stopRain() {
+            if (rainNoise) rainNoise.disconnect();
+            rainPlaying = false;
+        }
+
+        function playBirds() {
+            function chirp() {
+                if (!birdsPlaying) return;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.frequency.value = 2000 + Math.random() * 1000;
+                osc.type = 'sine';
+                gain.gain.value = 0.04;
+                gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.2);
+                setTimeout(chirp, 1500 + Math.random() * 2500);
+            }
+            birdsPlaying = true;
+            chirp();
+        }
+
+        function playSuccess() {
+            if (!audioContext) initAudio();
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.frequency.setValueAtTime(523.25, audioContext.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.15);
+            osc.type = 'sine';
+            gain.gain.value = 0.3;
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.4);
+        }
+
+        // ===================
+        // GAME STATE
+        // ===================
+        const gameState = {
+            day: 1,
+            energy: 50,
+            purpose: 0,
+            care: 0,
+            social: 0,
+            wellness: 0,
+            productivity: 0,
+            currentRoom: 'living',
+            tasks: {},
+            playerX: 450,
+            playerY: 275,
+            playerSpeed: 4,
+            playerDirection: 'down',
+            playerAnimFrame: 0,
+            animCounter: 0,
+            celebrating: false,
+            roomsVisited: new Set(['living'])
+        };
+
+        // Tasks
+        const allTasks = {
+            breakfast: { room: 'kitchen', icon: '🍳', name: 'Desayunar' },
+            cook: { room: 'kitchen', icon: '🍲', name: 'Cocinar' },
+            water: { room: 'kitchen', icon: '💧', name: 'Beber agua' },
+            friend: { room: 'living', icon: '💬', name: 'Llamar amigo' },
+            hobby: { room: 'living', icon: '🎨', name: 'Practicar hobby' },
+            music: { room: 'living', icon: '🎵', name: 'Música' },
+            rest: { room: 'bedroom', icon: '😴', name: 'Descansar' },
+            gratitude: { room: 'bedroom', icon: '📝', name: 'Diario' },
+            read: { room: 'bedroom', icon: '📚', name: 'Leer' },
+            shower: { room: 'bathroom', icon: '🚿', name: 'Ducharse' },
+            plan_day: { room: 'office', icon: '📋', name: 'Planificar' },
+            work: { room: 'office', icon: '💼', name: 'Trabajar' },
+            exercise: { room: 'garden', icon: '🏃', name: 'Ejercicio' },
+            meditate: { room: 'garden', icon: '🧘', name: 'Meditar' }
+        };
+
+        Object.keys(allTasks).forEach(key => gameState.tasks[key] = false);
+
+        // Rooms
+        const rooms = {
+            living: {
+                name: '🛋️ Sala',
+                bg: '#FFF8DC',
+                objects: [
+                    { x: 120, y: 120, w: 60, h: 60, type: 'friend', color: '#FFB4E5' },
+                    { x: 720, y: 120, w: 60, h: 60, type: 'hobby', color: '#E5B4FF' },
+                    { x: 420, y: 420, w: 60, h: 60, type: 'music', color: '#FFD1B3' }
+                ]
+            },
+            kitchen: {
+                name: '🍽️ Cocina',
+                bg: '#FFFACD',
+                objects: [
+                    { x: 120, y: 120, w: 60, h: 60, type: 'breakfast', color: '#FFE5B4' },
+                    { x: 720, y: 120, w: 60, h: 60, type: 'cook', color: '#FFD4B4' },
+                    { x: 420, y: 420, w: 60, h: 60, type: 'water', color: '#CCEFFF' }
+                ]
+            },
+            bedroom: {
+                name: '🛏️ Dormitorio',
+                bg: '#E6E6FA',
+                objects: [
+                    { x: 150, y: 150, w: 60, h: 60, type: 'rest', color: '#B4FFE5' },
+                    { x: 690, y: 150, w: 60, h: 60, type: 'gratitude', color: '#FFE5E5' },
+                    { x: 420, y: 400, w: 60, h: 60, type: 'read', color: '#FFF4B4' }
+                ]
+            },
+            bathroom: {
+                name: '🚿 Baño',
+                bg: '#E0F7FA',
+                objects: [
+                    { x: 420, y: 275, w: 60, h: 60, type: 'shower', color: '#B4E5FF' }
+                ]
+            },
+            office: {
+                name: '💼 Oficina',
+                bg: '#F5F5DC',
+                objects: [
+                    { x: 200, y: 200, w: 60, h: 60, type: 'plan_day', color: '#FFE4B5' },
+                    { x: 640, y: 200, w: 60, h: 60, type: 'work', color: '#D4E5FF' }
+                ]
+            },
+            garden: {
+                name: '🌳 Jardín',
+                bg: '#E8F5E9',
+                objects: [
+                    { x: 200, y: 200, w: 60, h: 60, type: 'exercise', color: '#B4FFB4' },
+                    { x: 640, y: 200, w: 60, h: 60, type: 'meditate', color: '#D4FFE5' }
+                ]
+            }
+        };
+
+        // ===================
+        // CANVAS & INPUT
+        // ===================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === ' ') { e.preventDefault(); checkInteraction(); }
+            if (e.key >= '1' && e.key <= '6') {
+                const roomNames = ['living', 'kitchen', 'bedroom', 'bathroom', 'office', 'garden'];
+                changeRoom(roomNames[parseInt(e.key) - 1]);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+        // Room buttons
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', () => changeRoom(btn.dataset.room));
+        });
+
+        function changeRoom(roomName) {
+            if (!rooms[roomName]) return;
+            gameState.currentRoom = roomName;
+            gameState.playerX = 450;
+            gameState.playerY = 275;
+            gameState.roomsVisited.add(roomName);
+
+            document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-room="${roomName}"]`).classList.add('active');
+        }
+
+        // ===================
+        // PLAYER SYSTEM
+        // ===================
+        function updatePlayer() {
+            if (gameState.celebrating) return;
+
+            let moving = false, newX = gameState.playerX, newY = gameState.playerY;
+
+            if (keys['arrowup'] || keys['w']) {
+                newY -= gameState.playerSpeed;
+                gameState.playerDirection = 'up';
+                moving = true;
+            }
+            if (keys['arrowdown'] || keys['s']) {
+                newY += gameState.playerSpeed;
+                gameState.playerDirection = 'down';
+                moving = true;
+            }
+            if (keys['arrowleft'] || keys['a']) {
+                newX -= gameState.playerSpeed;
+                gameState.playerDirection = 'left';
+                moving = true;
+            }
+            if (keys['arrowright'] || keys['d']) {
+                newX += gameState.playerSpeed;
+                gameState.playerDirection = 'right';
+                moving = true;
+            }
+
+            const ps = 50;
+            if (newX >= ps && newX <= canvas.width - ps) gameState.playerX = newX;
+            if (newY >= ps && newY <= canvas.height - ps) gameState.playerY = newY;
+
+            if (moving) {
+                gameState.animCounter++;
+                if (gameState.animCounter % 6 === 0) {
+                    gameState.playerAnimFrame = (gameState.playerAnimFrame + 1) % 4;
+                }
+            } else {
+                gameState.playerAnimFrame = 0;
+            }
+        }
+
+        function drawPlayer() {
+            const x = gameState.playerX;
+            const y = gameState.playerY;
+            const frame = gameState.playerAnimFrame;
+            const celebrating = gameState.celebrating;
+
+            ctx.save();
+
+            // Celebration bounce
+            if (celebrating) {
+                const bounce = Math.sin(gameState.animCounter * 0.3) * 25;
+                ctx.translate(0, bounce);
+            }
+
+            // SHADOW
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 35, 20, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // BODY (torso)
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.ellipse(x, y, 25, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // NECK
+            ctx.fillStyle = '#FFD1B3';
+            ctx.fillRect(x - 8, y - 15, 16, 15);
+
+            // HEAD
+            ctx.fillStyle = '#FFD1B3';
+            ctx.beginPath();
+            ctx.arc(x, y - 25, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            // HAIR
+            ctx.fillStyle = '#4a3728';
+            ctx.beginPath();
+            ctx.arc(x, y - 30, 23, Math.PI, 0, false);
+            ctx.fill();
+
+            // EYES
+            const eyeY = y - 28;
+            ctx.fillStyle = '#FFFFFF';
+            // Left eye white
+            ctx.beginPath();
+            ctx.arc(x - 8, eyeY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            // Right eye white
+            ctx.beginPath();
+            ctx.arc(x + 8, eyeY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pupils (blink on frame 2)
+            if (frame !== 2) {
+                ctx.fillStyle = '#000';
+                // Left pupil
+                ctx.beginPath();
+                ctx.arc(x - 8, eyeY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                // Right pupil
+                ctx.beginPath();
+                ctx.arc(x + 8, eyeY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Blink - closed eyes
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 13, eyeY);
+                ctx.lineTo(x - 3, eyeY);
+                ctx.moveTo(x + 3, eyeY);
+                ctx.lineTo(x + 13, eyeY);
+                ctx.stroke();
+            }
+
+            // MOUTH (smile bigger when celebrating)
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const smileWidth = celebrating ? 14 : 10;
+            const smileHeight = celebrating ? 8 : 5;
+            ctx.arc(x, y - 15, smileWidth, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // ARMS
+            const armSwing = Math.sin(frame * Math.PI / 2) * 12;
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+
+            if (celebrating) {
+                // Arms up celebrating!
+                ctx.beginPath();
+                ctx.moveTo(x - 20, y - 5);
+                ctx.lineTo(x - 30, y - 30);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x + 20, y - 5);
+                ctx.lineTo(x + 30, y - 30);
+                ctx.stroke();
+            } else {
+                // Left arm
+                ctx.beginPath();
+                ctx.moveTo(x - 20, y - 5);
+                ctx.lineTo(x - 28, y + 10 + armSwing);
+                ctx.stroke();
+
+                // Right arm
+                ctx.beginPath();
+                ctx.moveTo(x + 20, y - 5);
+                ctx.lineTo(x + 28, y + 10 - armSwing);
+                ctx.stroke();
+            }
+
+            // LEGS
+            const legSwing = Math.sin(frame * Math.PI / 2) * 10;
+            ctx.strokeStyle = '#4a5568';
+            ctx.lineWidth = 10;
+
+            // Left leg
+            ctx.beginPath();
+            ctx.moveTo(x - 10, y + 25);
+            ctx.lineTo(x - 12, y + 45 + legSwing);
+            ctx.stroke();
+
+            // Right leg
+            ctx.beginPath();
+            ctx.moveTo(x + 10, y + 25);
+            ctx.lineTo(x + 12, y + 45 - legSwing);
+            ctx.stroke();
+
+            // FEET
+            ctx.fillStyle = '#2d3748';
+            ctx.beginPath();
+            ctx.ellipse(x - 12, y + 48 + legSwing, 8, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + 12, y + 48 - legSwing, 8, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // ===================
+        // DRAWING FUNCTIONS
+        // ===================
+        function drawBackground() {
+            const room = rooms[gameState.currentRoom];
+            if (!room) return;
+
+            ctx.fillStyle = room.bg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid pattern
+            ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Room name
+            ctx.font = 'bold 22px Arial';
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.textAlign = 'center';
+            ctx.fillText(room.name, canvas.width/2, 35);
+        }
+
+        function drawObjects() {
+            const room = rooms[gameState.currentRoom];
+            if (!room) return;
+
+            room.objects.forEach(obj => {
+                const task = allTasks[obj.type];
+                if (!task) return;
+
+                // Object box
+                ctx.fillStyle = obj.color;
+                ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                ctx.strokeStyle = '#495057';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(obj.x, obj.y, obj.w, obj.h);
+
+                // Icon
+                ctx.font = '36px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(task.icon, obj.x + obj.w/2, obj.y + obj.h/2);
+
+                // Name
+                ctx.font = 'bold 11px Arial';
+                ctx.fillStyle = '#000';
+                ctx.fillText(task.name, obj.x + obj.w/2, obj.y + obj.h + 14);
+
+                // Proximity highlight
+                const dist = Math.hypot(
+                    gameState.playerX - (obj.x + obj.w/2),
+                    gameState.playerY - (obj.y + obj.h/2)
+                );
+
+                if (dist < 120) {
+                    ctx.strokeStyle = '#ffc107';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(obj.x - 3, obj.y - 3, obj.w + 6, obj.h + 6);
+
+                    if (!gameState.tasks[obj.type]) {
+                        ctx.font = 'bold 13px Arial';
+                        ctx.fillStyle = '#ffc107';
+                        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                        ctx.shadowBlur = 3;
+                        ctx.fillText('ESPACIO', obj.x + obj.w/2, obj.y - 18);
+                        ctx.shadowBlur = 0;
+                    }
+                }
+
+                // Completed checkmark
+                if (gameState.tasks[obj.type]) {
+                    ctx.font = '30px Arial';
+                    ctx.fillStyle = '#28a745';
+                    ctx.fillText('✓', obj.x + obj.w - 12, obj.y + 15);
+                }
+            });
+        }
+
+        // ===================
+        // GAME LOGIC
+        // ===================
+        function checkInteraction() {
+            const room = rooms[gameState.currentRoom];
+            if (!room) return;
+
+            room.objects.forEach(obj => {
+                const dist = Math.hypot(
+                    gameState.playerX - (obj.x + obj.w/2),
+                    gameState.playerY - (obj.y + obj.h/2)
+                );
+
+                if (dist < 120 && !gameState.tasks[obj.type]) {
+                    completeTask(obj.type);
+                }
+            });
+        }
+
+        const taskEffects = {
+            breakfast: { energy: 15, care: 10, msg: '¡Desayunaste! Nutriste tu cuerpo.' },
+            cook: { energy: -5, care: 15, productivity: 10, msg: '¡Cocinaste! Crear comida es autocuidado.' },
+            water: { energy: 8, wellness: 10, msg: '¡Te hidrataste! El agua es vida.' },
+            friend: { social: 20, purpose: 10, msg: '¡Conectaste! Las relaciones nutren.' },
+            hobby: { purpose: 15, wellness: 15, msg: '¡Creatividad! Tus pasiones importan.' },
+            music: { wellness: 15, msg: '¡Música! Sana el alma.' },
+            rest: { energy: 25, wellness: 15, msg: '¡Descansaste! Recuperaste energía.' },
+            gratitude: { purpose: 20, wellness: 15, msg: '¡Gratitud! Cambia perspectivas.' },
+            read: { purpose: 15, productivity: 8, msg: '¡Leíste! Expandiste tu mente.' },
+            shower: { energy: 10, care: 20, msg: '¡Ducha! Limpieza es autocuidado.' },
+            plan_day: { productivity: 20, purpose: 15, msg: '¡Planificaste! La estructura ayuda.' },
+            work: { productivity: 25, purpose: 15, energy: -10, msg: '¡Trabajaste! Eres productivo.' },
+            exercise: { energy: -5, care: 20, wellness: 20, msg: '¡Ejercicio! Endorfinas liberadas.' },
+            meditate: { wellness: 25, purpose: 15, msg: '¡Meditaste! Paz interior.' }
+        };
+
+        function completeTask(taskType) {
+            if (gameState.tasks[taskType]) return;
+            gameState.tasks[taskType] = true;
+
+            playSuccess();
+
+            gameState.celebrating = true;
+            setTimeout(() => gameState.celebrating = false, 1500);
+
+            const effect = taskEffects[taskType] || {};
+            gameState.energy = Math.max(0, Math.min(100, gameState.energy + (effect.energy || 0)));
+            gameState.purpose = Math.min(100, gameState.purpose + (effect.purpose || 0));
+            gameState.care = Math.min(100, gameState.care + (effect.care || 0));
+            gameState.social = Math.min(100, gameState.social + (effect.social || 0));
+            gameState.wellness = Math.min(100, gameState.wellness + (effect.wellness || 0));
+            gameState.productivity = Math.min(100, gameState.productivity + (effect.productivity || 0));
+
+            updateStats();
+            showMessage(effect.msg || '¡Bien hecho!');
+
+            if (Object.values(gameState.tasks).every(t => t)) {
+                setTimeout(() => completeDay(), 2500);
+            }
+        }
+
+        function updateStats() {
+            updateStatBar('energy-bar', gameState.energy);
+            updateStatBar('purpose-bar', gameState.purpose);
+            updateStatBar('care-bar', gameState.care);
+            updateStatBar('social-bar', gameState.social);
+            updateStatBar('wellness-bar', gameState.wellness);
+            updateStatBar('productivity-bar', gameState.productivity);
+        }
+
+        function updateStatBar(id, val) {
+            const bar = document.getElementById(id);
+            bar.style.width = val + '%';
+            bar.textContent = Math.round(val) + '%';
+        }
+
+        function showMessage(text) {
+            const box = document.getElementById('message-box');
+            document.getElementById('message-text').textContent = text;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 3500);
+        }
+
+        function completeDay() {
+            const avg = (gameState.purpose + gameState.care + gameState.social + gameState.wellness) / 4;
+            let msg = avg >= 70 ?
+                '🌟 ¡DÍA INCREÍBLE! Completaste todo. Cada paso importa.' :
+                '💫 ¡BUEN TRABAJO! Progresaste. Eso es lo que cuenta.';
+
+            showMessage(msg);
+            setTimeout(() => {
+                if (confirm(msg + '\n\n¿Comenzar un nuevo día?')) {
+                    gameState.day++;
+                    gameState.energy = 50;
+                    gameState.purpose = gameState.care = gameState.social = 0;
+                    gameState.wellness = gameState.productivity = 0;
+                    Object.keys(gameState.tasks).forEach(t => gameState.tasks[t] = false);
+                    updateStats();
+                    document.getElementById('day-counter').textContent = `📅 Día ${gameState.day} - Sigue adelante`;
+                    showMessage(`🌅 Día ${gameState.day}: Nueva oportunidad para cuidarte!`);
+                }
+            }, 2000);
+        }
+
+        // ===================
+        // GAME LOOP
+        // ===================
+        function gameLoop() {
+            updatePlayer();
+            drawBackground();
+            drawObjects();
+            drawPlayer();  // ¡EL MUÑEQUITO SE DIBUJA AQUÍ!
+            gameState.animCounter++;
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ===================
+        // INITIALIZE
+        // ===================
+        function init() {
+            updateStats();
+            showMessage('¡Bienvenido! 🎮 Muévete con FLECHAS/WASD. Presiona ESPACIO cerca de objetos. Activa sonidos arriba. ¡Tú importas! 💙');
+            gameLoop();
+
+            // Auto-start music
+            setTimeout(() => {
+                if (!musicPlaying) {
+                    playMusic();
+                    document.getElementById('music-toggle').classList.add('active');
+                }
+            }, 2000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
