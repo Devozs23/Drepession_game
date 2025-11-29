@@ -600,6 +600,71 @@
                 discovered: []
             },
 
+            // PARTE 11: Frases Motivacionales (para cuando derrotas bosses) 💙
+            motivationalQuotes: [
+                // Personas que han superado la depresión
+                {
+                    quote: "La depresión no define quién eres. Es algo que experimentas. Tú caminas bajo la lluvia, pero eso no te convierte en la lluvia.",
+                    author: "Matt Haig, autor de 'Razones para seguir viviendo'"
+                },
+                {
+                    quote: "El primer paso hacia mejorar es admitir que necesitas ayuda. Eso no te hace débil, te hace valiente.",
+                    author: "Demi Lovato, defensora de la salud mental"
+                },
+                {
+                    quote: "Está bien no estar bien. Lo importante es no quedarse solo en ese lugar oscuro.",
+                    author: "Kevin Love, atleta y activista"
+                },
+                {
+                    quote: "La recuperación es un proceso, no un evento. Sé paciente contigo mismo.",
+                    author: "Dr. Dan Siegel, neuropsiquiatra"
+                },
+                {
+                    quote: "Tus pensamientos no son hechos. La depresión miente. Tú vales más de lo que ella dice.",
+                    author: "Dra. Kristin Neff, experta en autocompasión"
+                },
+                {
+                    quote: "Cada día que eliges seguir adelante es una victoria, sin importar cuán pequeña parezca.",
+                    author: "JK Rowling, quien superó depresión severa"
+                },
+                {
+                    quote: "No tienes que ser positivo todo el tiempo. Está bien sentir todas tus emociones.",
+                    author: "Lady Gaga, activista de salud mental"
+                },
+                {
+                    quote: "La esperanza es la única cosa más fuerte que el miedo.",
+                    author: "Mensaje de sobrevivientes"
+                },
+                {
+                    quote: "Tu historia no termina aquí. El punto y coma representa una pausa, no un final.",
+                    author: "Proyecto Semicolon"
+                },
+                {
+                    quote: "Pedir ayuda no es rendirse, es negarse a rendirse.",
+                    author: "Charlie Mackesy, autor de 'El niño, el topo, el zorro y el caballo'"
+                },
+                {
+                    quote: "A veces el acto más valiente es simplemente levantarse de la cama. Y eso está bien.",
+                    author: "Comunidad de apoyo de salud mental"
+                },
+                {
+                    quote: "La curación no es lineal. Habrá días buenos y días malos, y ambos son parte del proceso.",
+                    author: "Dra. Brené Brown, investigadora"
+                },
+                {
+                    quote: "No estás roto. Estás sanando. Y eso requiere tiempo.",
+                    author: "Glennon Doyle, autora"
+                },
+                {
+                    quote: "Tu valor no disminuye por la incapacidad de alguien para ver tu valía.",
+                    author: "Mensaje de autoaceptación"
+                },
+                {
+                    quote: "Las tormentas no duran para siempre. Este es solo un capítulo, no toda tu historia.",
+                    author: "Terri Guillemets"
+                }
+            ],
+
             // Performance
             fps: 60,
             frameCount: 0
@@ -2782,8 +2847,13 @@
                     weather.intensity = Math.max(weather.intensity - dt * 0.2, 0);
                 }
 
-                // Generate weather particles
-                if (weather.current === 'rain' && Math.random() < weather.intensity) {
+                // BUGFIX: Limitar cantidad de partículas antes de generar
+                if (weather.particles.length > 150) {
+                    weather.particles.splice(0, 50); // Remove oldest 50
+                }
+
+                // Generate weather particles (OPTIMIZADO: menos frecuencia)
+                if (weather.current === 'rain' && Math.random() < weather.intensity * 0.3 && weather.particles.length < 100) {
                     weather.particles.push({
                         x: Math.random() * canvas.width + Game.camera.x,
                         y: Game.camera.y - 10,
@@ -2793,7 +2863,7 @@
                         color: '#60a5fa',
                         type: 'rain'
                     });
-                } else if (weather.current === 'snow' && Math.random() < weather.intensity * 0.5) {
+                } else if (weather.current === 'snow' && Math.random() < weather.intensity * 0.2 && weather.particles.length < 80) {
                     weather.particles.push({
                         x: Math.random() * canvas.width + Game.camera.x,
                         y: Game.camera.y - 10,
@@ -2856,10 +2926,7 @@
                     // Fog is just visual, no effect on player
                 }
 
-                // Limit particles
-                if (weather.particles.length > 200) {
-                    weather.particles.splice(0, 50);
-                }
+                // BUGFIX: Ya se limitan arriba, este era redundante
             },
 
             // PARTE 11: Transform player 🔮
@@ -2966,6 +3033,33 @@
                     // Normal form
                     if (trans.current === 'normal') {
                         p.isInvulnerable = false;
+                    }
+                }
+            },
+
+            // BUGFIX PARTE 11: Update particle system (fix frame-rate dependent bug) 💫
+            updateParticles(dt) {
+                if (!dt || dt > 1) return; // Guard against invalid dt
+
+                // BUGFIX: Limit total particles to prevent memory overflow
+                if (Game.particles.length > 500) {
+                    Game.particles.splice(0, 200); // Remove oldest 200 particles
+                }
+
+                // Update particle positions and life
+                for (let i = Game.particles.length - 1; i >= 0; i--) {
+                    const p = Game.particles[i];
+
+                    // Update position
+                    p.x += p.vx * dt * 60; // Normalize for 60 FPS baseline
+                    p.y += p.vy * dt * 60;
+
+                    // BUGFIX: Decrease life by dt instead of fixed 0.02
+                    p.life -= dt;
+
+                    // Remove dead particles
+                    if (p.life <= 0) {
+                        Game.particles.splice(i, 1);
                     }
                 }
             },
@@ -3347,6 +3441,9 @@
 
                 // PARTE 11: Update transformations
                 this.updateTransformations(dt);
+
+                // BUGFIX PARTE 11: Update main particle system 💫
+                this.updateParticles(dt);
 
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
@@ -4081,10 +4178,12 @@
                                             if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                         }
 
+                                        // PARTE 11: Show motivational quote on boss defeat 💙
+                                        const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                         showNotification(
-                                            `🏆 ¡${boss.type.name} Derrotado!`,
-                                            `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
-                                            5000
+                                            `💙 ¡${boss.type.name} Derrotado!`,
+                                            `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                            8000
                                         );
                                     }
 
@@ -4181,10 +4280,12 @@
                                         if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                     }
 
+                                    // PARTE 11: Show motivational quote on boss defeat 💙
+                                    const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                     showNotification(
-                                        `🏆 ¡${boss.type.name} Derrotado!`,
-                                        `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
-                                        5000
+                                        `💙 ¡${boss.type.name} Derrotado!`,
+                                        `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                        8000
                                     );
                                 }
                             }
@@ -4848,10 +4949,12 @@
                                 if (mission.reward.xp) this.gainXP(mission.reward.xp);
                             }
 
+                            // PARTE 11: Show motivational quote on boss defeat 💙
+                            const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                             showNotification(
-                                `🏆 ¡${boss.type.name} Derrotado!`,
-                                `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
-                                5000
+                                `💙 ¡${boss.type.name} Derrotado!`,
+                                `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                8000
                             );
                             playSound('levelup');
 
@@ -6437,26 +6540,19 @@
                 ctx.restore();
             },
 
+            // BUGFIX PARTE 11: Only draw particles (update moved to updateParticles)
             drawParticles() {
-                Game.particles = Game.particles.filter(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= 0.02;
-
-                    if (p.life <= 0) return false;
-
+                Game.particles.forEach(p => {
                     const screenX = p.x - Game.camera.x;
                     const screenY = p.y - Game.camera.y;
 
                     ctx.save();
-                    ctx.globalAlpha = p.life;
+                    ctx.globalAlpha = Math.max(0, Math.min(1, p.life)); // Clamp to 0-1
                     ctx.fillStyle = p.color;
                     ctx.beginPath();
-                    ctx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
+                    ctx.arc(screenX, screenY, p.size || 3, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
-
-                    return true;
                 });
             },
 
