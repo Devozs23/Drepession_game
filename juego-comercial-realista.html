@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camino de Esperanza - Juego Terapéutico Profesional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        #loadingScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loading-subtitle {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .loading-bar-container {
+            width: 400px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fff, #fbbf24);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Particle Background */
+        .bg-particle {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* UI Overlay */
+        #ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
+
+        .hud-stat {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-bar {
+            width: 150px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .health-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .energy-fill { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .xp-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            animation: slideInRight 0.5s ease, slideOutRight 0.5s ease 3.5s;
+            z-index: 200;
+            pointer-events: auto;
+            max-width: 400px;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+        }
+
+        /* Button Styles */
+        .game-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            pointer-events: auto;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+        }
+
+        /* Modal/Dialog */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            z-index: 300;
+            min-width: 400px;
+            color: white;
+            pointer-events: auto;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 250;
+            pointer-events: auto;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-title">🌟 Camino de Esperanza 🌟</div>
+            <div class="loading-subtitle">Un viaje de sanación y descubrimiento</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay"></div>
+
+    <script>
+        // ============================================
+        // GAME ENGINE - PARTE 1: Estructura Base
+        // ============================================
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State Management
+        const GameStates = {
+            LOADING: 'loading',
+            MAIN_MENU: 'main_menu',
+            CHARACTER_SELECT: 'character_select',
+            PLAYING: 'playing',
+            PAUSED: 'paused',
+            SHOP: 'shop',
+            CUTSCENE: 'cutscene',
+            GAME_OVER: 'game_over',
+            VICTORY: 'victory'
+        };
+
+        // Main Game Object
+        const Game = {
+            state: GameStates.LOADING,
+            currentScene: null,
+            deltaTime: 0,
+            lastFrameTime: 0,
+            paused: false,
+
+            // Save System
+            saveData: {
+                playerName: '',
+                character: 'luna', // luna or sol
+                level: 1,
+                xp: 0,
+                coins: 0,
+                currentWorld: 1,
+                currentLevel: 1,
+                unlockedWorlds: [1],
+                unlockedAbilities: [],
+                stats: {
+                    maxHealth: 100,
+                    maxEnergy: 100,
+                    strength: 10,
+                    defense: 5,
+                    speed: 5
+                },
+                achievements: [],
+                playtime: 0,
+                completedLevels: []
+            },
+
+            // Player State
+            player: {
+                x: 100,
+                y: 500,
+                width: 32,
+                height: 48,
+                velocityX: 0,
+                velocityY: 0,
+                health: 100,
+                energy: 100,
+                xp: 0,
+                level: 1,
+                coins: 0,
+                isGrounded: false,
+                isFacingRight: true,
+                isAttacking: false,
+                isDashing: false,
+                isInvulnerable: false,
+                canDoubleJump: false,
+                hasDoubleJumped: false,
+                attackCooldown: 0,
+                dashCooldown: 0,
+                invulnerabilityTime: 0,
+                combo: 0,
+                comboTimer: 0
+            },
+
+            // Input System
+            keys: {},
+            mouseX: 0,
+            mouseY: 0,
+            mouseDown: false,
+
+            // Cameras and Effects
+            camera: {
+                x: 0,
+                y: 0,
+                targetX: 0,
+                targetY: 0,
+                shake: 0,
+                shakeIntensity: 0
+            },
+
+            // Particle System
+            particles: [],
+
+            // Enemies
+            enemies: [],
+
+            // Collectibles
+            collectibles: [],
+
+            // NPCs
+            npcs: [],
+
+            // Current Level Data
+            currentLevelData: null,
+
+            // Audio Context
+            audioContext: null,
+            sounds: {},
+
+            // Performance
+            fps: 60,
+            frameCount: 0
+        };
+
+        // ============================================
+        // SAVE SYSTEM
+        // ============================================
+
+        function saveGame() {
+            const saveData = {
+                ...Game.saveData,
+                savedAt: Date.now(),
+                playtime: Game.saveData.playtime
+            };
+            localStorage.setItem('caminoDeEsperanza_save', JSON.stringify(saveData));
+            showNotification('💾 Progreso Guardado', 'Tu aventura ha sido guardada exitosamente');
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('caminoDeEsperanza_save');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    Game.saveData = { ...Game.saveData, ...data };
+                    return true;
+                } catch (e) {
+                    console.error('Error loading save:', e);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        function deleteSave() {
+            localStorage.removeItem('caminoDeEsperanza_save');
+        }
+
+        // ============================================
+        // NOTIFICATION SYSTEM
+        // ============================================
+
+        function showNotification(title, text, duration = 4000) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <div class="notification-text">${text}</div>
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), duration);
+        }
+
+        // ============================================
+        // MODAL SYSTEM
+        // ============================================
+
+        function showModal(title, content, buttons = []) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-title">${title}</div>
+                <div class="modal-content">${content}</div>
+                <div class="modal-buttons"></div>
+            `;
+
+            const buttonContainer = modal.querySelector('.modal-buttons');
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = 'game-button';
+                button.textContent = btn.text;
+                button.onclick = () => {
+                    btn.onClick();
+                    overlay.remove();
+                    modal.remove();
+                };
+                buttonContainer.appendChild(button);
+            });
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+        }
+
+        // ============================================
+        // MAIN MENU SCENE
+        // ============================================
+
+        const MainMenuScene = {
+            particles: [],
+            stars: [],
+            title: 'Camino de Esperanza',
+            subtitle: 'Un Viaje de Sanación Interior',
+            menuItems: [
+                { text: '🎮 Nueva Aventura', action: 'newGame' },
+                { text: '📂 Continuar', action: 'continue' },
+                { text: '⚙️ Opciones', action: 'options' },
+                { text: '🏆 Logros', action: 'achievements' },
+                { text: 'ℹ️ Créditos', action: 'credits' }
+            ],
+            selectedIndex: 0,
+            time: 0,
+
+            init() {
+                // Create background stars
+                for (let i = 0; i < 100; i++) {
+                    this.stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 2,
+                        speed: Math.random() * 0.5 + 0.1,
+                        opacity: Math.random()
+                    });
+                }
+
+                // Create floating particles
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 4 + 2,
+                        speedX: (Math.random() - 0.5) * 2,
+                        speedY: Math.random() * -1 - 0.5,
+                        hue: Math.random() * 60 + 200, // Purple/blue hues
+                        opacity: Math.random() * 0.5 + 0.3
+                    });
+                }
+
+                // Check if save exists
+                if (loadGame()) {
+                    this.menuItems[1].text = '📂 Continuar (Nivel ' + Game.saveData.level + ')';
+                } else {
+                    this.menuItems[1].disabled = true;
+                }
+            },
+
+            update(dt) {
+                this.time += dt;
+
+                // Update stars
+                this.stars.forEach(star => {
+                    star.y += star.speed;
+                    if (star.y > canvas.height) {
+                        star.y = 0;
+                        star.x = Math.random() * canvas.width;
+                    }
+                    star.opacity = 0.3 + Math.sin(this.time * 2 + star.x) * 0.3;
+                });
+
+                // Update particles
+                this.particles.forEach(particle => {
+                    particle.x += particle.speedX;
+                    particle.y += particle.speedY;
+
+                    if (particle.y < -10) {
+                        particle.y = canvas.height + 10;
+                        particle.x = Math.random() * canvas.width;
+                    }
+                    if (particle.x < -10) particle.x = canvas.width + 10;
+                    if (particle.x > canvas.width + 10) particle.x = -10;
+
+                    particle.opacity = 0.3 + Math.sin(this.time * 3 + particle.x * 0.01) * 0.2;
+                });
+            },
+
+            draw() {
+                // Background gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#0f0c29');
+                gradient.addColorStop(0.5, '#302b63');
+                gradient.addColorStop(1, '#24243e');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw stars
+                this.stars.forEach(star => {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.fillRect(star.x, star.y, star.size, star.size);
+                });
+
+                // Draw particles
+                this.particles.forEach(particle => {
+                    ctx.save();
+                    ctx.globalAlpha = particle.opacity;
+                    ctx.fillStyle = `hsl(${particle.hue}, 70%, 60%)`;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // Draw title with glow effect
+                ctx.save();
+                ctx.shadowColor = '#667eea';
+                ctx.shadowBlur = 30;
+                ctx.font = 'bold 72px Arial';
+                ctx.textAlign = 'center';
+                const titleGradient = ctx.createLinearGradient(0, 100, 0, 180);
+                titleGradient.addColorStop(0, '#fff');
+                titleGradient.addColorStop(1, '#667eea');
+                ctx.fillStyle = titleGradient;
+                ctx.fillText(this.title, canvas.width / 2, 150);
+                ctx.restore();
+
+                // Draw subtitle
+                ctx.font = '24px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.subtitle, canvas.width / 2, 200);
+
+                // Draw menu items
+                const startY = 300;
+                const spacing = 70;
+
+                this.menuItems.forEach((item, index) => {
+                    const y = startY + index * spacing;
+                    const isSelected = index === this.selectedIndex;
+                    const isDisabled = item.disabled;
+
+                    // Menu item background
+                    if (isSelected) {
+                        ctx.save();
+                        ctx.shadowColor = '#667eea';
+                        ctx.shadowBlur = 20;
+                        const itemGradient = ctx.createLinearGradient(
+                            canvas.width / 2 - 250, y - 25,
+                            canvas.width / 2 + 250, y + 25
+                        );
+                        itemGradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+                        itemGradient.addColorStop(0.5, 'rgba(118, 75, 162, 0.5)');
+                        itemGradient.addColorStop(1, 'rgba(102, 126, 234, 0.3)');
+                        ctx.fillStyle = itemGradient;
+                        ctx.fillRect(canvas.width / 2 - 250, y - 25, 500, 50);
+                        ctx.restore();
+                    }
+
+                    // Menu item text
+                    ctx.font = isSelected ? 'bold 32px Arial' : '28px Arial';
+                    ctx.fillStyle = isDisabled ? 'rgba(255, 255, 255, 0.3)' :
+                                   isSelected ? '#fff' : 'rgba(255, 255, 255, 0.7)';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(item.text, canvas.width / 2, y + 10);
+
+                    // Selection indicator
+                    if (isSelected && !isDisabled) {
+                        const pulseSize = 5 + Math.sin(this.time * 5) * 2;
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.beginPath();
+                        ctx.arc(canvas.width / 2 - 270, y, pulseSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(canvas.width / 2 + 270, y, pulseSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Draw controls hint
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.textAlign = 'center';
+                ctx.fillText('↑↓ Navegar  |  ENTER Seleccionar  |  ESC Salir', canvas.width / 2, canvas.height - 30);
+            },
+
+            handleInput(key) {
+                if (key === 'ArrowUp') {
+                    do {
+                        this.selectedIndex = (this.selectedIndex - 1 + this.menuItems.length) % this.menuItems.length;
+                    } while (this.menuItems[this.selectedIndex].disabled);
+                    playSound('menu_move');
+                }
+
+                if (key === 'ArrowDown') {
+                    do {
+                        this.selectedIndex = (this.selectedIndex + 1) % this.menuItems.length;
+                    } while (this.menuItems[this.selectedIndex].disabled);
+                    playSound('menu_move');
+                }
+
+                if (key === 'Enter') {
+                    const selected = this.menuItems[this.selectedIndex];
+                    if (!selected.disabled) {
+                        playSound('menu_select');
+                        this.executeAction(selected.action);
+                    }
+                }
+            },
+
+            executeAction(action) {
+                switch (action) {
+                    case 'newGame':
+                        showModal(
+                            '🎮 Nueva Aventura',
+                            '<p style="text-align: center; font-size: 18px;">¿Estás seguro? Esto borrará tu progreso actual.</p>',
+                            [
+                                {
+                                    text: 'Sí, comenzar',
+                                    onClick: () => {
+                                        deleteSave();
+                                        startCharacterSelect();
+                                    }
+                                },
+                                {
+                                    text: 'Cancelar',
+                                    onClick: () => {}
+                                }
+                            ]
+                        );
+                        break;
+
+                    case 'continue':
+                        if (loadGame()) {
+                            startGame();
+                        }
+                        break;
+
+                    case 'options':
+                        showModal(
+                            '⚙️ Opciones',
+                            `
+                            <div style="text-align: left; padding: 20px;">
+                                <p><strong>Controles:</strong></p>
+                                <p>← → : Movimiento</p>
+                                <p>ESPACIO: Saltar</p>
+                                <p>Z: Atacar</p>
+                                <p>X: Habilidad especial</p>
+                                <p>C: Dash</p>
+                                <p>ESC: Pausar</p>
+                            </div>
+                            `,
+                            [{ text: 'Cerrar', onClick: () => {} }]
+                        );
+                        break;
+
+                    case 'achievements':
+                        const achievementsList = Game.saveData.achievements.length > 0 ?
+                            Game.saveData.achievements.map(a => `<p>🏆 ${a}</p>`).join('') :
+                            '<p style="text-align: center; opacity: 0.7;">Aún no has desbloqueado logros</p>';
+
+                        showModal(
+                            '🏆 Logros',
+                            `<div style="max-height: 400px; overflow-y: auto;">${achievementsList}</div>`,
+                            [{ text: 'Cerrar', onClick: () => {} }]
+                        );
+                        break;
+
+                    case 'credits':
+                        showModal(
+                            'ℹ️ Créditos',
+                            `
+                            <div style="text-align: center; line-height: 2;">
+                                <p><strong>Camino de Esperanza</strong></p>
+                                <p>Un juego terapéutico para la sanación emocional</p>
+                                <br>
+                                <p>Desarrollado con ❤️</p>
+                                <p>2024</p>
+                            </div>
+                            `,
+                            [{ text: 'Cerrar', onClick: () => {} }]
+                        );
+                        break;
+                }
+            }
+        };
+
+        // ============================================
+        // AUDIO SYSTEM
+        // ============================================
+
+        function initAudio() {
+            Game.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            if (!Game.audioContext) initAudio();
+
+            const now = Game.audioContext.currentTime;
+            const osc = Game.audioContext.createOscillator();
+            const gain = Game.audioContext.createGain();
+
+            osc.connect(gain);
+            gain.connect(Game.audioContext.destination);
+
+            switch (type) {
+                case 'menu_move':
+                    osc.frequency.value = 400;
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+
+                case 'menu_select':
+                    osc.frequency.value = 600;
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                    break;
+            }
+        }
+
+        // ============================================
+        // CHARACTER SELECT (Placeholder for Part 2)
+        // ============================================
+
+        function startCharacterSelect() {
+            showNotification('🎨 Selección de Personaje', 'Esta función se implementará en la Parte 2');
+            // Will be implemented in Part 2
+        }
+
+        function startGame() {
+            showNotification('🎮 Iniciando Juego', 'El modo de juego se implementará en la Parte 3');
+            // Will be implemented in Part 3
+        }
+
+        // ============================================
+        // INPUT HANDLING
+        // ============================================
+
+        document.addEventListener('keydown', (e) => {
+            Game.keys[e.key] = true;
+
+            if (Game.state === GameStates.MAIN_MENU) {
+                MainMenuScene.handleInput(e.key);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            Game.keys[e.key] = false;
+        });
+
+        // ============================================
+        // GAME LOOP
+        // ============================================
+
+        function gameLoop(timestamp) {
+            // Calculate delta time
+            if (!Game.lastFrameTime) Game.lastFrameTime = timestamp;
+            Game.deltaTime = (timestamp - Game.lastFrameTime) / 1000;
+            Game.lastFrameTime = timestamp;
+
+            // Update
+            if (Game.state === GameStates.MAIN_MENU) {
+                MainMenuScene.update(Game.deltaTime);
+            }
+
+            // Draw
+            if (Game.state === GameStates.MAIN_MENU) {
+                MainMenuScene.draw();
+            }
+
+            // Continue loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        function init() {
+            // Simulate loading
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+
+                    // Hide loading screen
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').classList.add('hidden');
+
+                        // Initialize main menu
+                        Game.state = GameStates.MAIN_MENU;
+                        MainMenuScene.init();
+
+                        // Start game loop
+                        requestAnimationFrame(gameLoop);
+
+                        showNotification(
+                            '🌟 Bienvenido',
+                            'Tu viaje de esperanza está a punto de comenzar'
+                        );
+                    }, 500);
+                }
+                document.getElementById('loadingBar').style.width = progress + '%';
+            }, 100);
+        }
+
+        // Start when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
