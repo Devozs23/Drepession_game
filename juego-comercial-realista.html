@@ -1469,6 +1469,173 @@
                 { id: 'master', name: 'Maestro', description: 'Usa habilidad especial 20 veces', icon: '✨', unlocked: false, requirement: 20 }
             ],
 
+            // PARTE 6: Boss Fights definitions
+            bossTypes: [
+                {
+                    id: 'desesperanza',
+                    name: 'Desesperanza',
+                    title: 'La Sombra del Pasado',
+                    position: 2000,
+                    health: 200,
+                    damage: 15,
+                    xp: 150,
+                    coins: 100,
+                    color: '#1e1b4b',
+                    size: 80,
+                    speed: 0.5,
+                    phases: [
+                        {
+                            healthThreshold: 100,
+                            message: '"No puedes escapar de tus errores..."',
+                            color: '#312e81',
+                            speed: 1.0,
+                            spawnMinions: true
+                        },
+                        {
+                            healthThreshold: 50,
+                            message: '"¡La oscuridad es eterna!"',
+                            color: '#1e1b4b',
+                            speed: 1.5,
+                            attackMultiplier: 1.5
+                        }
+                    ],
+                    attacks: [
+                        { type: 'charge', cooldown: 120, damage: 20 },
+                        { type: 'shockwave', cooldown: 180, damage: 15, range: 200 }
+                    ],
+                    dialogue: {
+                        intro: '"Soy el peso de todo lo que dejaste atrás..."',
+                        halfHealth: '"¿Crees que puedes vencerme? Soy eterno..."',
+                        defeat: '"La luz... es más fuerte... de lo que pensaba..."'
+                    }
+                },
+                {
+                    id: 'duda_suprema',
+                    name: 'Duda Suprema',
+                    title: 'El Eco de la Incertidumbre',
+                    position: 3500,
+                    health: 250,
+                    damage: 18,
+                    xp: 200,
+                    coins: 150,
+                    color: '#7c3aed',
+                    size: 70,
+                    speed: 1.2,
+                    phases: [
+                        {
+                            healthThreshold: 150,
+                            message: '"¿Realmente crees en ti mismo?"',
+                            duplicates: 2,
+                            color: '#8b5cf6'
+                        },
+                        {
+                            healthThreshold: 75,
+                            message: '"¡Multiplícate, confusión!"',
+                            duplicates: 4,
+                            color: '#7c3aed',
+                            speed: 1.5
+                        }
+                    ],
+                    attacks: [
+                        { type: 'duplicate', cooldown: 150 },
+                        { type: 'confusion_blast', cooldown: 200, damage: 20 }
+                    ],
+                    dialogue: {
+                        intro: '"¿Seguro que este es el camino correcto?"',
+                        halfHealth: '"Cada decisión que tomas... está equivocada..."',
+                        defeat: '"Quizás... quizás sí sabías lo que hacías..."'
+                    }
+                },
+                {
+                    id: 'oscuridad_total',
+                    name: 'Oscuridad Total',
+                    title: 'El Abismo Final',
+                    position: 4800,
+                    health: 350,
+                    damage: 25,
+                    xp: 300,
+                    coins: 250,
+                    color: '#000000',
+                    size: 100,
+                    speed: 0.8,
+                    phases: [
+                        {
+                            healthThreshold: 250,
+                            message: '"La oscuridad lo consume todo..."',
+                            color: '#1a1a1a',
+                            screenDarkness: 0.3
+                        },
+                        {
+                            healthThreshold: 150,
+                            message: '"¡NO HAY ESPERANZA!"',
+                            color: '#0a0a0a',
+                            screenDarkness: 0.5,
+                            speed: 1.2
+                        },
+                        {
+                            healthThreshold: 50,
+                            message: '"¡FORMA FINAL: DESESPERACIÓN ABSOLUTA!"',
+                            color: '#000000',
+                            screenDarkness: 0.7,
+                            speed: 1.5,
+                            attackMultiplier: 2.0,
+                            invulnerablePeriods: true
+                        }
+                    ],
+                    attacks: [
+                        { type: 'darkness_wave', cooldown: 150, damage: 30 },
+                        { type: 'void_pull', cooldown: 200, pull: true },
+                        { type: 'despair_rain', cooldown: 250, damage: 20, aoe: true }
+                    ],
+                    dialogue: {
+                        intro: '"Yo soy el fin de toda esperanza. Ríndete ahora."',
+                        phase2: '"¡LA OSCURIDAD ES INFINITA!"',
+                        phase3: '"¡ESTE ES MI PODER VERDADERO!"',
+                        defeat: '"No... la luz... siempre prevalece... Recuérdalo..."'
+                    }
+                }
+            ],
+
+            // Active bosses in world
+            bosses: [],
+
+            // PARTE 6: Shop system
+            shopItems: [
+                // Permanent upgrades
+                { id: 'health_up_1', name: '+20 Vida Máxima', type: 'upgrade', stat: 'maxHealth', value: 20, cost: 50, icon: '❤️', purchased: false },
+                { id: 'health_up_2', name: '+50 Vida Máxima', type: 'upgrade', stat: 'maxHealth', value: 50, cost: 150, icon: '❤️', purchased: false, requires: 'health_up_1' },
+                { id: 'energy_up_1', name: '+20 Energía Máxima', type: 'upgrade', stat: 'maxEnergy', value: 20, cost: 50, icon: '⚡', purchased: false },
+                { id: 'energy_up_2', name: '+50 Energía Máxima', type: 'upgrade', stat: 'maxEnergy', value: 50, cost: 150, icon: '⚡', purchased: false, requires: 'energy_up_1' },
+                { id: 'strength_up_1', name: '+5 Fuerza', type: 'upgrade', stat: 'strength', value: 5, cost: 75, icon: '💪', purchased: false },
+                { id: 'strength_up_2', name: '+10 Fuerza', type: 'upgrade', stat: 'strength', value: 10, cost: 200, icon: '💪', purchased: false, requires: 'strength_up_1' },
+                { id: 'speed_up_1', name: '+10 Velocidad', type: 'upgrade', stat: 'speed', value: 10, cost: 60, icon: '🏃', purchased: false },
+                { id: 'defense_up_1', name: '+5 Defensa', type: 'upgrade', stat: 'defense', value: 5, cost: 80, icon: '🛡️', purchased: false },
+
+                // Consumables
+                { id: 'potion_health', name: 'Poción de Vida', type: 'consumable', effect: 'heal', value: 50, cost: 30, icon: '🧪', stock: 99 },
+                { id: 'potion_energy', name: 'Poción de Energía', type: 'consumable', effect: 'energy', value: 50, cost: 30, icon: '⭐', stock: 99 },
+                { id: 'bomb', name: 'Bomba de Luz', type: 'consumable', effect: 'damage_all', value: 100, cost: 50, icon: '💣', stock: 99 },
+
+                // Special abilities
+                { id: 'triple_jump', name: 'Salto Triple', type: 'ability', cost: 250, icon: '🦘', purchased: false, description: 'Desbloquea tercer salto' },
+                { id: 'dash_attack', name: 'Dash Mejorado', type: 'ability', cost: 300, icon: '⚡', purchased: false, description: 'Dash más largo y rápido' }
+            ],
+
+            // PARTE 6: Missions system
+            missions: [
+                // Main missions (story)
+                { id: 'main_1', name: 'Primer Despertar', type: 'main', description: 'Derrota a Desesperanza', completed: false, reward: { coins: 100, xp: 100 }, icon: '🎯' },
+                { id: 'main_2', name: 'Enfrentando Dudas', type: 'main', description: 'Derrota a Duda Suprema', completed: false, reward: { coins: 150, xp: 150 }, icon: '🎯' },
+                { id: 'main_3', name: 'Luz en la Oscuridad', type: 'main', description: 'Derrota a Oscuridad Total', completed: false, reward: { coins: 250, xp: 250 }, icon: '🎯' },
+
+                // Side missions
+                { id: 'side_1', name: 'Coleccionista Novato', type: 'side', description: 'Recolecta 50 monedas', target: 50, current: 0, completed: false, reward: { coins: 25 }, icon: '💰' },
+                { id: 'side_2', name: 'Cazador de Sombras', type: 'side', description: 'Derrota 20 enemigos', target: 20, current: 0, completed: false, reward: { coins: 50, xp: 50 }, icon: '⚔️' },
+                { id: 'side_3', name: 'Maestro del Combo', type: 'side', description: 'Alcanza combo x10', target: 10, current: 0, completed: false, reward: { coins: 75 }, icon: '🔥' },
+                { id: 'side_4', name: 'Acróbata', type: 'side', description: 'Salta 50 veces', target: 50, current: 0, completed: false, reward: { coins: 30 }, icon: '🦘' },
+                { id: 'side_5', name: 'Poder Supremo', type: 'side', description: 'Usa habilidad especial 10 veces', target: 10, current: 0, completed: false, reward: { coins: 60 }, icon: '✨' }
+            ],
+
             // Motivational messages
             motivationalMessages: [
                 "Un paso a la vez 🌟",
@@ -1531,6 +1698,9 @@
 
                 // PARTE 5: Generate NPCs
                 this.generateNPCs();
+
+                // PARTE 6: Generate bosses
+                this.generateBosses();
 
                 // Create decorative elements
                 this.createClouds();
@@ -1776,6 +1946,35 @@
                         type: npcType,
                         hasInteracted: false,
                         floatOffset: 0
+                    });
+                });
+            },
+
+            // PARTE 6: Generate bosses
+            generateBosses() {
+                this.bosses = [];
+
+                this.bossTypes.forEach(bossType => {
+                    this.bosses.push({
+                        x: bossType.position,
+                        y: canvas.height - 150,
+                        width: bossType.size,
+                        height: bossType.size,
+                        type: bossType,
+                        health: bossType.health,
+                        maxHealth: bossType.health,
+                        currentPhase: 0,
+                        isDefeated: false,
+                        isActive: false, // Activates when player gets near
+                        attackCooldown: 0,
+                        velocityX: 0,
+                        velocityY: 0,
+                        currentAttack: null,
+                        dialogue: null,
+                        dialogueTimer: 0,
+                        minions: [],
+                        duplicates: [],
+                        invulnerableTimer: 0
                     });
                 });
             },
@@ -2028,6 +2227,12 @@
 
                 // PARTE 5: Update NPCs
                 this.updateNPCs(dt);
+
+                // PARTE 6: Update bosses
+                this.updateBosses(dt);
+
+                // PARTE 6: Update missions
+                this.updateMissions();
 
                 // PARTE 5: Update active buffs
                 this.updateBuffs(dt);
@@ -2327,6 +2532,131 @@
                 });
             },
 
+            // PARTE 6: Update bosses
+            updateBosses(dt) {
+                this.bosses.forEach(boss => {
+                    if (boss.isDefeated) return;
+
+                    // Activate boss when player gets near
+                    const distance = Math.abs(Game.player.x - boss.x);
+                    if (distance < 300 && !boss.isActive) {
+                        boss.isActive = true;
+                        boss.dialogue = boss.type.dialogue.intro;
+                        boss.dialogueTimer = 3;
+                        showNotification(
+                            `⚔️ ${boss.type.name}`,
+                            boss.type.title,
+                            3000
+                        );
+                        playSound('enemy_death'); // Dramatic sound
+                    }
+
+                    if (!boss.isActive) return;
+
+                    // Show dialogue
+                    if (boss.dialogueTimer > 0) {
+                        boss.dialogueTimer -= dt;
+                    }
+
+                    // Update invulnerability
+                    if (boss.invulnerableTimer > 0) {
+                        boss.invulnerableTimer--;
+                    }
+
+                    // Check phase transitions
+                    boss.type.phases.forEach((phase, index) => {
+                        if (boss.currentPhase === index && boss.health <= phase.healthThreshold) {
+                            boss.currentPhase++;
+                            boss.dialogue = phase.message;
+                            boss.dialogueTimer = 2;
+                            showNotification('⚡ Cambio de Fase!', phase.message, 3000);
+                            playSound('levelup');
+                        }
+                    });
+
+                    // Simple AI: Move towards player
+                    if (boss.attackCooldown <= 0) {
+                        const dir = Game.player.x > boss.x ? 1 : -1;
+                        boss.velocityX = dir * boss.type.speed;
+                    } else {
+                        boss.attackCooldown--;
+                    }
+
+                    // Apply velocity
+                    boss.x += boss.velocityX;
+                    boss.velocityX *= 0.9; // Friction
+
+                    // Check collision with player
+                    if (this.checkCollision(Game.player, boss) && !Game.player.isInvulnerable) {
+                        const shieldBuff = Game.player.activeBuffs.find(b => b.type === 'shield');
+                        if (!shieldBuff) {
+                            Game.player.health -= boss.type.damage;
+                            Game.player.stats.damageTaken += boss.type.damage;
+                            Game.player.invulnerabilityTime = 60;
+                            playSound('damage');
+
+                            const knockbackDir = Game.player.x < boss.x ? -1 : 1;
+                            Game.player.velocityX = knockbackDir * 12;
+                            Game.player.velocityY = -10;
+
+                            Game.camera.shake = 15;
+                            Game.camera.shakeIntensity = 10;
+
+                            if (Game.player.health <= 0) {
+                                this.gameOver();
+                            }
+                        }
+                    }
+                });
+            },
+
+            // PARTE 6: Update missions
+            updateMissions() {
+                const p = Game.player;
+
+                this.missions.forEach(mission => {
+                    if (mission.completed) return;
+
+                    switch (mission.id) {
+                        case 'side_1':
+                            mission.current = p.stats.coinsCollected;
+                            break;
+                        case 'side_2':
+                            mission.current = p.stats.enemiesDefeated;
+                            break;
+                        case 'side_3':
+                            mission.current = p.stats.maxCombo;
+                            break;
+                        case 'side_4':
+                            mission.current = p.stats.jumps;
+                            break;
+                        case 'side_5':
+                            mission.current = p.stats.specialAbilitiesUsed;
+                            break;
+                    }
+
+                    // Check completion
+                    if (mission.target && mission.current >= mission.target && !mission.completed) {
+                        mission.completed = true;
+
+                        // Give rewards
+                        if (mission.reward.coins) {
+                            p.coins += mission.reward.coins;
+                        }
+                        if (mission.reward.xp) {
+                            this.gainXP(mission.reward.xp);
+                        }
+
+                        showNotification(
+                            `${mission.icon} ¡Misión Completada!`,
+                            `${mission.name} - Recompensa: ${mission.reward.coins || 0} 💰`,
+                            4000
+                        );
+                        playSound('levelup');
+                    }
+                });
+            },
+
             updateEnemies(dt) {
                 this.enemies.forEach(enemy => {
                     if (enemy.isDead) return;
@@ -2573,6 +2903,89 @@
                     }
                 });
 
+                // PARTE 6: Check boss hits
+                this.bosses.forEach(boss => {
+                    if (boss.isDefeated || !boss.isActive || boss.invulnerableTimer > 0) return;
+
+                    const hitbox = {
+                        x: attackX,
+                        y: attackY,
+                        width: attackWidth,
+                        height: attackHeight
+                    };
+
+                    if (this.checkCollision(hitbox, boss)) {
+                        let damage = Game.saveData.stats.strength;
+
+                        const strengthBuff = p.activeBuffs.find(b => b.type === 'strength' || b.type === 'damage_boost');
+                        if (strengthBuff) {
+                            damage *= strengthBuff.multiplier;
+                        }
+
+                        const comboMultiplier = 1 + (p.combo * 0.15);
+                        damage = Math.floor(damage * comboMultiplier);
+
+                        boss.health -= damage;
+                        p.stats.damageDealt += damage;
+
+                        p.combo++;
+                        p.comboTimer = 3;
+                        if (p.combo > p.stats.maxCombo) {
+                            p.stats.maxCombo = p.combo;
+                        }
+
+                        // Boss hit effects
+                        for (let i = 0; i < 20; i++) {
+                            Game.particles.push({
+                                x: boss.x + boss.width / 2,
+                                y: boss.y + boss.height / 2,
+                                vx: (Math.random() - 0.5) * 10,
+                                vy: (Math.random() - 0.5) * 10,
+                                life: 0.8,
+                                color: boss.type.color,
+                                size: Math.random() * 6 + 3
+                            });
+                        }
+
+                        playSound('hit');
+
+                        // Check if boss defeated
+                        if (boss.health <= 0) {
+                            boss.isDefeated = true;
+                            p.coins += boss.type.coins;
+                            this.gainXP(boss.type.xp);
+
+                            // Complete main mission
+                            const mission = this.missions.find(m => m.type === 'main' && m.description.includes(boss.type.name));
+                            if (mission) {
+                                mission.completed = true;
+                                if (mission.reward.coins) p.coins += mission.reward.coins;
+                                if (mission.reward.xp) this.gainXP(mission.reward.xp);
+                            }
+
+                            showNotification(
+                                `🏆 ¡${boss.type.name} Derrotado!`,
+                                `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
+                                5000
+                            );
+                            playSound('levelup');
+
+                            // Death explosion
+                            for (let i = 0; i < 50; i++) {
+                                Game.particles.push({
+                                    x: boss.x + boss.width / 2,
+                                    y: boss.y + boss.height / 2,
+                                    vx: (Math.random() - 0.5) * 15,
+                                    vy: (Math.random() - 0.5) * 15,
+                                    life: 1.5,
+                                    color: boss.type.color,
+                                    size: Math.random() * 8 + 4
+                                });
+                            }
+                        }
+                    }
+                });
+
                 setTimeout(() => {
                     p.isAttacking = false;
                 }, 200);
@@ -2746,6 +3159,9 @@
 
                 // Draw enemies
                 this.drawEnemies();
+
+                // PARTE 6: Draw bosses
+                this.drawBosses();
 
                 // PARTE 5: Draw player trail
                 this.drawTrail();
@@ -3067,6 +3483,110 @@
                     ctx.shadowBlur = 4;
                     ctx.fillText(enemy.name, screenX + enemy.width / 2, screenY - 15);
                     ctx.shadowBlur = 0;
+                });
+            },
+
+            // PARTE 6: Draw bosses
+            drawBosses() {
+                this.bosses.forEach(boss => {
+                    if (boss.isDefeated) return;
+
+                    const screenX = boss.x - Game.camera.x;
+                    const screenY = boss.y - Game.camera.y;
+
+                    if (screenX + boss.width < -100 || screenX > canvas.width + 100) return;
+
+                    ctx.save();
+
+                    // Massive glow effect
+                    ctx.shadowColor = boss.type.color;
+                    ctx.shadowBlur = 30;
+
+                    // Boss body
+                    const currentPhase = boss.type.phases[boss.currentPhase];
+                    const color = currentPhase?.color || boss.type.color;
+
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.9;
+                    ctx.beginPath();
+                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2, boss.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Aura
+                    ctx.globalAlpha = 0.3;
+                    ctx.beginPath();
+                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2, boss.width / 2 + 20, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Eyes (glowing red)
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = '#ff0000';
+                    const eyeY = screenY + boss.height / 2 - 10;
+                    ctx.shadowColor = '#ff0000';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(screenX + boss.width / 2 - 20, eyeY, 8, 0, Math.PI * 2);
+                    ctx.arc(screenX + boss.width / 2 + 20, eyeY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+
+                    // BOSS HEALTH BAR (prominent)
+                    const barWidth = 200;
+                    const barHeight = 20;
+                    const barX = screenX + boss.width / 2 - barWidth / 2;
+                    const barY = screenY - 40;
+
+                    // Background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                    // Health
+                    ctx.fillStyle = '#ef4444';
+                    const healthWidth = (boss.health / boss.maxHealth) * barWidth;
+                    ctx.fillRect(barX, barY, healthWidth, barHeight);
+
+                    // Border
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+                    // Boss name and title
+                    ctx.font = 'bold 18px Arial';
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.textAlign = 'center';
+                    ctx.shadowColor = '#000';
+                    ctx.shadowBlur = 6;
+                    ctx.fillText(boss.type.name, screenX + boss.width / 2, screenY - 55);
+
+                    ctx.font = '12px Arial';
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText(boss.type.title, screenX + boss.width / 2, screenY - 70);
+
+                    // Health text
+                    ctx.font = '14px Arial';
+                    ctx.fillText(`${Math.floor(boss.health)} / ${boss.maxHealth}`, screenX + boss.width / 2, barY + 15);
+                    ctx.shadowBlur = 0;
+
+                    // Dialogue box (if active)
+                    if (boss.dialogue && boss.dialogueTimer > 0) {
+                        const dialogueWidth = 300;
+                        const dialogueHeight = 50;
+                        const dialogueX = screenX + boss.width / 2 - dialogueWidth / 2;
+                        const dialogueY = screenY - 120;
+
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.fillRect(dialogueX, dialogueY, dialogueWidth, dialogueHeight);
+
+                        ctx.strokeStyle = boss.type.color;
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(dialogueX, dialogueY, dialogueWidth, dialogueHeight);
+
+                        ctx.font = '14px Arial';
+                        ctx.fillStyle = '#fff';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(boss.dialogue, screenX + boss.width / 2, dialogueY + 30);
+                    }
                 });
             },
 
