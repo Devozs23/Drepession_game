@@ -570,6 +570,36 @@
                 timeWithoutGround: 0
             },
 
+            // PARTE 11: Weather System (Sistema de Clima Dinámico)
+            weather: {
+                current: 'clear', // clear, rain, snow, storm, fog, aurora
+                intensity: 0,
+                timer: 0,
+                nextChangeTime: 30, // Cambia cada 30-60 segundos
+                particles: [],
+                lightning: {
+                    active: false,
+                    x: 0,
+                    timer: 0,
+                    flash: 0
+                }
+            },
+
+            // PARTE 11: Player Transformations (Transformaciones del Jugador)
+            transformations: {
+                current: 'normal', // normal, shadow, light, giant, speed
+                timer: 0,
+                cooldown: 0,
+                available: ['normal'] // Desbloquear más con progreso
+            },
+
+            // PARTE 11: Secret Rooms & Easter Eggs
+            secrets: {
+                rooms: [],
+                easterEggs: [],
+                discovered: []
+            },
+
             // Performance
             fps: 60,
             frameCount: 0
@@ -1806,6 +1836,12 @@
                 Game.player.isGrounded = false;
                 Game.player.color = charColor;
 
+                // PARTE 11: Unlock all transformations
+                Game.transformations.available = ['normal', 'shadow', 'light', 'giant', 'speed'];
+                Game.transformations.current = 'normal';
+                Game.transformations.timer = 0;
+                Game.transformations.cooldown = 0;
+
                 // Create parallax layers
                 this.createParallaxLayers();
 
@@ -2703,6 +2739,237 @@
                 });
             },
 
+            // PARTE 11: Update weather system 🌧️❄️⛈️
+            updateWeather(dt) {
+                if (!dt || dt > 1) return;
+
+                const weather = Game.weather;
+                weather.timer += dt;
+
+                // Change weather periodically
+                if (weather.timer >= weather.nextChangeTime) {
+                    weather.timer = 0;
+                    weather.nextChangeTime = Math.random() * 30 + 30; // 30-60 segundos
+
+                    const weathers = ['clear', 'rain', 'snow', 'storm', 'fog', 'aurora'];
+                    const newWeather = weathers[Math.floor(Math.random() * weathers.length)];
+
+                    if (newWeather !== weather.current) {
+                        weather.current = newWeather;
+                        weather.intensity = 0;
+
+                        try {
+                            if (typeof showNotification === 'function') {
+                                const messages = {
+                                    rain: ['🌧️ Lluvia', 'Las plataformas están resbalosas'],
+                                    snow: ['❄️ Nieve', 'El frío reduce tu velocidad'],
+                                    storm: ['⛈️ Tormenta', '¡Cuidado con los rayos!'],
+                                    fog: ['🌫️ Niebla', 'Visibilidad reducida'],
+                                    aurora: ['🌌 Aurora Boreal', '¡Energía ilimitada!'],
+                                    clear: ['☀️ Despejado', 'Clima perfecto']
+                                };
+                                const msg = messages[newWeather];
+                                showNotification(msg[0], msg[1], 3000);
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                // Gradual intensity change
+                if (weather.current !== 'clear') {
+                    weather.intensity = Math.min(weather.intensity + dt * 0.1, 1);
+                } else {
+                    weather.intensity = Math.max(weather.intensity - dt * 0.2, 0);
+                }
+
+                // Generate weather particles
+                if (weather.current === 'rain' && Math.random() < weather.intensity) {
+                    weather.particles.push({
+                        x: Math.random() * canvas.width + Game.camera.x,
+                        y: Game.camera.y - 10,
+                        vx: -2,
+                        vy: 15 + Math.random() * 5,
+                        life: 2,
+                        color: '#60a5fa',
+                        type: 'rain'
+                    });
+                } else if (weather.current === 'snow' && Math.random() < weather.intensity * 0.5) {
+                    weather.particles.push({
+                        x: Math.random() * canvas.width + Game.camera.x,
+                        y: Game.camera.y - 10,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: 2 + Math.random() * 3,
+                        life: 5,
+                        color: '#ffffff',
+                        type: 'snow',
+                        size: Math.random() * 4 + 2
+                    });
+                }
+
+                // Update weather particles
+                for (let i = weather.particles.length - 1; i >= 0; i--) {
+                    const p = weather.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= dt;
+
+                    if (p.life <= 0 || p.y > canvas.height + Game.camera.y) {
+                        weather.particles.splice(i, 1);
+                    }
+                }
+
+                // Lightning in storm
+                if (weather.current === 'storm' && Math.random() < 0.01 && !weather.lightning.active) {
+                    weather.lightning.active = true;
+                    weather.lightning.x = Math.random() * canvas.width + Game.camera.x;
+                    weather.lightning.timer = 0.3;
+                    weather.lightning.flash = 1;
+
+                    try {
+                        if (typeof playSound === 'function') playSound('hit');
+                    } catch (e) {}
+                }
+
+                // Update lightning
+                if (weather.lightning.active) {
+                    weather.lightning.timer -= dt;
+                    weather.lightning.flash -= dt * 3;
+
+                    if (weather.lightning.timer <= 0) {
+                        weather.lightning.active = false;
+                    }
+
+                    // Damage player if close to lightning
+                    const p = Game.player;
+                    if (Math.abs(p.x - weather.lightning.x) < 50 && Math.random() < 0.3) {
+                        p.health = Math.max(p.health - 5, 0);
+                        if (p.health <= 0) this.gameOver();
+                    }
+                }
+
+                // Weather effects on player
+                const p = Game.player;
+                if (weather.current === 'aurora') {
+                    // Aurora gives infinite energy
+                    p.energy = Math.min(p.energy + dt * 20, Game.saveData.stats.maxEnergy);
+                } else if (weather.current === 'fog') {
+                    // Fog is just visual, no effect on player
+                }
+
+                // Limit particles
+                if (weather.particles.length > 200) {
+                    weather.particles.splice(0, 50);
+                }
+            },
+
+            // PARTE 11: Transform player 🔮
+            transformPlayer(transformType) {
+                const trans = Game.transformations;
+
+                if (!trans.available.includes(transformType)) {
+                    try {
+                        if (typeof showNotification === 'function') {
+                            showNotification('🔒 Transformación Bloqueada', 'Completa más misiones para desbloquear', 2000);
+                        }
+                    } catch (e) {}
+                    return;
+                }
+
+                if (trans.cooldown > 0) {
+                    try {
+                        if (typeof showNotification === 'function') {
+                            showNotification('⏳ En Enfriamiento', `Espera ${Math.ceil(trans.cooldown)} segundos`, 2000);
+                        }
+                    } catch (e) {}
+                    return;
+                }
+
+                trans.current = transformType;
+                trans.timer = 10; // 10 segundos de transformación
+                trans.cooldown = 20; // 20 segundos de cooldown
+
+                const messages = {
+                    shadow: ['👤 Forma Sombra', '¡Eres invisible!'],
+                    light: ['💡 Forma Luz', '¡Puedes volar!'],
+                    giant: ['🗿 Forma Gigante', '¡Poder supremo!'],
+                    speed: ['⚡ Forma Veloz', '¡Velocidad extrema!']
+                };
+
+                try {
+                    if (typeof showNotification === 'function' && messages[transformType]) {
+                        showNotification(messages[transformType][0], messages[transformType][1], 3000);
+                    }
+                } catch (e) {}
+
+                // Visual effect
+                try {
+                    for (let i = 0; i < 50; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        Game.particles.push({
+                            x: Game.player.x + Game.player.width / 2,
+                            y: Game.player.y + Game.player.height / 2,
+                            vx: Math.cos(angle) * 10,
+                            vy: Math.sin(angle) * 10,
+                            life: 1,
+                            color: transformType === 'shadow' ? '#1f2937' :
+                                   transformType === 'light' ? '#fbbf24' :
+                                   transformType === 'giant' ? '#dc2626' : '#10b981',
+                            size: Math.random() * 6 + 3
+                        });
+                    }
+                } catch (e) {}
+            },
+
+            // PARTE 11: Update transformations
+            updateTransformations(dt) {
+                if (!dt || dt > 1) return;
+
+                const trans = Game.transformations;
+
+                // Decrease transformation timer
+                if (trans.timer > 0) {
+                    trans.timer -= dt;
+
+                    if (trans.timer <= 0) {
+                        trans.current = 'normal';
+                        try {
+                            if (typeof showNotification === 'function') {
+                                showNotification('🔄 Transformación Terminada', 'Volviste a la normalidad', 2000);
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                // Decrease cooldown
+                if (trans.cooldown > 0) {
+                    trans.cooldown -= dt;
+                }
+
+                // Apply transformation effects
+                const p = Game.player;
+
+                if (trans.current === 'shadow') {
+                    // Invisible to enemies (reduce damage taken)
+                    p.isInvulnerable = true;
+                } else if (trans.current === 'light') {
+                    // Can fly (reduce gravity)
+                    if (Game.keys[' '] || Game.keys['w'] || Game.keys['W']) {
+                        p.velocityY = Math.max(p.velocityY - 1, -10);
+                    }
+                } else if (trans.current === 'giant') {
+                    // Increased damage and size
+                    // Size handled in rendering
+                } else if (trans.current === 'speed') {
+                    // Extreme speed
+                    // Speed handled in physics
+                } else {
+                    // Normal form
+                    if (trans.current === 'normal') {
+                        p.isInvulnerable = false;
+                    }
+                }
+            },
+
             // PARTE 5: Check achievements
             checkAchievements() {
                 const p = Game.player;
@@ -3075,6 +3342,12 @@
                 // PARTE 10: Update checkpoints
                 this.updateCheckpoints(dt);
 
+                // PARTE 11: Update weather system
+                this.updateWeather(dt);
+
+                // PARTE 11: Update transformations
+                this.updateTransformations(dt);
+
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
                     Game.player.trail.push({
@@ -3125,13 +3398,32 @@
 
             updatePlayerPhysics(dt) {
                 const p = Game.player;
-                const gravity = 0.8;
+                let gravity = 0.8;
                 let moveSpeed = 5 * (Game.saveData.stats.speed / 100);
 
                 // PARTE 5: Apply speed buff
                 const speedBuff = p.activeBuffs.find(b => b.type === 'speed');
                 if (speedBuff) {
                     moveSpeed *= speedBuff.multiplier;
+                }
+
+                // PARTE 11: Apply transformation effects 🔮
+                const trans = Game.transformations;
+                if (trans.current === 'speed') {
+                    moveSpeed *= 3; // Triple speed
+                } else if (trans.current === 'giant') {
+                    moveSpeed *= 0.7; // Slower but stronger
+                } else if (trans.current === 'light') {
+                    gravity *= 0.3; // Much lighter, can fly
+                } else if (trans.current === 'shadow') {
+                    // Shadow form doesn't affect speed
+                }
+
+                // PARTE 11: Weather effects on movement
+                if (Game.weather.current === 'snow') {
+                    moveSpeed *= 0.7; // Slower in snow
+                } else if (Game.weather.current === 'storm') {
+                    moveSpeed *= 0.85; // Slightly slower in storm
                 }
 
                 const jumpForce = -15;
@@ -4106,15 +4398,18 @@
 
             // PARTE 8: Update dream portals
             updateDreamPortals(dt) {
+                if (!dt || dt > 1) return; // BUGFIX: Guard dt
+
                 const p = Game.player;
+                if (!Game.dreamPortals) return; // BUGFIX: Verificar existe
 
                 Game.dreamPortals.forEach(portal => {
-                    if (!portal.active) return;
+                    if (!portal || !portal.active) return;
 
                     portal.rotation += dt;
 
-                    // Generate portal particles
-                    if (Math.random() < 0.5) {
+                    // Generate portal particles (BUGFIX: Limitar cantidad)
+                    if (Math.random() < 0.5 && portal.particles.length < 50) {
                         portal.particles.push({
                             x: portal.x + portal.width / 2 + (Math.random() - 0.5) * portal.width,
                             y: portal.y + portal.height,
@@ -4141,17 +4436,29 @@
                     if (this.checkCollision(p, portal)) {
                         this.enterDreamWorld(portal);
                         portal.active = false;
+                        // BUGFIX: Resetear después de un tiempo
+                        setTimeout(() => {
+                            Game.inDreamWorld = false;
+                            portal.active = true;
+                        }, 10000); // 10 segundos en mundo de ensueño
                     }
                 });
             },
 
             // PARTE 8: Enter dream world
             enterDreamWorld(portal) {
-                showNotification(
-                    '🌀 Entrando al Mundo de los Sueños...',
-                    'Las leyes de la física no aplican aquí',
-                    4000
-                );
+                // BUGFIX: Try-catch para notificación
+                try {
+                    if (typeof showNotification === 'function') {
+                        showNotification(
+                            '🌀 Entrando al Mundo de los Sueños...',
+                            'Las leyes de la física no aplican aquí',
+                            4000
+                        );
+                    }
+                } catch (e) {
+                    console.log('Dream world notification error:', e);
+                }
 
                 // Modify game state for dream world
                 Game.inDreamWorld = true;
@@ -4171,21 +4478,28 @@
                 });
 
                 // Epic visual effect
-                for (let i = 0; i < 100; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 15 + 5;
-                    Game.particles.push({
-                        x: Game.player.x + Game.player.width / 2,
-                        y: Game.player.y + Game.player.height / 2,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: 2,
-                        color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
-                        size: Math.random() * 8 + 4
-                    });
+                try {
+                    for (let i = 0; i < 100; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 15 + 5;
+                        Game.particles.push({
+                            x: Game.player.x + Game.player.width / 2,
+                            y: Game.player.y + Game.player.height / 2,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 2,
+                            color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
+                            size: Math.random() * 8 + 4
+                        });
+                    }
+                } catch (e) {
+                    console.log('Dream world particles error:', e);
                 }
 
-                playSound('levelup');
+                // BUGFIX: Try-catch para sonido
+                try {
+                    if (typeof playSound === 'function') playSound('levelup');
+                } catch (e) {}
             },
 
             // PARTE 8: Update atmospheric particles
@@ -4896,6 +5210,9 @@
 
                 // PARTE 8: Draw companion
                 this.drawCompanion();
+
+                // PARTE 11: Draw weather effects
+                this.drawWeather();
 
                 // Draw motivational message
                 this.drawMessage();
@@ -5960,6 +6277,110 @@
                 ctx.restore();
             },
 
+            // PARTE 11: Draw weather effects 🌧️❄️⛈️
+            drawWeather() {
+                const weather = Game.weather;
+                if (!weather || weather.current === 'clear') return;
+
+                ctx.save();
+
+                // Draw weather particles
+                weather.particles.forEach(p => {
+                    const screenX = p.x - Game.camera.x;
+                    const screenY = p.y - Game.camera.y;
+
+                    if (p.type === 'rain') {
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 2;
+                        ctx.globalAlpha = 0.6;
+                        ctx.beginPath();
+                        ctx.moveTo(screenX, screenY);
+                        ctx.lineTo(screenX + p.vx * 2, screenY + p.vy * 2);
+                        ctx.stroke();
+                    } else if (p.type === 'snow') {
+                        ctx.fillStyle = p.color;
+                        ctx.globalAlpha = 0.8;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Draw lightning
+                if (weather.lightning.active) {
+                    const lx = weather.lightning.x - Game.camera.x;
+
+                    ctx.globalAlpha = Math.max(weather.lightning.flash, 0);
+
+                    // Flash effect
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Lightning bolt
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.shadowBlur = 20;
+
+                    ctx.beginPath();
+                    ctx.moveTo(lx, 0);
+                    const segments = 5 + Math.floor(Math.random() * 3);
+                    let currentX = lx;
+                    let currentY = 0;
+
+                    for (let i = 0; i < segments; i++) {
+                        currentY += canvas.height / segments;
+                        currentX += (Math.random() - 0.5) * 40;
+                        ctx.lineTo(currentX, currentY);
+                    }
+                    ctx.stroke();
+                }
+
+                // Draw fog overlay
+                if (weather.current === 'fog') {
+                    const fogGradient = ctx.createRadialGradient(
+                        canvas.width / 2, canvas.height / 2, 0,
+                        canvas.width / 2, canvas.height / 2, canvas.width
+                    );
+                    fogGradient.addColorStop(0, 'rgba(200, 200, 200, 0)');
+                    fogGradient.addColorStop(0.7, `rgba(200, 200, 200, ${weather.intensity * 0.3})`);
+                    fogGradient.addColorStop(1, `rgba(200, 200, 200, ${weather.intensity * 0.5})`);
+
+                    ctx.fillStyle = fogGradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                // Draw aurora borealis
+                if (weather.current === 'aurora') {
+                    ctx.globalAlpha = weather.intensity * 0.6;
+
+                    const auroraColors = ['#10b981', '#60a5fa', '#a855f7', '#ec4899'];
+                    const time = Date.now() / 1000;
+
+                    for (let i = 0; i < 3; i++) {
+                        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
+                        gradient.addColorStop(0, 'transparent');
+                        gradient.addColorStop(0.5, auroraColors[i % auroraColors.length]);
+                        gradient.addColorStop(1, 'transparent');
+
+                        ctx.fillStyle = gradient;
+
+                        ctx.beginPath();
+                        for (let x = 0; x <= canvas.width; x += 20) {
+                            const y = canvas.height * 0.2 + Math.sin((x + time * 50 + i * 100) / 50) * 30;
+                            if (x === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.lineTo(canvas.width, 0);
+                        ctx.lineTo(0, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            },
+
             // PARTE 8: Draw breathing exercise overlay
             drawBreathingExercise() {
                 const ex = Game.breathingExercise;
@@ -6140,6 +6561,24 @@
                             3000
                         );
                     }
+                }
+
+                // PARTE 11: Transformations (Teclas 1-4) 🔮
+                if (e.key === '1') {
+                    e.preventDefault();
+                    GameScene.transformPlayer('shadow'); // Forma Sombra - Invisible
+                }
+                if (e.key === '2') {
+                    e.preventDefault();
+                    GameScene.transformPlayer('light'); // Forma Luz - Volar
+                }
+                if (e.key === '3') {
+                    e.preventDefault();
+                    GameScene.transformPlayer('giant'); // Forma Gigante - Poder
+                }
+                if (e.key === '4') {
+                    e.preventDefault();
+                    GameScene.transformPlayer('speed'); // Forma Veloz - Velocidad
                 }
 
                 // Pause
