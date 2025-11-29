@@ -506,6 +506,48 @@
             audioContext: null,
             sounds: {},
 
+            // PARTE 9: Generative Music System
+            musicSystem: {
+                audioContext: null,
+                masterGain: null,
+                bassGain: null,
+                melodyGain: null,
+                drumGain: null,
+                padGain: null,
+
+                // Musical scales (pentatonic for pleasant sounds)
+                scales: {
+                    major: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21],
+                    minor: [0, 2, 3, 7, 10, 12, 14, 15, 19, 22],
+                    dream: [0, 2, 5, 7, 9, 12, 14, 17, 19, 21]
+                },
+                currentScale: 'major',
+                baseFreq: 220, // A3
+
+                // Drum patterns
+                kickPattern: [1, 0, 0, 0, 1, 0, 0, 0],
+                snarePattern: [0, 0, 1, 0, 0, 0, 1, 0],
+                hihatPattern: [1, 1, 1, 1, 1, 1, 1, 1],
+                beatIndex: 0,
+                bpm: 128,
+                lastBeatTime: 0,
+
+                // Active musical layers
+                layers: {
+                    bass: false,
+                    drums: false,
+                    melody: false,
+                    pads: false
+                },
+
+                // Recent notes for arpeggiator
+                recentNotes: [],
+
+                // Music state
+                intensity: 0, // 0-1, increases with gameplay
+                emotionalState: 'neutral' // neutral, calm, excited, epic
+            },
+
             // Performance
             fps: 60,
             frameCount: 0
@@ -1781,6 +1823,9 @@
                 // PARTE 8: Initialize world progress
                 Game.worldProgress = 0;
 
+                // PARTE 9: Initialize generative music system
+                this.initMusicSystem();
+
                 // Create decorative elements
                 this.createClouds();
                 this.createStars();
@@ -2165,6 +2210,303 @@
                 }
             },
 
+            // PARTE 9: Initialize Music System
+            initMusicSystem() {
+                try {
+                    const MS = Game.musicSystem;
+                    MS.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Create master gain
+                    MS.masterGain = MS.audioContext.createGain();
+                    MS.masterGain.gain.value = 0.3;
+                    MS.masterGain.connect(MS.audioContext.destination);
+
+                    // Create separate gains for each layer
+                    MS.bassGain = MS.audioContext.createGain();
+                    MS.bassGain.gain.value = 0;
+                    MS.bassGain.connect(MS.masterGain);
+
+                    MS.melodyGain = MS.audioContext.createGain();
+                    MS.melodyGain.gain.value = 0;
+                    MS.melodyGain.connect(MS.masterGain);
+
+                    MS.drumGain = MS.audioContext.createGain();
+                    MS.drumGain.gain.value = 0;
+                    MS.drumGain.connect(MS.masterGain);
+
+                    MS.padGain = MS.audioContext.createGain();
+                    MS.padGain.gain.value = 0;
+                    MS.padGain.connect(MS.masterGain);
+
+                    // Start with just pads (ambient)
+                    MS.layers.pads = true;
+                    this.fadeInLayer('pads', 0.15, 2);
+
+                    console.log('🎵 Generative Music System initialized!');
+                } catch (e) {
+                    console.log('Audio not supported:', e);
+                }
+            },
+
+            // PARTE 9: Play note on jump
+            playJumpNote(velocity) {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const scale = MS.scales[MS.currentScale];
+                const noteIndex = Math.min(Math.floor(velocity / 3), scale.length - 1);
+                const semitone = scale[noteIndex];
+                const freq = MS.baseFreq * Math.pow(2, semitone / 12);
+
+                // Create oscillator for melody
+                const osc = MS.audioContext.createOscillator();
+                const gain = MS.audioContext.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+
+                gain.gain.value = 0;
+                gain.gain.linearRampToValueAtTime(0.15, MS.audioContext.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(MS.melodyGain);
+
+                osc.start(MS.audioContext.currentTime);
+                osc.stop(MS.audioContext.currentTime + 0.3);
+
+                // Add to recent notes for arpeggiator
+                MS.recentNotes.push(freq);
+                if (MS.recentNotes.length > 4) MS.recentNotes.shift();
+            },
+
+            // PARTE 9: Play kick drum
+            playKick() {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const osc = MS.audioContext.createOscillator();
+                const gain = MS.audioContext.createGain();
+
+                osc.frequency.value = 55; // Low A
+                osc.frequency.exponentialRampToValueAtTime(30, MS.audioContext.currentTime + 0.1);
+
+                gain.gain.value = 1;
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 0.4);
+
+                osc.connect(gain);
+                gain.connect(MS.drumGain);
+
+                osc.start(MS.audioContext.currentTime);
+                osc.stop(MS.audioContext.currentTime + 0.4);
+            },
+
+            // PARTE 9: Play snare
+            playSnare() {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const noise = MS.audioContext.createBufferSource();
+                const buffer = MS.audioContext.createBuffer(1, MS.audioContext.sampleRate * 0.2, MS.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                noise.buffer = buffer;
+
+                const filter = MS.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 2000;
+
+                const gain = MS.audioContext.createGain();
+                gain.gain.value = 0.5;
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 0.15);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(MS.drumGain);
+
+                noise.start(MS.audioContext.currentTime);
+                noise.stop(MS.audioContext.currentTime + 0.15);
+            },
+
+            // PARTE 9: Play hihat
+            playHihat() {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const noise = MS.audioContext.createBufferSource();
+                const buffer = MS.audioContext.createBuffer(1, MS.audioContext.sampleRate * 0.05, MS.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < data.length; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                noise.buffer = buffer;
+
+                const filter = MS.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 8000;
+
+                const gain = MS.audioContext.createGain();
+                gain.gain.value = 0.3;
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 0.05);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(MS.drumGain);
+
+                noise.start(MS.audioContext.currentTime);
+                noise.stop(MS.audioContext.currentTime + 0.05);
+            },
+
+            // PARTE 9: Play bass note
+            playBass(freq) {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const osc = MS.audioContext.createOscillator();
+                const gain = MS.audioContext.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq / 2; // One octave lower
+
+                gain.gain.value = 0;
+                gain.gain.linearRampToValueAtTime(0.2, MS.audioContext.currentTime + 0.01);
+                gain.gain.linearRampToValueAtTime(0.1, MS.audioContext.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 0.4);
+
+                osc.connect(gain);
+                gain.connect(MS.bassGain);
+
+                osc.start(MS.audioContext.currentTime);
+                osc.stop(MS.audioContext.currentTime + 0.4);
+            },
+
+            // PARTE 9: Epic drop effect
+            playEpicDrop() {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                // Sweep down
+                const osc = MS.audioContext.createOscillator();
+                const gain = MS.audioContext.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.value = 1000;
+                osc.frequency.exponentialRampToValueAtTime(50, MS.audioContext.currentTime + 1.5);
+
+                gain.gain.value = 0.4;
+                gain.gain.exponentialRampToValueAtTime(0.001, MS.audioContext.currentTime + 1.5);
+
+                osc.connect(gain);
+                gain.connect(MS.masterGain);
+
+                osc.start(MS.audioContext.currentTime);
+                osc.stop(MS.audioContext.currentTime + 1.5);
+
+                // Trigger all layers
+                this.fadeInLayer('bass', 0.25, 0.5);
+                this.fadeInLayer('drums', 0.6, 0.5);
+                this.fadeInLayer('melody', 0.3, 0.5);
+            },
+
+            // PARTE 9: Fade in a musical layer
+            fadeInLayer(layer, targetVolume, duration) {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                MS.layers[layer] = true;
+
+                const gain = layer === 'bass' ? MS.bassGain :
+                             layer === 'melody' ? MS.melodyGain :
+                             layer === 'drums' ? MS.drumGain :
+                             MS.padGain;
+
+                gain.gain.cancelScheduledValues(MS.audioContext.currentTime);
+                gain.gain.setValueAtTime(gain.gain.value, MS.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(targetVolume, MS.audioContext.currentTime + duration);
+            },
+
+            // PARTE 9: Fade out a musical layer
+            fadeOutLayer(layer, duration) {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const gain = layer === 'bass' ? MS.bassGain :
+                             layer === 'melody' ? MS.melodyGain :
+                             layer === 'drums' ? MS.drumGain :
+                             MS.padGain;
+
+                gain.gain.cancelScheduledValues(MS.audioContext.currentTime);
+                gain.gain.setValueAtTime(gain.gain.value, MS.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0, MS.audioContext.currentTime + duration);
+
+                setTimeout(() => {
+                    MS.layers[layer] = false;
+                }, duration * 1000);
+            },
+
+            // PARTE 9: Update music based on gameplay
+            updateMusicSystem(dt) {
+                const MS = Game.musicSystem;
+                if (!MS.audioContext) return;
+
+                const p = Game.player;
+
+                // Calculate music intensity from gameplay
+                const comboIntensity = Math.min(p.combo / 10, 0.4);
+                const healthIntensity = (1 - p.health / Game.saveData.stats.maxHealth) * 0.3;
+                const progressIntensity = Game.worldProgress * 0.3;
+
+                MS.intensity = Math.min(comboIntensity + progressIntensity + healthIntensity, 1);
+
+                // Add drums when intensity rises
+                if (MS.intensity > 0.2 && !MS.layers.drums) {
+                    this.fadeInLayer('drums', 0.4, 2);
+                }
+
+                // Add melody when comboing
+                if (p.combo >= 3 && !MS.layers.melody) {
+                    this.fadeInLayer('melody', 0.25, 1);
+                }
+
+                // Add bass when high intensity
+                if (MS.intensity > 0.5 && !MS.layers.bass) {
+                    this.fadeInLayer('bass', 0.2, 2);
+                }
+
+                // Change scale based on emotional state
+                if (Game.inDreamWorld) {
+                    MS.currentScale = 'dream';
+                } else if (p.health < 30) {
+                    MS.currentScale = 'minor';
+                } else {
+                    MS.currentScale = 'major';
+                }
+
+                // Procedural drums
+                const beatDuration = (60 / MS.bpm) * 1000; // ms per beat
+                if (MS.layers.drums && Date.now() - MS.lastBeatTime > beatDuration) {
+                    MS.lastBeatTime = Date.now();
+
+                    if (MS.kickPattern[MS.beatIndex]) this.playKick();
+                    if (MS.snarePattern[MS.beatIndex]) this.playSnare();
+                    if (MS.hihatPattern[MS.beatIndex]) this.playHihat();
+
+                    // Bass on kicks
+                    if (MS.layers.bass && MS.kickPattern[MS.beatIndex] && MS.recentNotes.length > 0) {
+                        const bassNote = MS.recentNotes[0];
+                        this.playBass(bassNote);
+                    }
+
+                    MS.beatIndex = (MS.beatIndex + 1) % 8;
+                }
+            },
+
             // PARTE 5: Check achievements
             checkAchievements() {
                 const p = Game.player;
@@ -2524,6 +2866,9 @@
                 if (Game.breathingExercise.active) {
                     this.updateBreathingExercise(dt);
                 }
+
+                // PARTE 9: Update generative music system
+                this.updateMusicSystem(dt);
 
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
@@ -3118,6 +3463,8 @@
                                     // Check if boss defeated
                                     if (boss.health <= 0 && !boss.isDefeated) {
                                         boss.isDefeated = true;
+                                        // PARTE 9: Epic drop!
+                                        this.playEpicDrop();
                                         p.coins += boss.type.coins;
                                         this.gainXP(boss.type.xp);
 
@@ -3216,6 +3563,8 @@
 
                                 if (boss.health <= 0 && !boss.isDefeated) {
                                     boss.isDefeated = true;
+                                    // PARTE 9: Epic drop!
+                                    this.playEpicDrop();
                                     p.coins += boss.type.coins;
                                     this.gainXP(boss.type.xp);
 
@@ -3673,12 +4022,16 @@
                     p.isGrounded = false;
                     p.stats.jumps++;
                     playSound('jump');
+                    // PARTE 9: Play musical note
+                    this.playJumpNote(Math.abs(jumpForce));
                 } else if (p.canDoubleJump && !p.isGrounded && (p.energy >= 15 || hasInfiniteEnergy)) {
                     p.velocityY = jumpForce;
                     if (!hasInfiniteEnergy) p.energy -= 15;
                     p.canDoubleJump = false;
                     p.stats.jumps++;
                     playSound('jump');
+                    // PARTE 9: Play higher note for double jump
+                    this.playJumpNote(Math.abs(jumpForce) + 5);
                 }
             },
 
@@ -3854,6 +4207,8 @@
                         // Check if boss defeated
                         if (boss.health <= 0) {
                             boss.isDefeated = true;
+                            // PARTE 9: Epic drop!
+                            this.playEpicDrop();
                             p.coins += boss.type.coins;
                             this.gainXP(boss.type.xp);
 
