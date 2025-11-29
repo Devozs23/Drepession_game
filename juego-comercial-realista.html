@@ -854,6 +854,57 @@
                     osc.start(now);
                     osc.stop(now + 0.3);
                     break;
+
+                case 'attack':
+                    osc.type = 'square';
+                    osc.frequency.value = 150;
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+
+                case 'hit':
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = 300;
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+
+                case 'enemy_death':
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = 400;
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                    break;
+
+                case 'levelup':
+                    // Triumphant ascending sound
+                    const freq1 = 440;
+                    const freq2 = 550;
+                    const freq3 = 660;
+
+                    [freq1, freq2, freq3].forEach((freq, i) => {
+                        const tempOsc = Game.audioContext.createOscillator();
+                        const tempGain = Game.audioContext.createGain();
+                        tempOsc.connect(tempGain);
+                        tempGain.connect(Game.audioContext.destination);
+
+                        tempOsc.frequency.value = freq;
+                        tempGain.gain.setValueAtTime(0, now + i * 0.1);
+                        tempGain.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.05);
+                        tempGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
+
+                        tempOsc.start(now + i * 0.1);
+                        tempOsc.stop(now + i * 0.1 + 0.3);
+                    });
+                    return; // Don't use the main oscillator
             }
         }
 
@@ -1202,6 +1253,47 @@
             // Collectibles (coins, power-ups)
             coins: [],
 
+            // Enemies (negative thoughts) - PARTE 4
+            enemies: [],
+            enemyTypes: [
+                {
+                    name: 'Duda',
+                    color: '#8b5cf6',
+                    health: 30,
+                    damage: 10,
+                    xp: 20,
+                    speed: 1,
+                    size: 30
+                },
+                {
+                    name: 'Miedo',
+                    color: '#ef4444',
+                    health: 40,
+                    damage: 15,
+                    xp: 30,
+                    speed: 0.8,
+                    size: 35
+                },
+                {
+                    name: 'Tristeza',
+                    color: '#3b82f6',
+                    health: 25,
+                    damage: 8,
+                    xp: 15,
+                    speed: 0.5,
+                    size: 28
+                },
+                {
+                    name: 'Ansiedad',
+                    color: '#f59e0b',
+                    health: 35,
+                    damage: 12,
+                    xp: 25,
+                    speed: 1.5,
+                    size: 32
+                }
+            ],
+
             // Motivational messages
             motivationalMessages: [
                 "Un paso a la vez 🌟",
@@ -1252,6 +1344,9 @@
 
                 // Generate coins
                 this.generateCoins();
+
+                // Generate enemies - PARTE 4
+                this.generateEnemies();
 
                 // Create decorative elements
                 this.createClouds();
@@ -1409,10 +1504,53 @@
                 }
             },
 
+            generateEnemies() {
+                this.enemies = [];
+
+                // Generate enemies on platforms
+                for (let i = 3; i < this.platforms.length - 1; i += 3) {
+                    const platform = this.platforms[i];
+                    const typeIndex = Math.floor(Math.random() * this.enemyTypes.length);
+                    const enemyType = this.enemyTypes[typeIndex];
+
+                    this.enemies.push({
+                        x: platform.x + platform.width / 2,
+                        y: platform.y - enemyType.size - 10,
+                        velocityX: enemyType.speed * (Math.random() > 0.5 ? 1 : -1),
+                        velocityY: 0,
+                        width: enemyType.size,
+                        height: enemyType.size,
+                        health: enemyType.health,
+                        maxHealth: enemyType.health,
+                        damage: enemyType.damage,
+                        xp: enemyType.xp,
+                        speed: enemyType.speed,
+                        color: enemyType.color,
+                        name: enemyType.name,
+                        isGrounded: false,
+                        isDead: false,
+                        patrolPlatform: platform,
+                        hitCooldown: 0,
+                        knockback: 0
+                    });
+                }
+            },
+
             createHUD() {
                 const overlay = document.getElementById('ui-overlay');
                 overlay.innerHTML = `
                     <div class="hud">
+                        <div class="hud-stat">
+                            <span>⭐ Nivel</span>
+                            <span id="level-text">1</span>
+                        </div>
+                        <div class="hud-stat">
+                            <span>✨ XP</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill xp-fill" id="xp-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="xp-text">0/100</span>
+                        </div>
                         <div class="hud-stat">
                             <span>❤️</span>
                             <div class="stat-bar">
@@ -1444,6 +1582,13 @@
                 const energyPercent = (Game.player.energy / Game.saveData.stats.maxEnergy) * 100;
                 const progress = Math.floor((Game.player.x / this.worldLength) * 100);
 
+                // XP calculation
+                const xpForNextLevel = this.getXPForLevel(Game.player.level + 1);
+                const xpPercent = (Game.player.xp / xpForNextLevel) * 100;
+
+                const levelText = document.getElementById('level-text');
+                const xpBar = document.getElementById('xp-bar');
+                const xpText = document.getElementById('xp-text');
                 const healthBar = document.getElementById('health-bar');
                 const energyBar = document.getElementById('energy-bar');
                 const healthText = document.getElementById('health-text');
@@ -1451,12 +1596,65 @@
                 const coinsText = document.getElementById('coins-text');
                 const progressText = document.getElementById('progress-text');
 
+                if (levelText) levelText.textContent = Game.player.level;
+                if (xpBar) xpBar.style.width = xpPercent + '%';
+                if (xpText) xpText.textContent = `${Game.player.xp}/${xpForNextLevel}`;
                 if (healthBar) healthBar.style.width = healthPercent + '%';
                 if (energyBar) energyBar.style.width = energyPercent + '%';
                 if (healthText) healthText.textContent = Math.floor(Game.player.health);
                 if (energyText) energyText.textContent = Math.floor(Game.player.energy);
                 if (coinsText) coinsText.textContent = Game.player.coins;
                 if (progressText) progressText.textContent = progress + '%';
+            },
+
+            getXPForLevel(level) {
+                return Math.floor(100 * Math.pow(1.5, level - 1));
+            },
+
+            gainXP(amount) {
+                Game.player.xp += amount;
+                const xpNeeded = this.getXPForLevel(Game.player.level + 1);
+
+                if (Game.player.xp >= xpNeeded) {
+                    this.levelUp();
+                }
+            },
+
+            levelUp() {
+                Game.player.level++;
+                const xpNeeded = this.getXPForLevel(Game.player.level + 1);
+                Game.player.xp = Game.player.xp - this.getXPForLevel(Game.player.level);
+
+                // Increase stats
+                Game.saveData.stats.maxHealth += 10;
+                Game.saveData.stats.maxEnergy += 5;
+                Game.saveData.stats.strength += 3;
+                Game.saveData.stats.defense += 2;
+
+                // Heal on level up
+                Game.player.health = Game.saveData.stats.maxHealth;
+                Game.player.energy = Game.saveData.stats.maxEnergy;
+
+                // Visual effect
+                for (let i = 0; i < 50; i++) {
+                    Game.particles.push({
+                        x: Game.player.x + Game.player.width / 2,
+                        y: Game.player.y + Game.player.height / 2,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 1,
+                        color: '#fbbf24',
+                        size: Math.random() * 6 + 3
+                    });
+                }
+
+                playSound('levelup');
+                showNotification(
+                    `⭐ ¡Nivel ${Game.player.level}!`,
+                    `Has subido de nivel! +10 ❤️ +5 ⚡ +3 💪`
+                );
+
+                saveGame();
             },
 
             showRandomMessage() {
@@ -1479,6 +1677,9 @@
 
                 // Update coins
                 this.updateCoins(dt);
+
+                // Update enemies
+                this.updateEnemies(dt);
 
                 // Update clouds
                 this.clouds.forEach(cloud => {
@@ -1589,6 +1790,10 @@
                 if (p.energy < Game.saveData.stats.maxEnergy) {
                     p.energy += dt * 5;
                 }
+
+                // Decrease cooldowns
+                if (p.attackCooldown > 0) p.attackCooldown--;
+                if (p.invulnerabilityTime > 0) p.invulnerabilityTime--;
             },
 
             updateCamera() {
@@ -1639,6 +1844,67 @@
                 });
             },
 
+            updateEnemies(dt) {
+                this.enemies.forEach(enemy => {
+                    if (enemy.isDead) return;
+
+                    // Apply gravity
+                    enemy.velocityY += 0.8;
+
+                    // Apply velocity
+                    enemy.x += enemy.velocityX;
+                    enemy.y += enemy.velocityY;
+
+                    // Check platform collisions
+                    enemy.isGrounded = false;
+                    this.platforms.forEach(platform => {
+                        if (platform.broken) return;
+
+                        if (this.checkCollision(enemy, platform)) {
+                            if (enemy.velocityY > 0 && enemy.y + enemy.height - enemy.velocityY <= platform.y + 10) {
+                                enemy.y = platform.y - enemy.height;
+                                enemy.velocityY = 0;
+                                enemy.isGrounded = true;
+                            }
+                        }
+                    });
+
+                    // Patrol behavior
+                    if (enemy.isGrounded && enemy.patrolPlatform) {
+                        const platform = enemy.patrolPlatform;
+                        if (enemy.x < platform.x || enemy.x + enemy.width > platform.x + platform.width) {
+                            enemy.velocityX *= -1;
+                        }
+                    }
+
+                    // Check collision with player
+                    if (this.checkCollision(Game.player, enemy)) {
+                        if (enemy.hitCooldown <= 0) {
+                            // Player takes damage
+                            Game.player.health -= enemy.damage;
+                            Game.player.invulnerabilityTime = 60;
+                            enemy.hitCooldown = 60;
+                            playSound('damage');
+
+                            // Knockback
+                            const knockbackDir = Game.player.x < enemy.x ? -1 : 1;
+                            Game.player.velocityX = knockbackDir * 8;
+                            Game.player.velocityY = -8;
+
+                            Game.camera.shake = 10;
+                            Game.camera.shakeIntensity = 8;
+
+                            if (Game.player.health <= 0) {
+                                this.gameOver();
+                            }
+                        }
+                    }
+
+                    // Decrease cooldowns
+                    if (enemy.hitCooldown > 0) enemy.hitCooldown--;
+                });
+            },
+
             checkCollision(player, platform) {
                 return player.x < platform.x + platform.width &&
                        player.x + player.width > platform.x &&
@@ -1677,6 +1943,105 @@
                 }
             },
 
+            handleAttack() {
+                const p = Game.player;
+
+                if (p.attackCooldown > 0 || p.energy < 15) return;
+
+                p.isAttacking = true;
+                p.attackCooldown = 30;
+                p.energy -= 15;
+
+                playSound('attack');
+
+                // Create attack hitbox
+                const attackRange = 50;
+                const attackX = p.isFacingRight ? p.x + p.width : p.x - attackRange;
+                const attackY = p.y;
+                const attackWidth = attackRange;
+                const attackHeight = p.height;
+
+                // Attack particles
+                for (let i = 0; i < 10; i++) {
+                    Game.particles.push({
+                        x: attackX + attackWidth / 2,
+                        y: attackY + attackHeight / 2,
+                        vx: (p.isFacingRight ? 5 : -5) + (Math.random() - 0.5) * 3,
+                        vy: (Math.random() - 0.5) * 5,
+                        life: 0.5,
+                        color: p.color,
+                        size: Math.random() * 4 + 2
+                    });
+                }
+
+                // Check enemy hits
+                this.enemies.forEach(enemy => {
+                    if (enemy.isDead) return;
+
+                    const hitbox = {
+                        x: attackX,
+                        y: attackY,
+                        width: attackWidth,
+                        height: attackHeight
+                    };
+
+                    if (this.checkCollision(hitbox, enemy)) {
+                        // Deal damage
+                        const damage = Game.saveData.stats.strength;
+                        enemy.health -= damage;
+
+                        // Knockback
+                        const knockbackDir = p.isFacingRight ? 1 : -1;
+                        enemy.velocityX = knockbackDir * 10;
+                        enemy.velocityY = -5;
+
+                        // Hit effect
+                        for (let i = 0; i < 15; i++) {
+                            Game.particles.push({
+                                x: enemy.x + enemy.width / 2,
+                                y: enemy.y + enemy.height / 2,
+                                vx: (Math.random() - 0.5) * 8,
+                                vy: (Math.random() - 0.5) * 8,
+                                life: 0.8,
+                                color: enemy.color,
+                                size: Math.random() * 5 + 2
+                            });
+                        }
+
+                        playSound('hit');
+
+                        // Check if enemy died
+                        if (enemy.health <= 0) {
+                            enemy.isDead = true;
+                            this.gainXP(enemy.xp);
+
+                            // Death explosion
+                            for (let i = 0; i < 30; i++) {
+                                Game.particles.push({
+                                    x: enemy.x + enemy.width / 2,
+                                    y: enemy.y + enemy.height / 2,
+                                    vx: (Math.random() - 0.5) * 12,
+                                    vy: (Math.random() - 0.5) * 12,
+                                    life: 1,
+                                    color: enemy.color,
+                                    size: Math.random() * 6 + 3
+                                });
+                            }
+
+                            playSound('enemy_death');
+                            showNotification(
+                                `💫 ${enemy.name} derrotado!`,
+                                `+${enemy.xp} XP`
+                            );
+                        }
+                    }
+                });
+
+                setTimeout(() => {
+                    p.isAttacking = false;
+                }, 200);
+            },
+
             draw() {
                 // Draw parallax background
                 this.drawParallax();
@@ -1692,6 +2057,9 @@
 
                 // Draw coins
                 this.drawCoins();
+
+                // Draw enemies
+                this.drawEnemies();
 
                 // Draw player
                 this.drawPlayer();
@@ -1841,6 +2209,73 @@
                     ctx.fill();
 
                     ctx.restore();
+                });
+            },
+
+            drawEnemies() {
+                this.enemies.forEach(enemy => {
+                    if (enemy.isDead) return;
+
+                    const screenX = enemy.x - Game.camera.x;
+                    const screenY = enemy.y - Game.camera.y;
+
+                    // Don't draw if off screen
+                    if (screenX + enemy.width < 0 || screenX > canvas.width) return;
+
+                    ctx.save();
+
+                    // Glow effect
+                    ctx.shadowColor = enemy.color;
+                    ctx.shadowBlur = 15;
+
+                    // Enemy body (shadowy form)
+                    ctx.fillStyle = enemy.color;
+                    ctx.globalAlpha = 0.8;
+                    ctx.beginPath();
+                    ctx.arc(screenX + enemy.width / 2, screenY + enemy.height / 2, enemy.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Eyes (menacing)
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = '#fff';
+                    const eyeY = screenY + enemy.height / 2 - 5;
+                    ctx.beginPath();
+                    ctx.arc(screenX + enemy.width / 2 - 8, eyeY, 4, 0, Math.PI * 2);
+                    ctx.arc(screenX + enemy.width / 2 + 8, eyeY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pupils
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath();
+                    ctx.arc(screenX + enemy.width / 2 - 8, eyeY, 2, 0, Math.PI * 2);
+                    ctx.arc(screenX + enemy.width / 2 + 8, eyeY, 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+
+                    // Health bar
+                    if (enemy.health < enemy.maxHealth) {
+                        const barWidth = enemy.width;
+                        const barHeight = 4;
+                        const barX = screenX;
+                        const barY = screenY - 10;
+
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                        ctx.fillStyle = '#ef4444';
+                        const healthWidth = (enemy.health / enemy.maxHealth) * barWidth;
+                        ctx.fillRect(barX, barY, healthWidth, barHeight);
+                    }
+
+                    // Name label
+                    ctx.font = '12px Arial';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.shadowColor = '#000';
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(enemy.name, screenX + enemy.width / 2, screenY - 15);
+                    ctx.shadowBlur = 0;
                 });
             },
 
@@ -2018,6 +2453,12 @@
                 if (e.key === ' ' || e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
                     e.preventDefault();
                     GameScene.handleJump();
+                }
+
+                // Attack
+                if (e.key === 'z' || e.key === 'Z') {
+                    e.preventDefault();
+                    GameScene.handleAttack();
                 }
 
                 // Pause
