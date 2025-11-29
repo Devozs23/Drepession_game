@@ -718,23 +718,30 @@
             executeAction(action) {
                 switch (action) {
                     case 'newGame':
-                        showModal(
-                            '🎮 Nueva Aventura',
-                            '<p style="text-align: center; font-size: 18px;">¿Estás seguro? Esto borrará tu progreso actual.</p>',
-                            [
-                                {
-                                    text: 'Sí, comenzar',
-                                    onClick: () => {
-                                        deleteSave();
-                                        startCharacterSelect();
+                        // Si hay un juego guardado, mostrar confirmación
+                        if (loadGame()) {
+                            showModal(
+                                '🎮 Nueva Aventura',
+                                '<p style="text-align: center; font-size: 18px;">¿Estás seguro? Esto borrará tu progreso actual.</p>',
+                                [
+                                    {
+                                        text: 'Sí, comenzar',
+                                        onClick: () => {
+                                            deleteSave();
+                                            startCharacterSelect();
+                                        }
+                                    },
+                                    {
+                                        text: 'Cancelar',
+                                        onClick: () => {}
                                     }
-                                },
-                                {
-                                    text: 'Cancelar',
-                                    onClick: () => {}
-                                }
-                            ]
-                        );
+                                ]
+                            );
+                        } else {
+                            // No hay juego guardado, ir directo a selección
+                            deleteSave();
+                            startCharacterSelect();
+                        }
                         break;
 
                     case 'continue':
@@ -1116,11 +1123,19 @@
                     }
                 });
 
-                // Instructions
-                ctx.font = '18px Arial';
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                // Instructions (más prominentes)
+                ctx.save();
+                ctx.shadowColor = '#667eea';
+                ctx.shadowBlur = 10;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = '#fbbf24';
                 ctx.textAlign = 'center';
-                ctx.fillText('← → Seleccionar  |  ENTER Confirmar', canvas.width / 2, canvas.height - 30);
+                ctx.fillText('← → Seleccionar  |  ENTER o CLICK para Confirmar', canvas.width / 2, canvas.height - 40);
+                ctx.restore();
+
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fillText('ESC para volver al menú', canvas.width / 2, canvas.height - 15);
             },
 
             drawCharacter(x, y, char, isSelected) {
@@ -1207,30 +1222,55 @@
                     playSound('menu_move');
                 }
 
-                if (key === 'Enter') {
-                    const selected = this.characters[this.selectedIndex];
-                    Game.saveData.character = selected.id;
-                    Game.saveData.stats.maxHealth = selected.stats.health;
-                    Game.saveData.stats.maxEnergy = selected.stats.energy;
-                    Game.saveData.stats.speed = selected.stats.speed;
-                    Game.saveData.stats.strength = selected.stats.strength;
-
-                    playSound('menu_select');
-                    saveGame();
-                    showNotification(
-                        `¡${selected.name} Seleccionado!`,
-                        `Comenzando tu aventura como ${selected.title}`
-                    );
-
-                    setTimeout(() => {
-                        startGame();
-                    }, 1000);
+                if (key === 'Enter' || key === ' ') {
+                    this.selectCharacter();
                 }
 
                 if (key === 'Escape') {
                     Game.state = GameStates.MAIN_MENU;
                     MainMenuScene.init();
                 }
+            },
+
+            selectCharacter() {
+                const selected = this.characters[this.selectedIndex];
+                Game.saveData.character = selected.id;
+                Game.saveData.stats.maxHealth = selected.stats.health;
+                Game.saveData.stats.maxEnergy = selected.stats.energy;
+                Game.saveData.stats.speed = selected.stats.speed;
+                Game.saveData.stats.strength = selected.stats.strength;
+
+                playSound('menu_select');
+                saveGame();
+                showNotification(
+                    `¡${selected.name} Seleccionado!`,
+                    `Comenzando tu aventura como ${selected.title}`
+                );
+
+                setTimeout(() => {
+                    startGame();
+                }, 1000);
+            },
+
+            handleClick(x, y) {
+                const charWidth = 400;
+                const charHeight = 500;
+                const spacing = 100;
+                const startX = (canvas.width - (charWidth * 2 + spacing)) / 2;
+                const startY = 150;
+
+                this.characters.forEach((char, index) => {
+                    const charX = startX + index * (charWidth + spacing);
+                    const charY = startY;
+
+                    if (x >= charX && x <= charX + charWidth &&
+                        y >= charY && y <= charY + charHeight) {
+                        this.selectedIndex = index;
+                        playSound('menu_move');
+                        // Double click or immediate selection
+                        this.selectCharacter();
+                    }
+                });
             }
         };
 
@@ -1328,11 +1368,14 @@
                 // Initialize player from saved character
                 const charColor = Game.saveData.character === 'luna' ? '#ff6b9d' : '#667eea';
                 Game.player.x = 100;
-                Game.player.y = 300;
+                Game.player.y = canvas.height - 100; // Start above first platform
                 Game.player.velocityX = 0;
                 Game.player.velocityY = 0;
                 Game.player.health = Game.saveData.stats.maxHealth;
                 Game.player.energy = Game.saveData.stats.maxEnergy;
+                Game.player.xp = 0;
+                Game.player.level = 1;
+                Game.player.coins = 0;
                 Game.player.isGrounded = false;
                 Game.player.color = charColor;
 
@@ -1364,6 +1407,13 @@
 
                 // Create HUD
                 this.createHUD();
+
+                // Show welcome message with controls
+                showNotification(
+                    '🎮 ¡Comienza tu Aventura!',
+                    '← → Movimiento | ESPACIO Saltar | Z Atacar | ESC Pausar',
+                    6000
+                );
             },
 
             createParallaxLayers() {
@@ -2475,6 +2525,17 @@
 
         document.addEventListener('keyup', (e) => {
             Game.keys[e.key] = false;
+        });
+
+        // Mouse input for character selection
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (Game.state === GameStates.CHARACTER_SELECT) {
+                CharacterSelectScene.handleClick(x, y);
+            }
         });
 
         // ============================================
