@@ -548,6 +548,28 @@
                 emotionalState: 'neutral' // neutral, calm, excited, epic
             },
 
+            // PARTE 10: Checkpoint System
+            checkpoints: [],
+            lastCheckpoint: null,
+
+            // PARTE 10: Wind System
+            wind: {
+                active: false,
+                strength: 0,
+                direction: 1, // 1 = right, -1 = left
+                timer: 0,
+                nextWindTime: 0
+            },
+
+            // PARTE 10: Parkour Combo System
+            parkourCombo: {
+                count: 0,
+                lastPlatform: null,
+                timer: 0,
+                bonusMultiplier: 1,
+                timeWithoutGround: 0
+            },
+
             // Performance
             fps: 60,
             frameCount: 0
@@ -1826,12 +1848,12 @@
                 // PARTE 9: Initialize generative music system
                 this.initMusicSystem();
 
+                // PARTE 10: Generate checkpoints
+                this.generateCheckpoints();
+
                 // Create decorative elements
                 this.createClouds();
                 this.createStars();
-
-                // Set checkpoints
-                this.checkpoints = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500];
 
                 // Show first message
                 this.showRandomMessage();
@@ -1937,27 +1959,47 @@
                     color: '#4a3f6b'
                 });
 
-                // Generate platforms progressively
+                // Generate platforms progressively (PARTE 10: Más plataformas y más separadas)
                 let lastX = 300;
                 let lastY = canvas.height - 40;
+                let verticalSection = false;
 
-                for (let i = 0; i < 50; i++) {
-                    // Reduced gaps to ensure platforms are always reachable
-                    let gapX = Math.random() * 120 + 100;  // 100-220px (was 150-350px)
-                    let gapY = (Math.random() - 0.5) * 100; // -50 to +50px (was -75 to +75px)
+                for (let i = 0; i < 120; i++) { // Aumentado de 50 a 120 plataformas
+                    // PARTE 10: Gaps más grandes para más desafío
+                    let gapX = Math.random() * 180 + 150;  // 150-330px (más separadas)
+                    let gapY = (Math.random() - 0.5) * 140; // -70 to +70px (más variación vertical)
 
-                    // If platform is going upward, make horizontal gap smaller
-                    if (gapY < -20) { // Going significantly upward
-                        gapX = Math.random() * 80 + 80; // 80-160px for easier upward jumps
+                    // Secciones verticales cada 20 plataformas
+                    if (i % 20 === 10 && i > 10) {
+                        verticalSection = true;
+                        gapY = -80 - Math.random() * 40; // Forzar ascenso
+                        gapX = Math.random() * 60 + 100; // Gaps más cortos para torres
+                    } else if (verticalSection && Math.random() < 0.3) {
+                        verticalSection = false;
+                    }
+
+                    // Si va hacia arriba, reducir gap horizontal un poco
+                    if (gapY < -30) {
+                        gapX = Math.random() * 120 + 120; // 120-240px para saltos ascendentes
                     }
 
                     const width = Math.random() * 150 + 100;
 
                     lastX += gapX;
-                    lastY = Math.max(200, Math.min(canvas.height - 100, lastY + gapY));
+                    lastY = Math.max(100, Math.min(canvas.height - 100, lastY + gapY)); // Ahora pueden llegar hasta y=100
 
-                    const platformTypes = ['normal', 'moving', 'breakable'];
-                    const type = i % 5 === 0 ? platformTypes[Math.floor(Math.random() * platformTypes.length)] : 'normal';
+                    // PARTE 10: Nuevos tipos de plataformas
+                    const platformTypes = [
+                        'normal', 'normal', 'normal', // Más probabilidad de normales
+                        'moving',
+                        'breakable',
+                        'trampoline',  // ¡Nueva! Te lanza hacia arriba
+                        'cloud',       // ¡Nueva! Atravesable desde abajo
+                        'magnetic',    // ¡Nueva! Te atrae
+                        'boost',       // ¡Nueva! Impulso horizontal
+                        'rainbow'      // ¡Nueva! Cambia de color y da buffs
+                    ];
+                    const type = i % 4 === 0 ? platformTypes[Math.floor(Math.random() * platformTypes.length)] : 'normal';
 
                     this.platforms.push({
                         x: lastX,
@@ -1966,11 +2008,20 @@
                         height: 30,
                         type: type,
                         color: type === 'moving' ? '#667eea' :
-                               type === 'breakable' ? '#f59e0b' : '#5a4a7b',
+                               type === 'breakable' ? '#f59e0b' :
+                               type === 'trampoline' ? '#10b981' :
+                               type === 'cloud' ? '#e0f2fe' :
+                               type === 'magnetic' ? '#ec4899' :
+                               type === 'boost' ? '#f97316' :
+                               type === 'rainbow' ? '#a855f7' : '#5a4a7b',
                         originalY: lastY,
                         moveSpeed: type === 'moving' ? Math.random() * 2 + 1 : 0,
                         moveRange: 100,
-                        broken: false
+                        broken: false,
+                        magneticPull: type === 'magnetic' ? 0.5 : 0,
+                        boostPower: type === 'boost' ? 8 : 0,
+                        trampolinePower: type === 'trampoline' ? 22 : 0,
+                        rainbowHue: 0
                     });
                 }
 
@@ -2081,14 +2132,25 @@
                 });
             },
 
-            // PARTE 6: Generate bosses
+            // PARTE 6: Generate bosses (PARTE 10: Bosses en plataformas elevadas)
             generateBosses() {
                 this.bosses = [];
 
                 this.bossTypes.forEach(bossType => {
+                    // PARTE 10: Encontrar plataforma cercana a la posición del boss
+                    const nearbyPlatforms = this.platforms.filter(p =>
+                        Math.abs(p.x - bossType.position) < 500 &&
+                        p.y < canvas.height - 200 // Solo plataformas elevadas
+                    );
+
+                    // Si hay plataformas elevadas, usar una; si no, usar una altura media
+                    const targetY = nearbyPlatforms.length > 0
+                        ? nearbyPlatforms[Math.floor(Math.random() * nearbyPlatforms.length)].y - bossType.size - 10
+                        : canvas.height / 2; // Altura media si no hay plataformas
+
                     this.bosses.push({
                         x: bossType.position,
-                        y: canvas.height - 150,
+                        y: targetY, // PARTE 10: Ahora en plataformas elevadas
                         width: bossType.size,
                         height: bossType.size,
                         type: bossType,
@@ -2105,9 +2167,38 @@
                         dialogueTimer: 0,
                         minions: [],
                         duplicates: [],
-                        invulnerableTimer: 0
+                        invulnerableTimer: 0,
+                        isGrounded: false // PARTE 10: Para aplicar gravedad a bosses
                     });
                 });
+            },
+
+            // PARTE 10: Generate checkpoints
+            generateCheckpoints() {
+                Game.checkpoints = [];
+
+                // Place checkpoints every 1000 pixels
+                for (let x = 1000; x < this.worldLength; x += 1000) {
+                    // Find a safe platform near this x position
+                    const nearbyPlatforms = this.platforms.filter(p =>
+                        Math.abs(p.x - x) < 300 &&
+                        p.type !== 'breakable' &&
+                        p.type !== 'moving'
+                    );
+
+                    if (nearbyPlatforms.length > 0) {
+                        const platform = nearbyPlatforms[0];
+                        Game.checkpoints.push({
+                            x: platform.x + platform.width / 2,
+                            y: platform.y - 80,
+                            width: 40,
+                            height: 80,
+                            activated: false,
+                            animationTime: 0,
+                            particles: []
+                        });
+                    }
+                }
             },
 
             // PARTE 8: Initialize companion
@@ -2507,6 +2598,81 @@
                 }
             },
 
+            // PARTE 10: Update wind system
+            updateWind(dt) {
+                const wind = Game.wind;
+
+                // Increment timer
+                wind.timer += dt;
+
+                // Random wind gusts
+                if (!wind.active && wind.timer > wind.nextWindTime) {
+                    wind.active = true;
+                    wind.strength = Math.random() * 0.3 + 0.2; // 0.2-0.5
+                    wind.direction = Math.random() < 0.5 ? -1 : 1;
+                    wind.timer = 0;
+                    showNotification('🌪️ ¡Viento!', wind.direction > 0 ? 'Viento hacia la derecha' : 'Viento hacia la izquierda', 2000);
+                } else if (wind.active && wind.timer > 3) { // Wind lasts 3 seconds
+                    wind.active = false;
+                    wind.timer = 0;
+                    wind.nextWindTime = Math.random() * 10 + 5; // Next wind in 5-15 seconds
+                }
+            },
+
+            // PARTE 10: Update parkour combo system
+            updateParkourCombo(dt) {
+                const combo = Game.parkourCombo;
+
+                // Decrease timer
+                if (combo.timer > 0) {
+                    combo.timer -= dt;
+                }
+
+                // Reset combo if timer runs out
+                if (combo.timer <= 0 && combo.count > 0) {
+                    combo.count = 0;
+                    combo.lastPlatform = null;
+                    combo.bonusMultiplier = 1;
+                }
+
+                // Update bonus multiplier based on combo
+                if (combo.count >= 10) combo.bonusMultiplier = 3;
+                else if (combo.count >= 5) combo.bonusMultiplier = 2;
+                else combo.bonusMultiplier = 1;
+            },
+
+            // PARTE 10: Update checkpoints
+            updateCheckpoints(dt) {
+                const p = Game.player;
+
+                Game.checkpoints.forEach(checkpoint => {
+                    // Check if player touches checkpoint
+                    if (!checkpoint.activated) {
+                        const dx = Math.abs((p.x + p.width / 2) - checkpoint.x);
+                        const dy = Math.abs((p.y + p.height / 2) - checkpoint.y);
+
+                        if (dx < 30 && dy < 50) {
+                            checkpoint.activated = true;
+                            Game.lastCheckpoint = checkpoint;
+                            playSound('coin');
+                            showNotification('🏁 ¡Checkpoint!', 'Progreso guardado', 3000);
+
+                            // Create particles
+                            for (let i = 0; i < 20; i++) {
+                                this.createParticles(checkpoint.x, checkpoint.y, 1, '#fbbf24');
+                            }
+                        }
+                    }
+
+                    // Animate checkpoint
+                    if (checkpoint.activated) {
+                        checkpoint.animationTime += dt * 5;
+                    } else {
+                        checkpoint.animationTime += dt * 2;
+                    }
+                });
+            },
+
             // PARTE 5: Check achievements
             checkAchievements() {
                 const p = Game.player;
@@ -2870,6 +3036,15 @@
                 // PARTE 9: Update generative music system
                 this.updateMusicSystem(dt);
 
+                // PARTE 10: Update wind system
+                this.updateWind(dt);
+
+                // PARTE 10: Update parkour combo system
+                this.updateParkourCombo(dt);
+
+                // PARTE 10: Update checkpoints
+                this.updateCheckpoints(dt);
+
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
                     Game.player.trail.push({
@@ -2952,22 +3127,101 @@
                 // Apply gravity
                 p.velocityY += gravity;
 
+                // PARTE 10: Apply wind effect
+                if (Game.wind.active) {
+                    p.velocityX += Game.wind.direction * Game.wind.strength;
+                }
+
                 // Apply velocity
                 p.x += p.velocityX;
                 p.y += p.velocityY;
+
+                // PARTE 10: Parkour combo system
+                if (!p.isGrounded) {
+                    Game.parkourCombo.timeWithoutGround += dt;
+                } else if (Game.parkourCombo.timeWithoutGround > 0) {
+                    Game.parkourCombo.timeWithoutGround = 0;
+                }
 
                 // Check platform collisions
                 p.isGrounded = false;
                 this.platforms.forEach(platform => {
                     if (platform.broken) return;
 
+                    // PARTE 10: Plataformas magnéticas atraen al jugador
+                    if (platform.type === 'magnetic' && !p.isGrounded) {
+                        const dx = (platform.x + platform.width / 2) - (p.x + p.width / 2);
+                        const dy = (platform.y - 20) - (p.y + p.height / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 150) { // Radio de atracción
+                            p.velocityX += (dx / distance) * platform.magneticPull;
+                            p.velocityY += (dy / distance) * platform.magneticPull;
+                        }
+                    }
+
                     if (this.checkCollision(p, platform)) {
+                        // PARTE 10: Plataformas nube - atravesables desde abajo
+                        if (platform.type === 'cloud') {
+                            // Solo colisión si cayendo desde arriba
+                            if (p.velocityY > 0 && p.y + p.height - p.velocityY <= platform.y + 5) {
+                                p.y = platform.y - p.height;
+                                p.velocityY = 0;
+                                p.isGrounded = true;
+                                p.canDoubleJump = true;
+                            }
+                            return; // No colisión lateral o desde abajo
+                        }
+
                         // Landing on top of platform
                         if (p.velocityY > 0 && p.y + p.height - p.velocityY <= platform.y + 10) {
                             p.y = platform.y - p.height;
                             p.velocityY = 0;
                             p.isGrounded = true;
                             p.canDoubleJump = true;
+
+                            // PARTE 10: Parkour combo - bonus por encadenar plataformas
+                            if (Game.parkourCombo.lastPlatform !== platform && Game.parkourCombo.timeWithoutGround > 0.5) {
+                                Game.parkourCombo.count++;
+                                Game.parkourCombo.lastPlatform = platform;
+                                Game.parkourCombo.timer = 300; // 5 segundos para siguiente plataforma
+
+                                if (Game.parkourCombo.count >= 3) {
+                                    const bonus = Math.floor(Game.parkourCombo.count * 5);
+                                    p.coins += bonus;
+                                    showNotification(`🏃 Parkour Combo x${Game.parkourCombo.count}!`, `+${bonus} monedas`, 2000);
+                                }
+                            }
+
+                            // PARTE 10: Plataforma trampolín - super salto
+                            if (platform.type === 'trampoline') {
+                                p.velocityY = -platform.trampolinePower;
+                                p.isGrounded = false;
+                                playSound('jump');
+                                this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#10b981');
+                            }
+
+                            // PARTE 10: Plataforma de impulso - velocidad horizontal
+                            if (platform.type === 'boost') {
+                                if (p.velocityX > 0) p.velocityX += platform.boostPower;
+                                else if (p.velocityX < 0) p.velocityX -= platform.boostPower;
+                                else p.velocityX = p.isFacingRight ? platform.boostPower : -platform.boostPower;
+                                this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#f97316');
+                            }
+
+                            // PARTE 10: Plataforma arcoíris - buff aleatorio
+                            if (platform.type === 'rainbow' && !p.lastRainbowPlatform) {
+                                const buffs = ['speed', 'infinite_energy', 'shield', 'damage'];
+                                const randomBuff = buffs[Math.floor(Math.random() * buffs.length)];
+                                p.activeBuffs.push({
+                                    type: randomBuff,
+                                    duration: 300,
+                                    multiplier: randomBuff === 'speed' ? 1.5 : randomBuff === 'damage' ? 2 : 1
+                                });
+                                p.lastRainbowPlatform = platform;
+                                setTimeout(() => p.lastRainbowPlatform = null, 2000);
+                                showNotification(`✨ Buff: ${randomBuff.toUpperCase()}!`, '', 2000);
+                            }
 
                             // Break breakable platforms
                             if (platform.type === 'breakable') {
@@ -3032,6 +3286,10 @@
                 this.platforms.forEach(platform => {
                     if (platform.type === 'moving') {
                         platform.y = platform.originalY + Math.sin(this.time * platform.moveSpeed) * platform.moveRange;
+                    }
+                    // PARTE 10: Animar plataformas arcoíris
+                    if (platform.type === 'rainbow') {
+                        platform.rainbowHue = (platform.rainbowHue + dt * 50) % 360;
                     }
                 });
             },
@@ -4538,6 +4796,9 @@
                 // Draw coins
                 this.drawCoins();
 
+                // PARTE 10: Draw checkpoints
+                this.drawCheckpoints();
+
                 // PARTE 5: Draw power-ups
                 this.drawPowerups();
 
@@ -4675,9 +4936,80 @@
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                     ctx.fillRect(screenX + 5, screenY + 5, platform.width, platform.height);
 
-                    // Platform
-                    ctx.fillStyle = platform.color;
-                    ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                    // PARTE 10: Rainbow platform - animated color
+                    if (platform.type === 'rainbow') {
+                        ctx.fillStyle = `hsl(${platform.rainbowHue}, 70%, 60%)`;
+                        ctx.save();
+                        ctx.shadowColor = `hsl(${platform.rainbowHue}, 70%, 60%)`;
+                        ctx.shadowBlur = 15;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        ctx.restore();
+                    }
+                    // PARTE 10: Trampoline platform - spring effect
+                    else if (platform.type === 'trampoline') {
+                        ctx.fillStyle = platform.color;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        // Spring lines
+                        ctx.strokeStyle = '#059669';
+                        ctx.lineWidth = 2;
+                        for (let i = 0; i < 5; i++) {
+                            const x = screenX + (platform.width / 6) * (i + 1);
+                            ctx.beginPath();
+                            ctx.moveTo(x, screenY + 5);
+                            ctx.lineTo(x, screenY + platform.height - 5);
+                            ctx.stroke();
+                        }
+                    }
+                    // PARTE 10: Cloud platform - fluffy appearance
+                    else if (platform.type === 'cloud') {
+                        ctx.save();
+                        ctx.globalAlpha = 0.7;
+                        ctx.fillStyle = platform.color;
+                        // Draw cloud shape
+                        ctx.beginPath();
+                        for (let i = 0; i < 3; i++) {
+                            const cx = screenX + (platform.width / 4) * (i + 0.5);
+                            ctx.arc(cx, screenY + platform.height / 2, platform.height / 2, 0, Math.PI * 2);
+                        }
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    // PARTE 10: Magnetic platform - magnetic field lines
+                    else if (platform.type === 'magnetic') {
+                        ctx.fillStyle = platform.color;
+                        ctx.save();
+                        ctx.shadowColor = platform.color;
+                        ctx.shadowBlur = 10;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        // Magnetic particles
+                        for (let i = 0; i < 3; i++) {
+                            const angle = (this.time * 2 + i * (Math.PI * 2 / 3)) % (Math.PI * 2);
+                            const px = screenX + platform.width / 2 + Math.cos(angle) * 30;
+                            const py = screenY + platform.height / 2 + Math.sin(angle) * 20;
+                            ctx.fillStyle = '#ec4899';
+                            ctx.beginPath();
+                            ctx.arc(px, py, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
+                    }
+                    // PARTE 10: Boost platform - arrow indicator
+                    else if (platform.type === 'boost') {
+                        ctx.fillStyle = platform.color;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        // Arrow
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath();
+                        ctx.moveTo(screenX + platform.width * 0.7, screenY + platform.height / 2);
+                        ctx.lineTo(screenX + platform.width * 0.5, screenY + 8);
+                        ctx.lineTo(screenX + platform.width * 0.5, screenY + platform.height - 8);
+                        ctx.fill();
+                    }
+                    // Normal platform
+                    else {
+                        ctx.fillStyle = platform.color;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                    }
 
                     // Platform border
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -4727,6 +5059,58 @@
                     ctx.fill();
 
                     ctx.restore();
+                });
+            },
+
+            // PARTE 10: Draw checkpoints
+            drawCheckpoints() {
+                Game.checkpoints.forEach(checkpoint => {
+                    const screenX = checkpoint.x - Game.camera.x;
+                    const screenY = checkpoint.y - Game.camera.y;
+
+                    // Don't draw if off screen
+                    if (screenX < -100 || screenX > canvas.width + 100) return;
+
+                    ctx.save();
+
+                    // Checkpoint flag pole
+                    ctx.strokeStyle = checkpoint.activated ? '#fbbf24' : '#9ca3af';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(screenX, screenY + checkpoint.height);
+                    ctx.lineTo(screenX, screenY);
+                    ctx.stroke();
+
+                    // Checkpoint flag
+                    const flagWave = Math.sin(checkpoint.animationTime) * 5;
+                    ctx.fillStyle = checkpoint.activated ? '#fbbf24' : '#6b7280';
+
+                    if (checkpoint.activated) {
+                        ctx.shadowColor = '#fbbf24';
+                        ctx.shadowBlur = 20;
+                    }
+
+                    ctx.beginPath();
+                    ctx.moveTo(screenX, screenY);
+                    ctx.lineTo(screenX + 30 + flagWave, screenY + 10);
+                    ctx.lineTo(screenX + 25 + flagWave, screenY + 20);
+                    ctx.lineTo(screenX, screenY + 25);
+                    ctx.fill();
+
+                    // Checkpoint icon
+                    if (checkpoint.activated) {
+                        ctx.font = '20px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText('✓', screenX + 15, screenY + 12);
+                    }
+
+                    ctx.restore();
+
+                    // Animated particles if activated
+                    if (checkpoint.activated && Math.random() < 0.1) {
+                        this.createParticles(checkpoint.x, checkpoint.y + 40, 1, '#fbbf24');
+                    }
                 });
             },
 
