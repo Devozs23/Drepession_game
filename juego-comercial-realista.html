@@ -388,7 +388,24 @@
                 dashCooldown: 0,
                 invulnerabilityTime: 0,
                 combo: 0,
-                comboTimer: 0
+                comboTimer: 0,
+                // Special ability system
+                specialAbilityCooldown: 0,
+                isUsingSpecial: false,
+                // Power-ups
+                activeBuffs: [],
+                // Trail effect
+                trail: [],
+                // Achievements tracking
+                stats: {
+                    enemiesDefeated: 0,
+                    damageDealt: 0,
+                    damageTaken: 0,
+                    coinsCollected: 0,
+                    jumps: 0,
+                    specialAbilitiesUsed: 0,
+                    maxCombo: 0
+                }
             },
 
             // Input System
@@ -418,6 +435,9 @@
 
             // NPCs
             npcs: [],
+
+            // Power-ups
+            powerups: [],
 
             // Current Level Data
             currentLevelData: null,
@@ -1334,6 +1354,121 @@
                 }
             ],
 
+            // PARTE 5: Power-ups definitions
+            powerupTypes: [
+                {
+                    name: 'Escudo',
+                    icon: '🛡️',
+                    color: '#3b82f6',
+                    duration: 10, // seconds
+                    effect: 'shield',
+                    description: 'Inmunidad al daño'
+                },
+                {
+                    name: 'Velocidad',
+                    icon: '⚡',
+                    color: '#fbbf24',
+                    duration: 8,
+                    effect: 'speed',
+                    multiplier: 2,
+                    description: 'Movimiento ultra rápido'
+                },
+                {
+                    name: 'Fuerza',
+                    icon: '💪',
+                    color: '#ef4444',
+                    duration: 12,
+                    effect: 'strength',
+                    multiplier: 2.5,
+                    description: 'Daño aumentado'
+                },
+                {
+                    name: 'Curación',
+                    icon: '❤️',
+                    color: '#10b981',
+                    effect: 'heal',
+                    healAmount: 30,
+                    description: 'Restaura salud'
+                },
+                {
+                    name: 'Energía',
+                    icon: '⭐',
+                    color: '#8b5cf6',
+                    duration: 15,
+                    effect: 'infinite_energy',
+                    description: 'Energía infinita'
+                }
+            ],
+
+            // Special abilities per character
+            specialAbilities: {
+                luna: {
+                    name: 'Sueño Esperanzador',
+                    icon: '🌙',
+                    description: 'Onda de energía que empuja enemigos y cura',
+                    energyCost: 40,
+                    cooldown: 8, // seconds
+                    color: '#ff6b9d',
+                    healAmount: 15,
+                    pushForce: 15,
+                    range: 150
+                },
+                sol: {
+                    name: 'Destello Valiente',
+                    icon: '☀️',
+                    description: 'Dash devastador que atraviesa enemigos',
+                    energyCost: 35,
+                    cooldown: 6,
+                    color: '#667eea',
+                    damage: 25,
+                    dashSpeed: 20,
+                    duration: 0.5
+                }
+            },
+
+            // NPCs definitions
+            npcTypes: [
+                {
+                    name: 'Sabio de la Esperanza',
+                    color: '#10b981',
+                    messages: [
+                        'Cada pequeño paso cuenta en este viaje 🌱',
+                        'La valentía no es ausencia de miedo, es actuar a pesar de él 💚',
+                        'Tu esfuerzo ya es una victoria 🏆'
+                    ],
+                    buff: { type: 'xp_boost', multiplier: 1.5, duration: 20 }
+                },
+                {
+                    name: 'Guardián del Coraje',
+                    color: '#f59e0b',
+                    messages: [
+                        'Eres más fuerte de lo que crees 💫',
+                        'Cada batalla te hace más resiliente 🦁',
+                        'Tu luz interior nunca se apaga 🔥'
+                    ],
+                    buff: { type: 'damage_boost', multiplier: 1.3, duration: 15 }
+                }
+            ],
+
+            // Active NPCs in world
+            npcs: [],
+
+            // Active power-ups in world
+            powerups: [],
+
+            // Achievements system
+            achievements: [
+                { id: 'first_step', name: 'Primer Paso', description: 'Derrota tu primer enemigo', icon: '👣', unlocked: false },
+                { id: 'warrior', name: 'Guerrero', description: 'Derrota 10 enemigos', icon: '⚔️', unlocked: false, requirement: 10 },
+                { id: 'unstoppable', name: 'Imparable', description: 'Alcanza combo x5', icon: '🔥', unlocked: false, requirement: 5 },
+                { id: 'collector', name: 'Coleccionista', description: 'Recolecta 100 monedas', icon: '💰', unlocked: false, requirement: 100 },
+                { id: 'survivor', name: 'Superviviente', description: 'Llega al 50% del mundo', icon: '🌟', unlocked: false },
+                { id: 'champion', name: 'Campeón', description: 'Alcanza nivel 5', icon: '👑', unlocked: false, requirement: 5 },
+                { id: 'healer', name: 'Sanador', description: 'Usa 10 power-ups de curación', icon: '💚', unlocked: false, requirement: 10 },
+                { id: 'speedster', name: 'Velocista', description: 'Salta 100 veces', icon: '🦘', unlocked: false, requirement: 100 },
+                { id: 'master', name: 'Maestro', description: 'Usa habilidad especial 20 veces', icon: '✨', unlocked: false, requirement: 20 }
+            ],
+
             // Motivational messages
             motivationalMessages: [
                 "Un paso a la vez 🌟",
@@ -1391,6 +1526,12 @@
                 // Generate enemies - PARTE 4
                 this.generateEnemies();
 
+                // PARTE 5: Generate power-ups
+                this.generatePowerups();
+
+                // PARTE 5: Generate NPCs
+                this.generateNPCs();
+
                 // Create decorative elements
                 this.createClouds();
                 this.createStars();
@@ -1405,14 +1546,24 @@
                 Game.camera.x = 0;
                 Game.camera.y = 0;
 
+                // Reset player stats
+                Game.player.stats.enemiesDefeated = 0;
+                Game.player.stats.damageDealt = 0;
+                Game.player.stats.damageTaken = 0;
+                Game.player.stats.coinsCollected = 0;
+                Game.player.stats.jumps = 0;
+                Game.player.stats.specialAbilitiesUsed = 0;
+                Game.player.stats.maxCombo = 0;
+
                 // Create HUD
                 this.createHUD();
 
                 // Show welcome message with controls
+                const ability = this.specialAbilities[Game.saveData.character];
                 showNotification(
                     '🎮 ¡Comienza tu Aventura!',
-                    '← → Movimiento | ESPACIO Saltar | Z Atacar | ESC Pausar',
-                    6000
+                    `← → Movimiento | ESPACIO Saltar | Z Atacar | X ${ability.icon} ${ability.name}`,
+                    7000
                 );
             },
 
@@ -1586,8 +1737,104 @@
                 }
             },
 
+            // PARTE 5: Generate power-ups in world
+            generatePowerups() {
+                this.powerups = [];
+
+                // Place power-ups on some platforms (less frequent than coins)
+                for (let i = 5; i < this.platforms.length - 1; i += 7) {
+                    const platform = this.platforms[i];
+                    const typeIndex = Math.floor(Math.random() * this.powerupTypes.length);
+                    const powerupType = this.powerupTypes[typeIndex];
+
+                    this.powerups.push({
+                        x: platform.x + platform.width / 2,
+                        y: platform.y - 60,
+                        width: 30,
+                        height: 30,
+                        type: powerupType,
+                        collected: false,
+                        rotation: 0,
+                        floatOffset: Math.random() * Math.PI * 2 // For floating animation
+                    });
+                }
+            },
+
+            // PARTE 5: Generate NPCs (wise helpers)
+            generateNPCs() {
+                this.npcs = [];
+
+                // Place NPCs at specific checkpoints
+                [1000, 2500, 4000].forEach((checkpoint, index) => {
+                    const npcType = this.npcTypes[index % this.npcTypes.length];
+
+                    this.npcs.push({
+                        x: checkpoint,
+                        y: canvas.height - 120,
+                        width: 40,
+                        height: 60,
+                        type: npcType,
+                        hasInteracted: false,
+                        floatOffset: 0
+                    });
+                });
+            },
+
+            // PARTE 5: Check achievements
+            checkAchievements() {
+                const p = Game.player;
+
+                this.achievements.forEach(achievement => {
+                    if (achievement.unlocked) return;
+
+                    let unlock = false;
+
+                    switch (achievement.id) {
+                        case 'first_step':
+                            if (p.stats.enemiesDefeated >= 1) unlock = true;
+                            break;
+                        case 'warrior':
+                            if (p.stats.enemiesDefeated >= achievement.requirement) unlock = true;
+                            break;
+                        case 'unstoppable':
+                            if (p.stats.maxCombo >= achievement.requirement) unlock = true;
+                            break;
+                        case 'collector':
+                            if (p.stats.coinsCollected >= achievement.requirement) unlock = true;
+                            break;
+                        case 'survivor':
+                            if (p.x >= this.worldLength * 0.5) unlock = true;
+                            break;
+                        case 'champion':
+                            if (p.level >= achievement.requirement) unlock = true;
+                            break;
+                        case 'speedster':
+                            if (p.stats.jumps >= achievement.requirement) unlock = true;
+                            break;
+                        case 'master':
+                            if (p.stats.specialAbilitiesUsed >= achievement.requirement) unlock = true;
+                            break;
+                    }
+
+                    if (unlock) {
+                        achievement.unlocked = true;
+                        Game.saveData.achievements.push(achievement.id);
+                        saveGame();
+
+                        showNotification(
+                            `🏆 Logro Desbloqueado!`,
+                            `${achievement.icon} ${achievement.name}: ${achievement.description}`,
+                            5000
+                        );
+                        playSound('levelup');
+                    }
+                });
+            },
+
             createHUD() {
                 const overlay = document.getElementById('ui-overlay');
+                const ability = this.specialAbilities[Game.saveData.character];
+
                 overlay.innerHTML = `
                     <div class="hud">
                         <div class="hud-stat">
@@ -1623,6 +1870,15 @@
                             <span>📍</span>
                             <span id="progress-text">0%</span>
                         </div>
+                        <div class="hud-stat" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                            <span>${ability.icon} ${ability.name}</span>
+                            <span id="ability-cooldown" style="font-size: 12px;">Listo</span>
+                        </div>
+                        <div class="hud-stat" id="combo-display" style="display: none; color: #fbbf24; font-weight: bold; font-size: 20px;">
+                            <span>🔥 COMBO</span>
+                            <span id="combo-text">x0</span>
+                        </div>
+                        <div id="buffs-display" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
                     </div>
                 `;
             },
@@ -1655,6 +1911,42 @@
                 if (energyText) energyText.textContent = Math.floor(Game.player.energy);
                 if (coinsText) coinsText.textContent = Game.player.coins;
                 if (progressText) progressText.textContent = progress + '%';
+
+                // PARTE 5: Update special ability cooldown
+                const abilityCooldownText = document.getElementById('ability-cooldown');
+                if (abilityCooldownText) {
+                    if (Game.player.specialAbilityCooldown > 0) {
+                        const secondsLeft = Math.ceil(Game.player.specialAbilityCooldown / 60);
+                        abilityCooldownText.textContent = `${secondsLeft}s`;
+                        abilityCooldownText.style.color = '#ef4444';
+                    } else {
+                        abilityCooldownText.textContent = '✓ Listo';
+                        abilityCooldownText.style.color = '#10b981';
+                    }
+                }
+
+                // PARTE 5: Update combo display
+                const comboDisplay = document.getElementById('combo-display');
+                const comboText = document.getElementById('combo-text');
+                if (comboDisplay && comboText) {
+                    if (Game.player.combo >= 2) {
+                        comboDisplay.style.display = 'flex';
+                        comboText.textContent = `x${Game.player.combo}`;
+                    } else {
+                        comboDisplay.style.display = 'none';
+                    }
+                }
+
+                // PARTE 5: Update active buffs display
+                const buffsDisplay = document.getElementById('buffs-display');
+                if (buffsDisplay) {
+                    buffsDisplay.innerHTML = Game.player.activeBuffs.map(buff => {
+                        const timeLeft = Math.ceil(buff.duration / 60);
+                        return `<div style="font-size: 12px; color: ${buff.color};">
+                            ${buff.icon} ${buff.name} (${timeLeft}s)
+                        </div>`;
+                    }).join('');
+                }
             },
 
             getXPForLevel(level) {
@@ -1731,6 +2023,44 @@
                 // Update enemies
                 this.updateEnemies(dt);
 
+                // PARTE 5: Update power-ups
+                this.updatePowerups(dt);
+
+                // PARTE 5: Update NPCs
+                this.updateNPCs(dt);
+
+                // PARTE 5: Update active buffs
+                this.updateBuffs(dt);
+
+                // PARTE 5: Update combo timer
+                if (Game.player.comboTimer > 0) {
+                    Game.player.comboTimer -= dt;
+                    if (Game.player.comboTimer <= 0) {
+                        Game.player.combo = 0;
+                    }
+                }
+
+                // PARTE 5: Update ability cooldown
+                if (Game.player.specialAbilityCooldown > 0) {
+                    Game.player.specialAbilityCooldown--;
+                }
+
+                // PARTE 5: Update trail effect
+                if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
+                    Game.player.trail.push({
+                        x: Game.player.x + Game.player.width / 2,
+                        y: Game.player.y + Game.player.height / 2,
+                        life: 0.5,
+                        color: Game.player.color
+                    });
+                    if (Game.player.trail.length > 15) {
+                        Game.player.trail.shift();
+                    }
+                }
+
+                // PARTE 5: Check achievements
+                this.checkAchievements();
+
                 // Update clouds
                 this.clouds.forEach(cloud => {
                     cloud.x += cloud.speed;
@@ -1773,7 +2103,14 @@
             updatePlayerPhysics(dt) {
                 const p = Game.player;
                 const gravity = 0.8;
-                const moveSpeed = 5 * (Game.saveData.stats.speed / 100);
+                let moveSpeed = 5 * (Game.saveData.stats.speed / 100);
+
+                // PARTE 5: Apply speed buff
+                const speedBuff = p.activeBuffs.find(b => b.type === 'speed');
+                if (speedBuff) {
+                    moveSpeed *= speedBuff.multiplier;
+                }
+
                 const jumpForce = -15;
 
                 // Horizontal movement
@@ -1887,10 +2224,106 @@
                         if (distance < coin.radius + 20) {
                             coin.collected = true;
                             Game.player.coins += coin.value;
+                            Game.player.stats.coinsCollected++;
                             playSound('coin');
                             this.createCoinParticles(coin.x, coin.y);
                         }
                     }
+                });
+            },
+
+            // PARTE 5: Update power-ups
+            updatePowerups(dt) {
+                this.powerups.forEach(powerup => {
+                    if (!powerup.collected) {
+                        powerup.rotation += dt * 2;
+                        powerup.floatOffset += dt * 3;
+
+                        // Check collision with player
+                        const dx = powerup.x - (Game.player.x + Game.player.width / 2);
+                        const dy = powerup.y - (Game.player.y + Game.player.height / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 30) {
+                            powerup.collected = true;
+                            this.applyPowerup(powerup.type);
+                        }
+                    }
+                });
+            },
+
+            // PARTE 5: Apply power-up effect
+            applyPowerup(powerupType) {
+                const p = Game.player;
+
+                playSound('coin'); // Use coin sound, could create custom powerup sound
+
+                if (powerupType.effect === 'heal') {
+                    p.health = Math.min(p.health + powerupType.healAmount, Game.saveData.stats.maxHealth);
+                    showNotification(
+                        `${powerupType.icon} ${powerupType.name}!`,
+                        `+${powerupType.healAmount} ❤️`,
+                        2000
+                    );
+                } else {
+                    // Add timed buff
+                    p.activeBuffs.push({
+                        type: powerupType.effect,
+                        name: powerupType.name,
+                        icon: powerupType.icon,
+                        color: powerupType.color,
+                        duration: powerupType.duration * 60, // Convert to frames
+                        multiplier: powerupType.multiplier || 1
+                    });
+
+                    showNotification(
+                        `${powerupType.icon} ${powerupType.name}!`,
+                        powerupType.description,
+                        3000
+                    );
+                }
+            },
+
+            // PARTE 5: Update NPCs
+            updateNPCs(dt) {
+                this.npcs.forEach(npc => {
+                    npc.floatOffset += dt * 2;
+
+                    // Check if player is near NPC
+                    if (!npc.hasInteracted) {
+                        const distance = Math.abs(Game.player.x - npc.x);
+                        if (distance < 100) {
+                            npc.hasInteracted = true;
+
+                            // Show NPC message
+                            const message = npc.type.messages[Math.floor(Math.random() * npc.type.messages.length)];
+                            showNotification(
+                                `${npc.type.name} 🧙`,
+                                message,
+                                4000
+                            );
+
+                            // Apply buff
+                            Game.player.activeBuffs.push({
+                                type: npc.type.buff.type,
+                                name: npc.type.name,
+                                icon: '✨',
+                                color: npc.type.color,
+                                duration: npc.type.buff.duration * 60,
+                                multiplier: npc.type.buff.multiplier
+                            });
+
+                            playSound('levelup');
+                        }
+                    }
+                });
+            },
+
+            // PARTE 5: Update active buffs
+            updateBuffs(dt) {
+                Game.player.activeBuffs = Game.player.activeBuffs.filter(buff => {
+                    buff.duration--;
+                    return buff.duration > 0;
                 });
             },
 
@@ -1929,24 +2362,45 @@
 
                     // Check collision with player
                     if (this.checkCollision(Game.player, enemy)) {
-                        if (enemy.hitCooldown <= 0) {
-                            // Player takes damage
-                            Game.player.health -= enemy.damage;
-                            Game.player.invulnerabilityTime = 60;
-                            enemy.hitCooldown = 60;
-                            playSound('damage');
+                        if (enemy.hitCooldown <= 0 && !Game.player.isInvulnerable) {
+                            // PARTE 5: Check for shield buff
+                            const shieldBuff = Game.player.activeBuffs.find(b => b.type === 'shield');
+                            const hasInfiniteEnergy = Game.player.activeBuffs.find(b => b.type === 'infinite_energy');
 
-                            // Knockback
-                            const knockbackDir = Game.player.x < enemy.x ? -1 : 1;
-                            Game.player.velocityX = knockbackDir * 8;
-                            Game.player.velocityY = -8;
+                            if (!shieldBuff) {
+                                // Player takes damage
+                                Game.player.health -= enemy.damage;
+                                Game.player.stats.damageTaken += enemy.damage;
+                                Game.player.invulnerabilityTime = 60;
+                                playSound('damage');
 
-                            Game.camera.shake = 10;
-                            Game.camera.shakeIntensity = 8;
+                                // Knockback
+                                const knockbackDir = Game.player.x < enemy.x ? -1 : 1;
+                                Game.player.velocityX = knockbackDir * 8;
+                                Game.player.velocityY = -8;
 
-                            if (Game.player.health <= 0) {
-                                this.gameOver();
+                                Game.camera.shake = 10;
+                                Game.camera.shakeIntensity = 8;
+
+                                if (Game.player.health <= 0) {
+                                    this.gameOver();
+                                }
+                            } else {
+                                // Shield absorbs damage - show particle effect
+                                for (let i = 0; i < 10; i++) {
+                                    Game.particles.push({
+                                        x: Game.player.x + Game.player.width / 2,
+                                        y: Game.player.y + Game.player.height / 2,
+                                        vx: (Math.random() - 0.5) * 6,
+                                        vy: (Math.random() - 0.5) * 6,
+                                        life: 0.5,
+                                        color: '#3b82f6',
+                                        size: Math.random() * 4 + 2
+                                    });
+                                }
                             }
+
+                            enemy.hitCooldown = 60;
                         }
                     }
 
@@ -1979,28 +2433,32 @@
             handleJump() {
                 const p = Game.player;
                 const jumpForce = -15;
+                const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
 
-                if (p.isGrounded && p.energy >= 10) {
+                if (p.isGrounded && (p.energy >= 10 || hasInfiniteEnergy)) {
                     p.velocityY = jumpForce;
-                    p.energy -= 10;
+                    if (!hasInfiniteEnergy) p.energy -= 10;
                     p.isGrounded = false;
+                    p.stats.jumps++;
                     playSound('jump');
-                } else if (p.canDoubleJump && !p.isGrounded && p.energy >= 15) {
+                } else if (p.canDoubleJump && !p.isGrounded && (p.energy >= 15 || hasInfiniteEnergy)) {
                     p.velocityY = jumpForce;
-                    p.energy -= 15;
+                    if (!hasInfiniteEnergy) p.energy -= 15;
                     p.canDoubleJump = false;
+                    p.stats.jumps++;
                     playSound('jump');
                 }
             },
 
             handleAttack() {
                 const p = Game.player;
+                const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
 
-                if (p.attackCooldown > 0 || p.energy < 15) return;
+                if (p.attackCooldown > 0 || (p.energy < 15 && !hasInfiniteEnergy)) return;
 
                 p.isAttacking = true;
                 p.attackCooldown = 30;
-                p.energy -= 15;
+                if (!hasInfiniteEnergy) p.energy -= 15;
 
                 playSound('attack');
 
@@ -2036,9 +2494,28 @@
                     };
 
                     if (this.checkCollision(hitbox, enemy)) {
-                        // Deal damage
-                        const damage = Game.saveData.stats.strength;
+                        // PARTE 5: Calculate damage with buffs and combo
+                        let damage = Game.saveData.stats.strength;
+
+                        // Apply strength buff
+                        const strengthBuff = p.activeBuffs.find(b => b.type === 'strength' || b.type === 'damage_boost');
+                        if (strengthBuff) {
+                            damage *= strengthBuff.multiplier;
+                        }
+
+                        // Combo multiplier
+                        const comboMultiplier = 1 + (p.combo * 0.15);
+                        damage = Math.floor(damage * comboMultiplier);
+
                         enemy.health -= damage;
+                        p.stats.damageDealt += damage;
+
+                        // PARTE 5: Update combo
+                        p.combo++;
+                        p.comboTimer = 3; // 3 seconds to continue combo
+                        if (p.combo > p.stats.maxCombo) {
+                            p.stats.maxCombo = p.combo;
+                        }
 
                         // Knockback
                         const knockbackDir = p.isFacingRight ? 1 : -1;
@@ -2063,7 +2540,16 @@
                         // Check if enemy died
                         if (enemy.health <= 0) {
                             enemy.isDead = true;
-                            this.gainXP(enemy.xp);
+                            p.stats.enemiesDefeated++;
+
+                            // PARTE 5: Apply XP buff if active
+                            let xpGain = enemy.xp;
+                            const xpBuff = p.activeBuffs.find(b => b.type === 'xp_boost');
+                            if (xpBuff) {
+                                xpGain = Math.floor(xpGain * xpBuff.multiplier);
+                            }
+
+                            this.gainXP(xpGain);
 
                             // Death explosion
                             for (let i = 0; i < 30; i++) {
@@ -2092,6 +2578,150 @@
                 }, 200);
             },
 
+            // PARTE 5: Handle special ability
+            handleSpecialAbility() {
+                const p = Game.player;
+                const ability = this.specialAbilities[Game.saveData.character];
+
+                // Check cooldown and energy
+                if (p.specialAbilityCooldown > 0 || p.energy < ability.energyCost) {
+                    if (p.specialAbilityCooldown > 0) {
+                        showNotification('⏱️ Recargando', 'Habilidad aún en cooldown', 1500);
+                    } else {
+                        showNotification('⚡ Sin energía', 'Necesitas más energía', 1500);
+                    }
+                    return;
+                }
+
+                p.energy -= ability.energyCost;
+                p.specialAbilityCooldown = ability.cooldown * 60; // Convert to frames
+                p.isUsingSpecial = true;
+                p.stats.specialAbilitiesUsed++;
+
+                playSound('levelup');
+
+                if (Game.saveData.character === 'luna') {
+                    // Luna's ability: Healing wave
+                    showNotification(
+                        `${ability.icon} ${ability.name}!`,
+                        ability.description,
+                        3000
+                    );
+
+                    // Heal player
+                    p.health = Math.min(p.health + ability.healAmount, Game.saveData.stats.maxHealth);
+
+                    // Create wave effect
+                    for (let i = 0; i < 50; i++) {
+                        const angle = (Math.PI * 2 * i) / 50;
+                        const speed = 5 + Math.random() * 3;
+                        Game.particles.push({
+                            x: p.x + p.width / 2,
+                            y: p.y + p.height / 2,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 1.5,
+                            color: ability.color,
+                            size: Math.random() * 6 + 4
+                        });
+                    }
+
+                    // Push back nearby enemies
+                    this.enemies.forEach(enemy => {
+                        if (enemy.isDead) return;
+
+                        const dx = enemy.x - p.x;
+                        const dy = enemy.y - p.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < ability.range) {
+                            const pushDir = dx > 0 ? 1 : -1;
+                            enemy.velocityX = pushDir * ability.pushForce;
+                            enemy.velocityY = -ability.pushForce;
+                        }
+                    });
+
+                } else if (Game.saveData.character === 'sol') {
+                    // Sol's ability: Dash attack
+                    showNotification(
+                        `${ability.icon} ${ability.name}!`,
+                        ability.description,
+                        3000
+                    );
+
+                    p.isDashing = true;
+                    const dashDir = p.isFacingRight ? 1 : -1;
+                    p.velocityX = dashDir * ability.dashSpeed;
+                    p.isInvulnerable = true;
+
+                    // Trail particles
+                    const dashInterval = setInterval(() => {
+                        for (let i = 0; i < 5; i++) {
+                            Game.particles.push({
+                                x: p.x + p.width / 2,
+                                y: p.y + p.height / 2,
+                                vx: (Math.random() - 0.5) * 4,
+                                vy: (Math.random() - 0.5) * 4,
+                                life: 0.8,
+                                color: ability.color,
+                                size: Math.random() * 6 + 3
+                            });
+                        }
+                    }, 50);
+
+                    // Damage enemies during dash
+                    const dashDamageInterval = setInterval(() => {
+                        this.enemies.forEach(enemy => {
+                            if (enemy.isDead) return;
+
+                            if (this.checkCollision(p, enemy)) {
+                                enemy.health -= ability.damage;
+                                p.stats.damageDealt += ability.damage;
+
+                                // Knockback
+                                enemy.velocityX = dashDir * 15;
+                                enemy.velocityY = -10;
+
+                                // Hit particles
+                                for (let i = 0; i < 10; i++) {
+                                    Game.particles.push({
+                                        x: enemy.x + enemy.width / 2,
+                                        y: enemy.y + enemy.height / 2,
+                                        vx: (Math.random() - 0.5) * 10,
+                                        vy: (Math.random() - 0.5) * 10,
+                                        life: 0.6,
+                                        color: ability.color,
+                                        size: Math.random() * 5 + 2
+                                    });
+                                }
+
+                                if (enemy.health <= 0) {
+                                    enemy.isDead = true;
+                                    p.stats.enemiesDefeated++;
+                                    this.gainXP(enemy.xp);
+                                    playSound('enemy_death');
+                                }
+                            }
+                        });
+                    }, 100);
+
+                    // End dash after duration
+                    setTimeout(() => {
+                        p.isDashing = false;
+                        p.isInvulnerable = false;
+                        p.isUsingSpecial = false;
+                        clearInterval(dashInterval);
+                        clearInterval(dashDamageInterval);
+                    }, ability.duration * 1000);
+                }
+
+                if (Game.saveData.character === 'luna') {
+                    setTimeout(() => {
+                        p.isUsingSpecial = false;
+                    }, 500);
+                }
+            },
+
             draw() {
                 // Draw parallax background
                 this.drawParallax();
@@ -2108,8 +2738,17 @@
                 // Draw coins
                 this.drawCoins();
 
+                // PARTE 5: Draw power-ups
+                this.drawPowerups();
+
+                // PARTE 5: Draw NPCs
+                this.drawNPCs();
+
                 // Draw enemies
                 this.drawEnemies();
+
+                // PARTE 5: Draw player trail
+                this.drawTrail();
 
                 // Draw player
                 this.drawPlayer();
@@ -2259,6 +2898,108 @@
                     ctx.fill();
 
                     ctx.restore();
+                });
+            },
+
+            // PARTE 5: Draw power-ups
+            drawPowerups() {
+                this.powerups.forEach(powerup => {
+                    if (powerup.collected) return;
+
+                    const screenX = powerup.x - Game.camera.x;
+                    const screenY = powerup.y + Math.sin(powerup.floatOffset) * 10 - Game.camera.y;
+
+                    if (screenX < -50 || screenX > canvas.width + 50) return;
+
+                    ctx.save();
+                    ctx.translate(screenX, screenY);
+                    ctx.rotate(powerup.rotation);
+
+                    // Glow effect
+                    ctx.shadowColor = powerup.type.color;
+                    ctx.shadowBlur = 20;
+
+                    // Power-up background
+                    ctx.fillStyle = powerup.type.color;
+                    ctx.globalAlpha = 0.8;
+                    ctx.fillRect(-powerup.width/2, -powerup.height/2, powerup.width, powerup.height);
+
+                    // Icon
+                    ctx.globalAlpha = 1;
+                    ctx.font = '24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(powerup.type.icon, 0, 0);
+
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 5: Draw NPCs
+            drawNPCs() {
+                this.npcs.forEach(npc => {
+                    const screenX = npc.x - Game.camera.x;
+                    const screenY = npc.y + Math.sin(npc.floatOffset) * 5 - Game.camera.y;
+
+                    if (screenX < -100 || screenX > canvas.width + 100) return;
+
+                    ctx.save();
+
+                    // Glow effect
+                    ctx.shadowColor = npc.type.color;
+                    ctx.shadowBlur = 20;
+
+                    // Body (wise robed figure)
+                    ctx.fillStyle = npc.type.color;
+                    ctx.globalAlpha = 0.9;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, npc.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wisdom aura
+                    ctx.globalAlpha = 0.3;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, npc.width/2 + 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Face
+                    ctx.globalAlpha = 1;
+                    ctx.font = '30px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🧙', screenX, screenY);
+
+                    // Name label if not interacted
+                    if (!npc.hasInteracted) {
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#fff';
+                        ctx.shadowColor = '#000';
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(npc.type.name, screenX, screenY - 35);
+                    }
+
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 5: Draw player trail
+            drawTrail() {
+                Game.player.trail = Game.player.trail.filter(t => {
+                    t.life -= 0.03;
+                    if (t.life <= 0) return false;
+
+                    const screenX = t.x - Game.camera.x;
+                    const screenY = t.y - Game.camera.y;
+
+                    ctx.save();
+                    ctx.globalAlpha = t.life * 0.5;
+                    ctx.fillStyle = t.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    return true;
                 });
             },
 
@@ -2509,6 +3250,12 @@
                 if (e.key === 'z' || e.key === 'Z') {
                     e.preventDefault();
                     GameScene.handleAttack();
+                }
+
+                // PARTE 5: Special Ability
+                if (e.key === 'x' || e.key === 'X') {
+                    e.preventDefault();
+                    GameScene.handleSpecialAbility();
                 }
 
                 // Pause
