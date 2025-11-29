@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caminos de Esperanza ULTRA - Edición Profesional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: white;
+        }
+
+        /* Pantalla de carga épica */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #667eea 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading-text {
+            margin-top: 30px;
+            font-size: 24px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Selección de personaje mejorada */
+        #character-selection {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        #character-selection.active {
+            display: flex;
+        }
+
+        #character-selection h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        #character-selection p {
+            font-size: 22px;
+            margin-bottom: 50px;
+            max-width: 800px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .character-options {
+            display: flex;
+            gap: 80px;
+        }
+
+        .character-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 3px solid transparent;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-option::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .character-option:hover {
+            transform: translateY(-20px) scale(1.1);
+            border-color: white;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .character-preview {
+            width: 250px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .character-name {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Canvas del juego */
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: block;
+        }
+
+        /* HUD Ultra Profesional */
+        #hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .stat-panel {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-item {
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .stat-bar-container {
+            width: 250px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Sistema de poderes */
+        #powers-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .power-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .power-icon.locked {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+
+        .power-icon.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+        }
+
+        .power-cooldown {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        /* Mensajes motivacionales compactos */
+        #motivational-quote {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+            padding: 15px 20px;
+            border-radius: 12px;
+            max-width: 320px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9000;
+        }
+
+        #motivational-quote.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        #motivational-quote h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        #motivational-quote p {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        /* Sistema de logros */
+        #achievements {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .achievement-popup {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.5);
+            animation: slideInAchievement 0.5s ease, pulse 2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes slideInAchievement {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .achievement-icon {
+            font-size: 32px;
+        }
+
+        .achievement-text h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .achievement-text p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Instrucciones mejoradas */
+        #instructions {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #instructions p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        /* Mensaje de victoria épico */
+        #victory-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #a29bfe);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #victory-screen.show {
+            display: flex;
+            animation: victoryFadeIn 1s ease;
+        }
+
+        @keyframes victoryFadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #victory-screen h1 {
+            font-size: 72px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        #victory-screen p {
+            font-size: 24px;
+            max-width: 900px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card h3 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 18px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: all;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de carga -->
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div id="loading-text">Cargando Experiencia Ultra...</div>
+    </div>
+
+    <!-- Selección de personaje -->
+    <div id="character-selection">
+        <h1>✨ Caminos de Esperanza ULTRA ✨</h1>
+        <p>
+            Prepárate para una experiencia de nivel profesional.<br>
+            Gráficos avanzados • Física realista • Música adaptativa • Poderes desbloqueables<br>
+            <strong>Elige tu héroe y comienza tu viaje épico hacia la luz.</strong>
+        </p>
+        <div class="character-options">
+            <div class="character-option" onclick="selectCharacter('girl')">
+                <div class="character-preview">👧</div>
+                <div class="character-name">Luna - La Soñadora</div>
+            </div>
+            <div class="character-option" onclick="selectCharacter('boy')">
+                <div class="character-preview">👦</div>
+                <div class="character-name">Sol - El Valiente</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas del juego -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+        <div class="hud-top">
+            <div class="stat-panel">
+                <div class="stat-item">
+                    <div>⚡ Energía: <span id="energy-text">100</span>%</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill" id="energy-bar" style="width: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); box-shadow: 0 0 10px #fbbf24;"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div>🎯 Propósito: <span id="purpose-text">100</span>%</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill" id="purpose-bar" style="width: 100%; background: linear-gradient(90deg, #8b5cf6, #7c3aed); box-shadow: 0 0 10px #8b5cf6;"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div>💚 Esperanza: <span id="hope-text">100</span>%</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill" id="hope-bar" style="width: 100%; background: linear-gradient(90deg, #10b981, #059669); box-shadow: 0 0 10px #10b981;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-panel">
+                <div style="font-size: 16px; margin-bottom: 10px;">
+                    <strong>Plataformas:</strong> <span id="platform-count">0</span>/20
+                </div>
+                <div style="font-size: 14px; margin-bottom: 5px;">
+                    <strong>Tiempo:</strong> <span id="game-time">0:00</span>
+                </div>
+                <div style="font-size: 14px; margin-bottom: 5px;">
+                    <strong>Saltos:</strong> <span id="jump-count">0</span>
+                </div>
+                <div style="font-size: 14px;">
+                    <strong>Logros:</strong> <span id="achievement-count">0</span>/12
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de poderes -->
+    <div id="powers-panel">
+        <div class="power-icon locked" id="power-double-jump" title="Doble Salto">
+            🚀
+        </div>
+        <div class="power-icon locked" id="power-dash" title="Dash">
+            ⚡
+        </div>
+        <div class="power-icon locked" id="power-shield" title="Escudo">
+            🛡️
+        </div>
+        <div class="power-icon locked" id="power-time-slow" title="Slow Motion">
+            ⏱️
+        </div>
+    </div>
+
+    <!-- Mensaje motivacional -->
+    <div id="motivational-quote">
+        <h3 id="quote-title">Título</h3>
+        <p id="quote-text">Mensaje</p>
+    </div>
+
+    <!-- Logros -->
+    <div id="achievements"></div>
+
+    <!-- Instrucciones -->
+    <div id="instructions">
+        <p><strong>⬅️ A/D</strong> - Mover | <strong>ESPACIO</strong> - Saltar | <strong>SHIFT</strong> - Dash</p>
+        <p><strong>Q</strong> - Doble Salto | <strong>E</strong> - Escudo | <strong>R</strong> - Slow Motion</p>
+    </div>
+
+    <!-- Pantalla de victoria -->
+    <div id="victory-screen">
+        <h1>🏆 ¡VICTORIA ÉPICA! 🏆</h1>
+        <p id="victory-message">Has completado el viaje más desafiante. Demostraste que con determinación, poderes increíbles y esperanza, puedes superar cualquier obstáculo.</p>
+
+        <div class="stats-summary">
+            <div class="stat-card">
+                <h3 id="final-time">0:00</h3>
+                <p>Tiempo Total</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="final-jumps">0</h3>
+                <p>Saltos Totales</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="final-achievements">0</h3>
+                <p>Logros Desbloqueados</p>
+            </div>
+        </div>
+
+        <button class="btn" onclick="restartGame()">🎮 Jugar de Nuevo</button>
+    </div>
+
+    <script>
+        // Configuración inicial
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Ocultar pantalla de carga después de 2 segundos
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('character-selection').classList.add('active');
+        }, 2000);
+
+        // Estado del juego ultra completo
+        const gameState = {
+            character: null,
+            started: false,
+            player: {
+                x: 100,
+                y: 0,
+                width: 45,
+                height: 70,
+                velocityY: 0,
+                velocityX: 0,
+                onGround: false,
+                facingRight: true,
+                health: 100,
+                energy: 100,
+                purpose: 100,
+                hope: 100
+            },
+            camera: {
+                x: 0,
+                y: 0,
+                shake: 0
+            },
+            platforms: [],
+            particles: [],
+            weather: {
+                type: 'clear', // clear, rain, snow
+                particles: []
+            },
+            lighting: {
+                time: 0.25, // 0-1 (día/noche)
+                ambient: 1
+            },
+            powers: {
+                doubleJump: { unlocked: false, active: false, cooldown: 0 },
+                dash: { unlocked: false, active: false, cooldown: 0 },
+                shield: { unlocked: false, active: false, cooldown: 0 },
+                timeSlow: { unlocked: false, active: false, cooldown: 0 }
+            },
+            achievements: new Set(),
+            stats: {
+                platformsReached: 0,
+                jumps: 0,
+                startTime: 0,
+                playTime: 0
+            },
+            keys: {},
+            gravity: 0.6,
+            jumpPower: -16,
+            moveSpeed: 6,
+            animFrame: 0,
+            timeScale: 1
+        };
+
+        // Sistema de logros
+        const achievements = {
+            'FIRST_JUMP': { name: '🎯 Primer Salto', desc: 'Diste tu primer salto' },
+            'PLATFORM_5': { name: '⭐ Explorador', desc: 'Alcanzaste la plataforma 5' },
+            'PLATFORM_10': { name: '🌟 Escalador', desc: 'Alcanzaste la plataforma 10' },
+            'PLATFORM_15': { name: '💎 Maestro', desc: 'Alcanzaste la plataforma 15' },
+            'UNLOCK_DOUBLE_JUMP': { name: '🚀 Doble Salto', desc: 'Desbloqueaste el doble salto' },
+            'UNLOCK_DASH': { name: '⚡ Velocista', desc: 'Desbloqueaste el dash' },
+            'UNLOCK_SHIELD': { name: '🛡️ Defensor', desc: 'Desbloqueaste el escudo' },
+            'NO_FALL': { name: '🎪 Perfección', desc: 'Completaste 10 plataformas sin caer' },
+            'SPEED_RUN': { name: '⏱️ Veloz', desc: 'Completaste en menos de 2 minutos' },
+            'JUMP_MASTER': { name: '🦘 Saltarín', desc: 'Hiciste 100 saltos' },
+            'ALL_POWERS': { name: '💪 Todopoderoso', desc: 'Desbloqueaste todos los poderes' },
+            'COMPLETE': { name: '🏆 Héroe de la Esperanza', desc: 'Completaste el juego' }
+        };
+
+        function unlockAchievement(id) {
+            if (!gameState.achievements.has(id)) {
+                gameState.achievements.add(id);
+                const achievement = achievements[id];
+
+                // Mostrar popup
+                const popup = document.createElement('div');
+                popup.className = 'achievement-popup';
+                popup.innerHTML = `
+                    <div class="achievement-icon">${achievement.name.split(' ')[0]}</div>
+                    <div class="achievement-text">
+                        <h4>${achievement.name}</h4>
+                        <p>${achievement.desc}</p>
+                    </div>
+                `;
+                document.getElementById('achievements').appendChild(popup);
+
+                // Sonido de logro
+                playSound('achievement');
+
+                // Remover después de 4 segundos
+                setTimeout(() => popup.remove(), 4000);
+
+                // Actualizar contador
+                document.getElementById('achievement-count').textContent = gameState.achievements.size;
+            }
+        }
+
+        // Sistema de audio avanzado con Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let musicNodes = [];
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'jump':
+                    oscillator.frequency.value = 440;
+                    filter.frequency.value = 1000;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'land':
+                    oscillator.frequency.value = 220;
+                    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.12);
+                    break;
+                case 'power':
+                    oscillator.frequency.value = 880;
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 2000;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'achievement':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'checkpoint':
+                    for (let i = 0; i < 3; i++) {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = 440 * (i + 1);
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    }
+                    break;
+            }
+        }
+
+        // Música ambiental adaptativa
+        function startAdaptiveMusic() {
+            const baseFreq = 220;
+            const chords = [
+                [1, 1.25, 1.5], // Do mayor
+                [1.125, 1.4, 1.7], // Re menor
+                [1, 1.2, 1.5], // Do menor
+                [1.125, 1.5, 1.8] // Mi mayor
+            ];
+
+            setInterval(() => {
+                if (!gameState.started) return;
+
+                const chord = chords[Math.floor(Math.random() * chords.length)];
+                const volume = 0.03 + (gameState.player.energy / 100) * 0.02;
+
+                chord.forEach((ratio, i) => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+
+                    osc.type = 'sine';
+                    osc.frequency.value = baseFreq * ratio;
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 800 + gameState.player.hope * 10;
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioContext.destination);
+
+                    gain.gain.setValueAtTime(0, audioContext.currentTime);
+                    gain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.5);
+                    gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 4);
+
+                    osc.start(audioContext.currentTime);
+                    osc.stop(audioContext.currentTime + 4);
+                });
+            }, 5000);
+        }
+
+        // Sistema de partículas avanzado
+        class Particle {
+            constructor(x, y, type, options = {}) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.life = 1;
+                this.maxLife = options.maxLife || 1;
+
+                switch(type) {
+                    case 'spark':
+                        this.vx = (Math.random() - 0.5) * 8;
+                        this.vy = Math.random() * -5 - 3;
+                        this.size = 2 + Math.random() * 3;
+                        this.color = ['#fbbf24', '#f59e0b', '#fff'][Math.floor(Math.random() * 3)];
+                        this.decay = 0.02;
+                        break;
+                    case 'trail':
+                        this.vx = 0;
+                        this.vy = 0;
+                        this.size = 15 + Math.random() * 10;
+                        this.color = `rgba(102, 126, 234, ${0.3})`;
+                        this.decay = 0.05;
+                        break;
+                    case 'explosion':
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 2 + Math.random() * 4;
+                        this.vx = Math.cos(angle) * speed;
+                        this.vy = Math.sin(angle) * speed;
+                        this.size = 3 + Math.random() * 4;
+                        this.color = `hsl(${Math.random() * 60 + 200}, 70%, 60%)`;
+                        this.decay = 0.025;
+                        break;
+                    case 'rain':
+                        this.vx = -1;
+                        this.vy = 8 + Math.random() * 4;
+                        this.size = 1 + Math.random();
+                        this.color = 'rgba(174, 194, 224, 0.5)';
+                        this.decay = 0;
+                        break;
+                    case 'snow':
+                        this.vx = Math.sin(Date.now() / 1000 + this.x) * 0.5;
+                        this.vy = 1 + Math.random();
+                        this.size = 2 + Math.random() * 2;
+                        this.color = 'rgba(255, 255, 255, 0.8)';
+                        this.decay = 0;
+                        break;
+                    case 'magic':
+                        this.vx = (Math.random() - 0.5) * 2;
+                        this.vy = -2 - Math.random() * 2;
+                        this.size = 3 + Math.random() * 3;
+                        this.color = `hsl(${Math.random() * 360}, 80%, 70%)`;
+                        this.decay = 0.015;
+                        break;
+                }
+            }
+
+            update() {
+                this.x += this.vx * gameState.timeScale;
+                this.y += this.vy * gameState.timeScale;
+                this.vy += 0.2 * gameState.timeScale; // Gravedad para algunas partículas
+                this.life -= this.decay;
+
+                return this.life > 0 && this.y < canvas.height + 50;
+            }
+
+            draw() {
+                const screenX = this.x - gameState.camera.x;
+                const screenY = this.y - gameState.camera.y;
+
+                ctx.save();
+                ctx.globalAlpha = this.life;
+
+                if (this.type === 'spark') {
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = this.color;
+                    ctx.fillRect(screenX, screenY, this.size, this.size);
+                } else if (this.type === 'trail') {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'rain') {
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.size;
+                    ctx.beginPath();
+                    ctx.moveTo(screenX, screenY);
+                    ctx.lineTo(screenX + this.vx * 3, screenY + this.vy * 3);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        function createParticles(type, x, y, count) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push(new Particle(x, y, type));
+            }
+        }
+
+        // Sistema de clima dinámico
+        function updateWeather() {
+            // Crear partículas de clima
+            if (gameState.weather.type === 'rain' && Math.random() < 0.3) {
+                const x = gameState.camera.x + Math.random() * canvas.width;
+                const y = gameState.camera.y - 50;
+                gameState.weather.particles.push(new Particle(x, y, 'rain'));
+            } else if (gameState.weather.type === 'snow' && Math.random() < 0.1) {
+                const x = gameState.camera.x + Math.random() * canvas.width;
+                const y = gameState.camera.y - 50;
+                gameState.weather.particles.push(new Particle(x, y, 'snow'));
+            }
+
+            // Actualizar y dibujar partículas de clima
+            gameState.weather.particles = gameState.weather.particles.filter(p => {
+                const alive = p.update();
+                if (alive) p.draw();
+                return alive;
+            });
+        }
+
+        // Seleccionar personaje
+        function selectCharacter(type) {
+            gameState.character = type;
+            document.getElementById('character-selection').style.display = 'none';
+            startGame();
+        }
+
+        // Iniciar juego
+        function startGame() {
+            gameState.started = true;
+            gameState.stats.startTime = Date.now();
+            createPlatforms();
+            startAdaptiveMusic();
+            gameLoop();
+
+            // Mostrar primera frase motivacional
+            setTimeout(() => showMotivationalQuote(0), 3000);
+        }
+
+        // Crear plataformas con generación procedural
+        function createPlatforms() {
+            gameState.platforms.push({
+                x: 50,
+                y: canvas.height - 100,
+                width: 250,
+                height: 25,
+                index: 0,
+                color: '#667eea',
+                hasCheckpoint: false
+            });
+
+            gameState.player.y = canvas.height - 100 - gameState.player.height;
+
+            let lastX = 50;
+            let lastY = canvas.height - 100;
+
+            for (let i = 1; i < 20; i++) {
+                const width = 120 + Math.random() * 120;
+                const height = 25;
+
+                const distX = 180 + Math.random() * 200;
+                const distY = -60 + Math.random() * 120;
+
+                const x = lastX + distX;
+                const y = Math.max(120, Math.min(canvas.height - 120, lastY + distY));
+
+                const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140', '#30cfd0'];
+
+                gameState.platforms.push({
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    index: i,
+                    color: colors[i % colors.length],
+                    hasCheckpoint: [5, 10, 15, 19].includes(i)
+                });
+
+                lastX = x;
+                lastY = y;
+            }
+        }
+
+        // Dibujar jugador mejorado
+        function drawPlayer() {
+            const p = gameState.player;
+            const screenX = p.x - gameState.camera.x + gameState.camera.shake;
+            const screenY = p.y - gameState.camera.y;
+
+            ctx.save();
+
+            // Escudo activo
+            if (gameState.powers.shield.active) {
+                ctx.strokeStyle = 'rgba(72, 219, 251, 0.6)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + p.height/2, p.width, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = 'rgba(72, 219, 251, 0.3)';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + p.height/2, p.width + 5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Sombra
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(screenX + p.width/2, screenY + p.height + 8, p.width/2 + 5, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cuerpo
+            const bodyColor = gameState.character === 'girl' ? '#ff6b9d' : '#667eea';
+            ctx.fillStyle = bodyColor;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = bodyColor;
+            ctx.fillRect(screenX + 10, screenY + 25, p.width - 20, 30);
+            ctx.shadowBlur = 0;
+
+            // Cabeza con glow
+            ctx.fillStyle = '#FFD1B3';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'rgba(255, 209, 179, 0.5)';
+            ctx.beginPath();
+            ctx.arc(screenX + p.width/2, screenY + 15, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Cabello
+            if (gameState.character === 'girl') {
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + 10, 16, Math.PI, 0, false);
+                ctx.fill();
+                // Coletas con brillo
+                ctx.shadowBlur = 3;
+                ctx.shadowColor = '#8B4513';
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2 - 15, screenY + 15, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2 + 15, screenY + 15, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle = '#2d3748';
+                ctx.fillRect(screenX + p.width/2 - 12, screenY + 3, 24, 10);
+            }
+
+            // Ojos con brillo
+            ctx.fillStyle = '#000';
+            ctx.fillRect(screenX + p.width/2 - 8, screenY + 12, 4, 4);
+            ctx.fillRect(screenX + p.width/2 + 4, screenY + 12, 4, 4);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(screenX + p.width/2 - 7, screenY + 13, 1.5, 1.5);
+            ctx.fillRect(screenX + p.width/2 + 5, screenY + 13, 1.5, 1.5);
+
+            // Sonrisa
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(screenX + p.width/2, screenY + 18, 6, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Brazos animados
+            const armSwing = Math.sin(gameState.animFrame * 0.3) * 8;
+            ctx.fillStyle = '#FFD1B3';
+            ctx.fillRect(screenX + 5, screenY + 30 + armSwing, 8, 25);
+            ctx.fillRect(screenX + p.width - 13, screenY + 30 - armSwing, 8, 25);
+
+            // Piernas animadas
+            const legSwing = Math.sin(gameState.animFrame * 0.3) * 8;
+            ctx.fillStyle = '#4a5568';
+            ctx.fillRect(screenX + 14, screenY + 55 + legSwing, 8, 25);
+            ctx.fillRect(screenX + p.width - 22, screenY + 55 - legSwing, 8, 25);
+
+            ctx.restore();
+
+            // Efecto de dash
+            if (gameState.powers.dash.active) {
+                for (let i = 0; i < 3; i++) {
+                    ctx.globalAlpha = 0.3 - i * 0.1;
+                    ctx.fillStyle = bodyColor;
+                    ctx.fillRect(screenX - i * 20, screenY + 25, p.width - 20, 30);
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Dibujar plataformas mejoradas
+        function drawPlatforms() {
+            gameState.platforms.forEach(platform => {
+                const screenX = platform.x - gameState.camera.x;
+                const screenY = platform.y - gameState.camera.y;
+
+                // Glow de plataforma
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = platform.color;
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                ctx.shadowBlur = 0;
+
+                // Efecto 3D
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(screenX, screenY + platform.height - 8, platform.width, 8);
+
+                // Borde brillante
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(screenX, screenY, platform.width, platform.height);
+
+                // Checkpoint estrella
+                if (platform.hasCheckpoint) {
+                    const time = Date.now() / 500;
+                    const bounce = Math.sin(time) * 15;
+                    const rotation = time % (Math.PI * 2);
+
+                    ctx.save();
+                    ctx.translate(screenX + platform.width/2, screenY - 40 + bounce);
+                    ctx.rotate(rotation);
+                    ctx.font = 'bold 50px Arial';
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffd700';
+                    ctx.fillText('⭐', -25, 25);
+                    ctx.restore();
+                }
+            });
+        }
+
+        // Física avanzada
+        function updatePhysics() {
+            const p = gameState.player;
+            const ts = gameState.timeScale;
+
+            // Gravedad
+            p.velocityY += gameState.gravity * ts;
+            p.y += p.velocityY * ts;
+
+            // Movimiento horizontal
+            p.velocityX = 0;
+            if (gameState.keys['a'] || gameState.keys['arrowleft']) {
+                p.velocityX = -gameState.moveSpeed * ts;
+                p.facingRight = false;
+                gameState.animFrame++;
+            }
+            if (gameState.keys['d'] || gameState.keys['arrowright']) {
+                p.velocityX = gameState.moveSpeed * ts;
+                p.facingRight = true;
+                gameState.animFrame++;
+            }
+
+            // Dash power
+            if (gameState.keys['shift'] && gameState.powers.dash.unlocked && gameState.powers.dash.cooldown <= 0) {
+                p.velocityX *= 3;
+                gameState.powers.dash.active = true;
+                gameState.powers.dash.cooldown = 60;
+                playSound('power');
+                createParticles('spark', p.x + p.width/2, p.y + p.height/2, 15);
+
+                setTimeout(() => {
+                    gameState.powers.dash.active = false;
+                }, 200);
+            }
+
+            p.x += p.velocityX;
+
+            // Salto
+            if ((gameState.keys[' '] || gameState.keys['arrowup'])) {
+                if (p.onGround) {
+                    p.velocityY = gameState.jumpPower * ts;
+                    p.onGround = false;
+                    playSound('jump');
+                    createParticles('spark', p.x + p.width/2, p.y + p.height, 8);
+                    gameState.stats.jumps++;
+                    document.getElementById('jump-count').textContent = gameState.stats.jumps;
+
+                    if (gameState.stats.jumps === 1) {
+                        unlockAchievement('FIRST_JUMP');
+                    }
+                    if (gameState.stats.jumps === 100) {
+                        unlockAchievement('JUMP_MASTER');
+                    }
+                }
+                // Doble salto
+                else if (gameState.keys['q'] && gameState.powers.doubleJump.unlocked && !gameState.powers.doubleJump.active && gameState.powers.doubleJump.cooldown <= 0) {
+                    p.velocityY = gameState.jumpPower * 0.8 * ts;
+                    gameState.powers.doubleJump.active = true;
+                    gameState.powers.doubleJump.cooldown = 90;
+                    playSound('power');
+                    createParticles('magic', p.x + p.width/2, p.y + p.height/2, 12);
+                }
+            }
+
+            // Slow Motion power
+            if (gameState.keys['r'] && gameState.powers.timeSlow.unlocked && gameState.powers.timeSlow.cooldown <= 0) {
+                gameState.timeScale = 0.3;
+                gameState.powers.timeSlow.active = true;
+                gameState.powers.timeSlow.cooldown = 180;
+                playSound('power');
+
+                setTimeout(() => {
+                    gameState.timeScale = 1;
+                    gameState.powers.timeSlow.active = false;
+                }, 3000);
+            }
+
+            // Trail del jugador
+            if (Math.abs(p.velocityX) > 0 || Math.abs(p.velocityY) > 2) {
+                if (Math.random() < 0.3) {
+                    createParticles('trail', p.x + p.width/2, p.y + p.height/2, 1);
+                }
+            }
+
+            // Colisiones con plataformas
+            p.onGround = false;
+            gameState.platforms.forEach(platform => {
+                if (p.x + p.width > platform.x &&
+                    p.x < platform.x + platform.width &&
+                    p.y + p.height > platform.y &&
+                    p.y + p.height < platform.y + platform.height + 25 &&
+                    p.velocityY >= 0) {
+
+                    if (!p.onGround && p.velocityY > 5) {
+                        playSound('land');
+                        createParticles('spark', p.x + p.width/2, p.y + p.height, 5);
+                        gameState.camera.shake = Math.random() * 4 - 2;
+                    }
+
+                    p.y = platform.y - p.height;
+                    p.velocityY = 0;
+                    p.onGround = true;
+                    gameState.powers.doubleJump.active = false;
+
+                    // Actualizar progreso
+                    if (platform.index > gameState.stats.platformsReached) {
+                        gameState.stats.platformsReached = platform.index;
+                        document.getElementById('platform-count').textContent = platform.index;
+
+                        // Desbloquear poderes en ciertas plataformas
+                        if (platform.index === 5) {
+                            unlockAchievement('PLATFORM_5');
+                            if (!gameState.powers.doubleJump.unlocked) {
+                                gameState.powers.doubleJump.unlocked = true;
+                                document.getElementById('power-double-jump').classList.remove('locked');
+                                unlockAchievement('UNLOCK_DOUBLE_JUMP');
+                                showMotivationalQuote(1);
+                            }
+                        }
+                        if (platform.index === 10) {
+                            unlockAchievement('PLATFORM_10');
+                            if (!gameState.powers.dash.unlocked) {
+                                gameState.powers.dash.unlocked = true;
+                                document.getElementById('power-dash').classList.remove('locked');
+                                unlockAchievement('UNLOCK_DASH');
+                                showMotivationalQuote(2);
+                            }
+                            gameState.weather.type = 'clear';
+                        }
+                        if (platform.index === 15) {
+                            unlockAchievement('PLATFORM_15');
+                            if (!gameState.powers.shield.unlocked) {
+                                gameState.powers.shield.unlocked = true;
+                                document.getElementById('power-shield').classList.remove('locked');
+                                unlockAchievement('UNLOCK_SHIELD');
+                            }
+                            if (!gameState.powers.timeSlow.unlocked) {
+                                gameState.powers.timeSlow.unlocked = true;
+                                document.getElementById('power-time-slow').classList.remove('locked');
+                                showMotivationalQuote(3);
+                            }
+                            if (gameState.achievements.size >= 7) {
+                                unlockAchievement('ALL_POWERS');
+                            }
+                        }
+
+                        // Checkpoint
+                        if (platform.hasCheckpoint) {
+                            playSound('checkpoint');
+                            createParticles('explosion', platform.x + platform.width/2, platform.y - 40, 30);
+                            gameState.camera.shake = 8;
+
+                            if (platform.index === 19) {
+                                showVictory();
+                            } else {
+                                showMotivationalQuote(Math.floor(platform.index / 5));
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Caída
+            if (p.y > canvas.height + 200) {
+                respawnPlayer();
+            }
+
+            // Actualizar cámara
+            gameState.camera.x = p.x - canvas.width / 3;
+            gameState.camera.y = p.y - canvas.height / 2;
+            if (gameState.camera.shake > 0) gameState.camera.shake *= 0.9;
+
+            // Cooldowns
+            Object.values(gameState.powers).forEach(power => {
+                if (power.cooldown > 0) {
+                    power.cooldown--;
+                }
+            });
+
+            // Actualizar stats
+            p.energy = Math.min(100, p.energy + 0.01);
+            p.purpose = Math.min(100, p.purpose + 0.005);
+            p.hope = Math.min(100, p.hope + 0.008);
+            updateStatsDisplay();
+        }
+
+        function respawnPlayer() {
+            gameState.player.x = 100;
+            gameState.player.y = canvas.height - 100 - gameState.player.height;
+            gameState.player.velocityY = 0;
+            gameState.player.velocityX = 0;
+            gameState.camera.x = 0;
+            gameState.camera.y = 0;
+            createParticles('explosion', gameState.player.x, gameState.player.y, 20);
+        }
+
+        function updateStatsDisplay() {
+            const stats = ['energy', 'purpose', 'hope'];
+            stats.forEach(stat => {
+                const value = Math.round(gameState.player[stat]);
+                document.getElementById(`${stat}-text`).textContent = value;
+                document.getElementById(`${stat}-bar`).style.width = value + '%';
+            });
+        }
+
+        // Mensajes motivacionales
+        const quotes = [
+            { title: "💪 Primer Paso", text: "¡Increíble! Has comenzado tu viaje. Cada paso cuenta." },
+            { title: "🚀 Nuevo Poder", text: "¡Desbloqueaste doble salto! Ahora puedes llegar más alto." },
+            { title: "⚡ Velocista", text: "¡Dash desbloqueado! La velocidad está de tu lado." },
+            { title: "🛡️ Protegido", text: "¡Nuevos poderes! Eres más fuerte de lo que crees." },
+            { title: "🌟 Casi Allí", text: "Estás muy cerca. Sigue adelante, la luz te espera." },
+            { title: "🎯 Maestro", text: "Dominaste todos los poderes. Eres imparable." }
+        ];
+
+        function showMotivationalQuote(index) {
+            const quote = quotes[index % quotes.length];
+            document.getElementById('quote-title').textContent = quote.title;
+            document.getElementById('quote-text').textContent = quote.text;
+            document.getElementById('motivational-quote').classList.add('show');
+
+            setTimeout(() => {
+                document.getElementById('motivational-quote').classList.remove('show');
+            }, 5000);
+        }
+
+        function showVictory() {
+            unlockAchievement('COMPLETE');
+
+            const playTime = Math.floor((Date.now() - gameState.stats.startTime) / 1000);
+            const minutes = Math.floor(playTime / 60);
+            const seconds = playTime % 60;
+
+            document.getElementById('final-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('final-jumps').textContent = gameState.stats.jumps;
+            document.getElementById('final-achievements').textContent = gameState.achievements.size;
+
+            if (playTime < 120) {
+                unlockAchievement('SPEED_RUN');
+            }
+
+            document.getElementById('victory-screen').classList.add('show');
+            playSound('achievement');
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+
+        // Game Loop Principal
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!gameState.started) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // Fondo con gradiente basado en progreso
+            const progress = gameState.stats.platformsReached / 20;
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+
+            if (progress < 0.3) {
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(0.5, '#764ba2');
+                gradient.addColorStop(1, '#f093fb');
+            } else if (progress < 0.7) {
+                gradient.addColorStop(0, '#764ba2');
+                gradient.addColorStop(0.5, '#f093fb');
+                gradient.addColorStop(1, '#fa709a');
+            } else {
+                gradient.addColorStop(0, '#ff6b6b');
+                gradient.addColorStop(0.5, '#feca57');
+                gradient.addColorStop(1, '#48dbfb');
+            }
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Actualizar física
+            updatePhysics();
+
+            // Actualizar y dibujar partículas
+            gameState.particles = gameState.particles.filter(p => {
+                const alive = p.update();
+                if (alive) p.draw();
+                return alive;
+            });
+
+            // Clima
+            updateWeather();
+
+            // Dibujar elementos del juego
+            drawPlatforms();
+            drawPlayer();
+
+            // Actualizar tiempo
+            if (gameState.started) {
+                const playTime = Math.floor((Date.now() - gameState.stats.startTime) / 1000);
+                const minutes = Math.floor(playTime / 60);
+                const seconds = playTime % 60;
+                document.getElementById('game-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Controles
+        document.addEventListener('keydown', (e) => {
+            gameState.keys[e.key.toLowerCase()] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            gameState.keys[e.key.toLowerCase()] = false;
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Iniciar loop del juego
+        gameLoop();
+
+        console.log('🎮 Juego Ultra Profesional Cargado - Todas las características activas! 🚀');
+    </script>
+</body>
+</html>
