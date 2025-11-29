@@ -1818,8 +1818,15 @@
                 let lastY = canvas.height - 40;
 
                 for (let i = 0; i < 50; i++) {
-                    const gapX = Math.random() * 200 + 150;
-                    const gapY = (Math.random() - 0.5) * 150;
+                    // Reduced gaps to ensure platforms are always reachable
+                    let gapX = Math.random() * 120 + 100;  // 100-220px (was 150-350px)
+                    let gapY = (Math.random() - 0.5) * 100; // -50 to +50px (was -75 to +75px)
+
+                    // If platform is going upward, make horizontal gap smaller
+                    if (gapY < -20) { // Going significantly upward
+                        gapX = Math.random() * 80 + 80; // 80-160px for easier upward jumps
+                    }
+
                     const width = Math.random() * 150 + 100;
 
                     lastX += gapX;
