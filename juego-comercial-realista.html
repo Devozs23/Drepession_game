@@ -826,6 +826,34 @@
                     osc.start(now);
                     osc.stop(now + 0.2);
                     break;
+
+                case 'jump':
+                    osc.frequency.value = 300;
+                    osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+
+                case 'coin':
+                    osc.frequency.value = 800;
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+
+                case 'damage':
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = 200;
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
             }
         }
 
@@ -1160,9 +1188,818 @@
             CharacterSelectScene.init();
         }
 
+        // ============================================
+        // GAME SCENE - PARTE 3: Motor de Juego
+        // ============================================
+
+        const GameScene = {
+            // Parallax layers
+            parallaxLayers: [],
+
+            // Platforms
+            platforms: [],
+
+            // Collectibles (coins, power-ups)
+            coins: [],
+
+            // Motivational messages
+            motivationalMessages: [
+                "Un paso a la vez 🌟",
+                "Eres más fuerte de lo que crees 💪",
+                "La oscuridad siempre precede al amanecer 🌅",
+                "Cada día es una nueva oportunidad ✨",
+                "Tu valentía te define 🦁",
+                "Las tormentas pasan, tú permaneces 🌈",
+                "Mereces felicidad y paz 🕊️",
+                "Tu historia aún se está escribiendo 📖",
+                "Eres importante y valioso 💎",
+                "Mañana puede ser mejor 🌄",
+                "No estás solo en esto 🤝",
+                "Tu luz puede brillar de nuevo ☀️"
+            ],
+            currentMessage: null,
+            messageTimer: 0,
+
+            // World progress
+            worldLength: 5000,
+            checkpoints: [],
+
+            // Visual effects
+            clouds: [],
+            stars: [],
+
+            time: 0,
+
+            init() {
+                this.time = 0;
+
+                // Initialize player from saved character
+                const charColor = Game.saveData.character === 'luna' ? '#ff6b9d' : '#667eea';
+                Game.player.x = 100;
+                Game.player.y = 300;
+                Game.player.velocityX = 0;
+                Game.player.velocityY = 0;
+                Game.player.health = Game.saveData.stats.maxHealth;
+                Game.player.energy = Game.saveData.stats.maxEnergy;
+                Game.player.isGrounded = false;
+                Game.player.color = charColor;
+
+                // Create parallax layers
+                this.createParallaxLayers();
+
+                // Generate platforms
+                this.generatePlatforms();
+
+                // Generate coins
+                this.generateCoins();
+
+                // Create decorative elements
+                this.createClouds();
+                this.createStars();
+
+                // Set checkpoints
+                this.checkpoints = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500];
+
+                // Show first message
+                this.showRandomMessage();
+
+                // Reset camera
+                Game.camera.x = 0;
+                Game.camera.y = 0;
+
+                // Create HUD
+                this.createHUD();
+            },
+
+            createParallaxLayers() {
+                this.parallaxLayers = [
+                    // Sky layer (slowest)
+                    {
+                        speed: 0.1,
+                        y: 0,
+                        color1: '#1a1a2e',
+                        color2: '#2d1b69',
+                        elements: []
+                    },
+                    // Mountain layer
+                    {
+                        speed: 0.3,
+                        y: canvas.height - 200,
+                        color: '#3d2f5b',
+                        heights: []
+                    },
+                    // Cloud layer
+                    {
+                        speed: 0.5,
+                        clouds: []
+                    },
+                    // Foreground layer (fastest)
+                    {
+                        speed: 0.8,
+                        y: canvas.height - 50,
+                        color: '#2a1f47'
+                    }
+                ];
+
+                // Generate mountain heights
+                for (let i = 0; i < 100; i++) {
+                    this.parallaxLayers[1].heights.push(Math.random() * 100 + 50);
+                }
+            },
+
+            createClouds() {
+                this.clouds = [];
+                for (let i = 0; i < 15; i++) {
+                    this.clouds.push({
+                        x: Math.random() * this.worldLength,
+                        y: Math.random() * 200 + 50,
+                        width: Math.random() * 80 + 60,
+                        height: Math.random() * 30 + 20,
+                        speed: Math.random() * 0.3 + 0.1,
+                        opacity: Math.random() * 0.3 + 0.2
+                    });
+                }
+            },
+
+            createStars() {
+                this.stars = [];
+                for (let i = 0; i < 50; i++) {
+                    this.stars.push({
+                        x: Math.random() * this.worldLength,
+                        y: Math.random() * 300,
+                        size: Math.random() * 2 + 1,
+                        opacity: Math.random(),
+                        twinkleSpeed: Math.random() * 2 + 1
+                    });
+                }
+            },
+
+            generatePlatforms() {
+                this.platforms = [];
+
+                // Ground platform
+                this.platforms.push({
+                    x: 0,
+                    y: canvas.height - 40,
+                    width: 300,
+                    height: 40,
+                    type: 'ground',
+                    color: '#4a3f6b'
+                });
+
+                // Generate platforms progressively
+                let lastX = 300;
+                let lastY = canvas.height - 40;
+
+                for (let i = 0; i < 50; i++) {
+                    const gapX = Math.random() * 200 + 150;
+                    const gapY = (Math.random() - 0.5) * 150;
+                    const width = Math.random() * 150 + 100;
+
+                    lastX += gapX;
+                    lastY = Math.max(200, Math.min(canvas.height - 100, lastY + gapY));
+
+                    const platformTypes = ['normal', 'moving', 'breakable'];
+                    const type = i % 5 === 0 ? platformTypes[Math.floor(Math.random() * platformTypes.length)] : 'normal';
+
+                    this.platforms.push({
+                        x: lastX,
+                        y: lastY,
+                        width: width,
+                        height: 30,
+                        type: type,
+                        color: type === 'moving' ? '#667eea' :
+                               type === 'breakable' ? '#f59e0b' : '#5a4a7b',
+                        originalY: lastY,
+                        moveSpeed: type === 'moving' ? Math.random() * 2 + 1 : 0,
+                        moveRange: 100,
+                        broken: false
+                    });
+                }
+
+                // Final victory platform
+                this.platforms.push({
+                    x: this.worldLength - 200,
+                    y: canvas.height - 40,
+                    width: 200,
+                    height: 40,
+                    type: 'victory',
+                    color: '#fbbf24'
+                });
+            },
+
+            generateCoins() {
+                this.coins = [];
+
+                // Place coins above some platforms
+                for (let i = 1; i < this.platforms.length - 1; i += 2) {
+                    const platform = this.platforms[i];
+                    const numCoins = Math.floor(Math.random() * 3) + 1;
+
+                    for (let j = 0; j < numCoins; j++) {
+                        this.coins.push({
+                            x: platform.x + platform.width / 2 + (j - numCoins/2) * 40,
+                            y: platform.y - 60,
+                            radius: 12,
+                            collected: false,
+                            rotation: 0,
+                            value: 10
+                        });
+                    }
+                }
+            },
+
+            createHUD() {
+                const overlay = document.getElementById('ui-overlay');
+                overlay.innerHTML = `
+                    <div class="hud">
+                        <div class="hud-stat">
+                            <span>❤️</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill health-fill" id="health-bar" style="width: 100%"></div>
+                            </div>
+                            <span id="health-text">100</span>
+                        </div>
+                        <div class="hud-stat">
+                            <span>⚡</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill energy-fill" id="energy-bar" style="width: 100%"></div>
+                            </div>
+                            <span id="energy-text">100</span>
+                        </div>
+                        <div class="hud-stat">
+                            <span>💰</span>
+                            <span id="coins-text">0</span>
+                        </div>
+                        <div class="hud-stat">
+                            <span>📍</span>
+                            <span id="progress-text">0%</span>
+                        </div>
+                    </div>
+                `;
+            },
+
+            updateHUD() {
+                const healthPercent = (Game.player.health / Game.saveData.stats.maxHealth) * 100;
+                const energyPercent = (Game.player.energy / Game.saveData.stats.maxEnergy) * 100;
+                const progress = Math.floor((Game.player.x / this.worldLength) * 100);
+
+                const healthBar = document.getElementById('health-bar');
+                const energyBar = document.getElementById('energy-bar');
+                const healthText = document.getElementById('health-text');
+                const energyText = document.getElementById('energy-text');
+                const coinsText = document.getElementById('coins-text');
+                const progressText = document.getElementById('progress-text');
+
+                if (healthBar) healthBar.style.width = healthPercent + '%';
+                if (energyBar) energyBar.style.width = energyPercent + '%';
+                if (healthText) healthText.textContent = Math.floor(Game.player.health);
+                if (energyText) energyText.textContent = Math.floor(Game.player.energy);
+                if (coinsText) coinsText.textContent = Game.player.coins;
+                if (progressText) progressText.textContent = progress + '%';
+            },
+
+            showRandomMessage() {
+                const message = this.motivationalMessages[Math.floor(Math.random() * this.motivationalMessages.length)];
+                this.currentMessage = message;
+                this.messageTimer = 4; // 4 seconds
+            },
+
+            update(dt) {
+                this.time += dt;
+
+                // Update player physics
+                this.updatePlayerPhysics(dt);
+
+                // Update camera to follow player
+                this.updateCamera();
+
+                // Update moving platforms
+                this.updatePlatforms(dt);
+
+                // Update coins
+                this.updateCoins(dt);
+
+                // Update clouds
+                this.clouds.forEach(cloud => {
+                    cloud.x += cloud.speed;
+                    if (cloud.x > this.worldLength + 200) {
+                        cloud.x = -200;
+                    }
+                });
+
+                // Update stars
+                this.stars.forEach(star => {
+                    star.opacity = 0.5 + Math.sin(this.time * star.twinkleSpeed) * 0.5;
+                });
+
+                // Update message timer
+                if (this.messageTimer > 0) {
+                    this.messageTimer -= dt;
+                    if (this.messageTimer <= 0) {
+                        this.currentMessage = null;
+                    }
+                }
+
+                // Check for checkpoint messages
+                this.checkpoints.forEach((checkpoint, index) => {
+                    if (Game.player.x > checkpoint && Game.player.x < checkpoint + 50) {
+                        if (!this.currentMessage) {
+                            this.showRandomMessage();
+                        }
+                    }
+                });
+
+                // Update HUD
+                this.updateHUD();
+
+                // Check victory
+                if (Game.player.x >= this.worldLength - 100) {
+                    this.victory();
+                }
+            },
+
+            updatePlayerPhysics(dt) {
+                const p = Game.player;
+                const gravity = 0.8;
+                const moveSpeed = 5 * (Game.saveData.stats.speed / 100);
+                const jumpForce = -15;
+
+                // Horizontal movement
+                if (Game.keys['ArrowLeft'] || Game.keys['a'] || Game.keys['A']) {
+                    p.velocityX = -moveSpeed;
+                    p.isFacingRight = false;
+                } else if (Game.keys['ArrowRight'] || Game.keys['d'] || Game.keys['D']) {
+                    p.velocityX = moveSpeed;
+                    p.isFacingRight = true;
+                } else {
+                    p.velocityX *= 0.8; // Friction
+                }
+
+                // Apply gravity
+                p.velocityY += gravity;
+
+                // Apply velocity
+                p.x += p.velocityX;
+                p.y += p.velocityY;
+
+                // Check platform collisions
+                p.isGrounded = false;
+                this.platforms.forEach(platform => {
+                    if (platform.broken) return;
+
+                    if (this.checkCollision(p, platform)) {
+                        // Landing on top of platform
+                        if (p.velocityY > 0 && p.y + p.height - p.velocityY <= platform.y + 10) {
+                            p.y = platform.y - p.height;
+                            p.velocityY = 0;
+                            p.isGrounded = true;
+                            p.canDoubleJump = true;
+
+                            // Break breakable platforms
+                            if (platform.type === 'breakable') {
+                                setTimeout(() => {
+                                    platform.broken = true;
+                                }, 500);
+                            }
+
+                            // Victory platform
+                            if (platform.type === 'victory') {
+                                this.victory();
+                            }
+                        }
+                    }
+                });
+
+                // Prevent falling below screen
+                if (p.y > canvas.height + 100) {
+                    p.health -= 20;
+                    p.x = 100;
+                    p.y = 300;
+                    p.velocityX = 0;
+                    p.velocityY = 0;
+                    playSound('damage');
+
+                    if (p.health <= 0) {
+                        this.gameOver();
+                    }
+                }
+
+                // Energy regeneration
+                if (p.energy < Game.saveData.stats.maxEnergy) {
+                    p.energy += dt * 5;
+                }
+            },
+
+            updateCamera() {
+                // Smooth camera follow
+                Game.camera.targetX = Game.player.x - canvas.width / 3;
+                Game.camera.targetY = Game.player.y - canvas.height / 2;
+
+                Game.camera.x += (Game.camera.targetX - Game.camera.x) * 0.1;
+                Game.camera.y += (Game.camera.targetY - Game.camera.y) * 0.1;
+
+                // Clamp camera
+                Game.camera.x = Math.max(0, Math.min(Game.camera.x, this.worldLength - canvas.width));
+                Game.camera.y = Math.max(0, Math.min(Game.camera.y, 200));
+
+                // Camera shake
+                if (Game.camera.shake > 0) {
+                    Game.camera.shake -= 0.5;
+                    Game.camera.x += (Math.random() - 0.5) * Game.camera.shakeIntensity;
+                    Game.camera.y += (Math.random() - 0.5) * Game.camera.shakeIntensity;
+                }
+            },
+
+            updatePlatforms(dt) {
+                this.platforms.forEach(platform => {
+                    if (platform.type === 'moving') {
+                        platform.y = platform.originalY + Math.sin(this.time * platform.moveSpeed) * platform.moveRange;
+                    }
+                });
+            },
+
+            updateCoins(dt) {
+                this.coins.forEach(coin => {
+                    if (!coin.collected) {
+                        coin.rotation += dt * 3;
+
+                        // Check collision with player
+                        const dx = coin.x - (Game.player.x + Game.player.width / 2);
+                        const dy = coin.y - (Game.player.y + Game.player.height / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < coin.radius + 20) {
+                            coin.collected = true;
+                            Game.player.coins += coin.value;
+                            playSound('coin');
+                            this.createCoinParticles(coin.x, coin.y);
+                        }
+                    }
+                });
+            },
+
+            checkCollision(player, platform) {
+                return player.x < platform.x + platform.width &&
+                       player.x + player.width > platform.x &&
+                       player.y < platform.y + platform.height &&
+                       player.y + player.height > platform.y;
+            },
+
+            createCoinParticles(x, y) {
+                for (let i = 0; i < 10; i++) {
+                    Game.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 5,
+                        vy: (Math.random() - 0.5) * 5,
+                        life: 1,
+                        color: '#fbbf24',
+                        size: Math.random() * 4 + 2
+                    });
+                }
+            },
+
+            handleJump() {
+                const p = Game.player;
+                const jumpForce = -15;
+
+                if (p.isGrounded && p.energy >= 10) {
+                    p.velocityY = jumpForce;
+                    p.energy -= 10;
+                    p.isGrounded = false;
+                    playSound('jump');
+                } else if (p.canDoubleJump && !p.isGrounded && p.energy >= 15) {
+                    p.velocityY = jumpForce;
+                    p.energy -= 15;
+                    p.canDoubleJump = false;
+                    playSound('jump');
+                }
+            },
+
+            draw() {
+                // Draw parallax background
+                this.drawParallax();
+
+                // Draw stars
+                this.drawStars();
+
+                // Draw clouds
+                this.drawClouds();
+
+                // Draw platforms
+                this.drawPlatforms();
+
+                // Draw coins
+                this.drawCoins();
+
+                // Draw player
+                this.drawPlayer();
+
+                // Draw particles
+                this.drawParticles();
+
+                // Draw motivational message
+                this.drawMessage();
+            },
+
+            drawParallax() {
+                // Sky gradient
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                const progress = Game.player.x / this.worldLength;
+
+                // Change colors based on progress (dark to sunset)
+                if (progress < 0.5) {
+                    skyGradient.addColorStop(0, '#0f0c29');
+                    skyGradient.addColorStop(1, '#302b63');
+                } else {
+                    const t = (progress - 0.5) * 2;
+                    const r1 = Math.floor(15 + (255 - 15) * t);
+                    const g1 = Math.floor(12 + (107 - 12) * t);
+                    const b1 = Math.floor(41 + (133 - 41) * t);
+                    skyGradient.addColorStop(0, `rgb(${r1}, ${g1}, ${b1})`);
+                    skyGradient.addColorStop(1, '#ff6b9d');
+                }
+
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw mountains (parallax)
+                const layer = this.parallaxLayers[1];
+                const offsetX = Game.camera.x * layer.speed;
+
+                ctx.fillStyle = layer.color;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+
+                for (let i = 0; i < layer.heights.length; i++) {
+                    const x = (i * 100) - offsetX;
+                    const y = layer.y - layer.heights[i];
+                    ctx.lineTo(x, y);
+                }
+
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+            },
+
+            drawStars() {
+                this.stars.forEach(star => {
+                    const screenX = star.x - Game.camera.x * 0.1;
+                    const screenY = star.y;
+
+                    ctx.save();
+                    ctx.globalAlpha = star.opacity;
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(screenX, screenY, star.size, star.size);
+                    ctx.restore();
+                });
+            },
+
+            drawClouds() {
+                this.clouds.forEach(cloud => {
+                    const screenX = cloud.x - Game.camera.x * 0.5;
+                    const screenY = cloud.y;
+
+                    ctx.save();
+                    ctx.globalAlpha = cloud.opacity;
+                    ctx.fillStyle = '#fff';
+
+                    // Draw cloud shape
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, cloud.height / 2, 0, Math.PI * 2);
+                    ctx.arc(screenX + cloud.width / 3, screenY - cloud.height / 4, cloud.height / 1.5, 0, Math.PI * 2);
+                    ctx.arc(screenX + cloud.width * 2/3, screenY, cloud.height / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            },
+
+            drawPlatforms() {
+                this.platforms.forEach(platform => {
+                    if (platform.broken) return;
+
+                    const screenX = platform.x - Game.camera.x;
+                    const screenY = platform.y - Game.camera.y;
+
+                    // Don't draw if off screen
+                    if (screenX + platform.width < 0 || screenX > canvas.width) return;
+
+                    // Platform shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.fillRect(screenX + 5, screenY + 5, platform.width, platform.height);
+
+                    // Platform
+                    ctx.fillStyle = platform.color;
+                    ctx.fillRect(screenX, screenY, platform.width, platform.height);
+
+                    // Platform border
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(screenX, screenY, platform.width, platform.height);
+
+                    // Victory platform glow
+                    if (platform.type === 'victory') {
+                        ctx.save();
+                        ctx.shadowColor = '#fbbf24';
+                        ctx.shadowBlur = 20;
+                        ctx.fillStyle = platform.color;
+                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        ctx.restore();
+                    }
+                });
+            },
+
+            drawCoins() {
+                this.coins.forEach(coin => {
+                    if (coin.collected) return;
+
+                    const screenX = coin.x - Game.camera.x;
+                    const screenY = coin.y - Game.camera.y;
+
+                    // Don't draw if off screen
+                    if (screenX < -50 || screenX > canvas.width + 50) return;
+
+                    ctx.save();
+                    ctx.translate(screenX, screenY);
+                    ctx.rotate(coin.rotation);
+
+                    // Coin glow
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.shadowBlur = 10;
+
+                    // Coin
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, coin.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Coin center
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, coin.radius - 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                });
+            },
+
+            drawPlayer() {
+                const p = Game.player;
+                const screenX = p.x - Game.camera.x;
+                const screenY = p.y - Game.camera.y;
+
+                ctx.save();
+
+                // Flip if facing left
+                if (!p.isFacingRight) {
+                    ctx.translate(screenX + p.width, screenY);
+                    ctx.scale(-1, 1);
+                    ctx.translate(-(screenX + p.width), -screenY);
+                }
+
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(screenX + p.width/2, screenY + p.height + 2, p.width/2, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Body
+                ctx.fillStyle = p.color;
+                ctx.fillRect(screenX + 8, screenY + 20, p.width - 16, 22);
+
+                // Head
+                ctx.fillStyle = '#FFD1B3';
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + 12, 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Hair
+                if (Game.saveData.character === 'luna') {
+                    ctx.fillStyle = '#3d2817';
+                    ctx.beginPath();
+                    ctx.arc(screenX + p.width/2 - 6, screenY + 8, 10, 0, Math.PI * 2);
+                    ctx.arc(screenX + p.width/2 + 6, screenY + 8, 10, 0, Math.PI * 2);
+                    ctx.arc(screenX + p.width/2, screenY + 4, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#2d1810';
+                    ctx.beginPath();
+                    ctx.arc(screenX + p.width/2, screenY + 4, 12, 0, Math.PI);
+                    ctx.fill();
+                }
+
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2 - 4, screenY + 10, 2, 0, Math.PI * 2);
+                ctx.arc(screenX + p.width/2 + 4, screenY + 10, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Smile
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(screenX + p.width/2, screenY + 12, 5, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+
+                // Arms
+                ctx.fillStyle = '#FFD1B3';
+                ctx.fillRect(screenX + 2, screenY + 22, 6, 15);
+                ctx.fillRect(screenX + p.width - 8, screenY + 22, 6, 15);
+
+                // Legs
+                ctx.fillStyle = p.color;
+                const legOffset = Math.abs(p.velocityX) > 0.1 ? Math.sin(this.time * 10) * 3 : 0;
+                ctx.fillRect(screenX + 10, screenY + 42 + legOffset, 6, 18);
+                ctx.fillRect(screenX + p.width - 16, screenY + 42 - legOffset, 6, 18);
+
+                // Shoes
+                ctx.fillStyle = '#333';
+                ctx.fillRect(screenX + 10, screenY + 58, 6, 4);
+                ctx.fillRect(screenX + p.width - 16, screenY + 58, 6, 4);
+
+                ctx.restore();
+            },
+
+            drawParticles() {
+                Game.particles = Game.particles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+
+                    if (p.life <= 0) return false;
+
+                    const screenX = p.x - Game.camera.x;
+                    const screenY = p.y - Game.camera.y;
+
+                    ctx.save();
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    return true;
+                });
+            },
+
+            drawMessage() {
+                if (!this.currentMessage) return;
+
+                const alpha = this.messageTimer > 0.5 ? 1 : this.messageTimer * 2;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+
+                // Message background
+                const msgWidth = 400;
+                const msgHeight = 60;
+                const msgX = canvas.width - msgWidth - 20;
+                const msgY = 100;
+
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.9)';
+                ctx.shadowColor = '#667eea';
+                ctx.shadowBlur = 20;
+                ctx.fillRect(msgX, msgY, msgWidth, msgHeight);
+
+                // Message text
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.currentMessage, msgX + msgWidth/2, msgY + msgHeight/2 + 7);
+
+                ctx.restore();
+            },
+
+            victory() {
+                Game.state = GameStates.VICTORY;
+                saveGame();
+                showNotification('🎉 ¡Victoria!', '¡Has completado tu viaje de esperanza!');
+
+                // Show victory screen (will implement in next part)
+                setTimeout(() => {
+                    Game.state = GameStates.MAIN_MENU;
+                    MainMenuScene.init();
+                }, 3000);
+            },
+
+            gameOver() {
+                Game.state = GameStates.GAME_OVER;
+                showNotification('💔 Fin del Juego', 'No te rindas, inténtalo de nuevo');
+
+                setTimeout(() => {
+                    Game.state = GameStates.MAIN_MENU;
+                    MainMenuScene.init();
+                }, 3000);
+            }
+        };
+
         function startGame() {
-            showNotification('🎮 Iniciando Juego', 'El modo de juego se implementará en la Parte 3');
-            // Will be implemented in Part 3
+            Game.state = GameStates.PLAYING;
+            GameScene.init();
         }
 
         // ============================================
@@ -1176,6 +2013,22 @@
                 MainMenuScene.handleInput(e.key);
             } else if (Game.state === GameStates.CHARACTER_SELECT) {
                 CharacterSelectScene.handleInput(e.key);
+            } else if (Game.state === GameStates.PLAYING) {
+                // Jump
+                if (e.key === ' ' || e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    GameScene.handleJump();
+                }
+
+                // Pause
+                if (e.key === 'Escape') {
+                    Game.state = GameStates.PAUSED;
+                    showNotification('⏸️ Pausado', 'Presiona ESC para continuar');
+                }
+            } else if (Game.state === GameStates.PAUSED) {
+                if (e.key === 'Escape') {
+                    Game.state = GameStates.PLAYING;
+                }
             }
         });
 
@@ -1198,6 +2051,8 @@
                 MainMenuScene.update(Game.deltaTime);
             } else if (Game.state === GameStates.CHARACTER_SELECT) {
                 CharacterSelectScene.update(Game.deltaTime);
+            } else if (Game.state === GameStates.PLAYING) {
+                GameScene.update(Game.deltaTime);
             }
 
             // Draw
@@ -1205,6 +2060,8 @@
                 MainMenuScene.draw();
             } else if (Game.state === GameStates.CHARACTER_SELECT) {
                 CharacterSelectScene.draw();
+            } else if (Game.state === GameStates.PLAYING) {
+                GameScene.draw();
             }
 
             // Continue loop
