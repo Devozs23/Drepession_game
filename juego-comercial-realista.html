@@ -830,12 +830,334 @@
         }
 
         // ============================================
-        // CHARACTER SELECT (Placeholder for Part 2)
+        // CHARACTER SELECT SCENE - PARTE 2
         // ============================================
 
+        const CharacterSelectScene = {
+            characters: [
+                {
+                    id: 'luna',
+                    name: 'Luna',
+                    title: 'La Soñadora',
+                    description: 'Fuerte en esperanza y resistencia emocional',
+                    color: '#ff6b9d',
+                    stats: {
+                        health: 120,
+                        energy: 80,
+                        speed: 90,
+                        strength: 70
+                    }
+                },
+                {
+                    id: 'sol',
+                    name: 'Sol',
+                    title: 'El Valiente',
+                    description: 'Poderoso en fuerza y determinación',
+                    color: '#667eea',
+                    stats: {
+                        health: 100,
+                        energy: 100,
+                        speed: 75,
+                        strength: 95
+                    }
+                }
+            ],
+            selectedIndex: 0,
+            time: 0,
+            particles: [],
+
+            init() {
+                this.time = 0;
+                this.particles = [];
+
+                // Create character particles
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 3 + 1,
+                        speedX: (Math.random() - 0.5) * 1,
+                        speedY: (Math.random() - 0.5) * 1,
+                        opacity: Math.random() * 0.5 + 0.3
+                    });
+                }
+            },
+
+            update(dt) {
+                this.time += dt;
+
+                // Update particles
+                this.particles.forEach(p => {
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+
+                    if (p.x < 0) p.x = canvas.width;
+                    if (p.x > canvas.width) p.x = 0;
+                    if (p.y < 0) p.y = canvas.height;
+                    if (p.y > canvas.height) p.y = 0;
+                });
+            },
+
+            draw() {
+                // Background
+                const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                bgGradient.addColorStop(0, '#1a1a2e');
+                bgGradient.addColorStop(1, '#16213e');
+                ctx.fillStyle = bgGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Particles
+                this.particles.forEach(p => {
+                    ctx.save();
+                    ctx.globalAlpha = p.opacity;
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    ctx.restore();
+                });
+
+                // Title
+                ctx.save();
+                ctx.shadowColor = '#667eea';
+                ctx.shadowBlur = 20;
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('Elige tu Héroe', canvas.width / 2, 80);
+                ctx.restore();
+
+                // Draw characters
+                const charWidth = 400;
+                const charHeight = 500;
+                const spacing = 100;
+                const startX = (canvas.width - (charWidth * 2 + spacing)) / 2;
+                const startY = 150;
+
+                this.characters.forEach((char, index) => {
+                    const x = startX + index * (charWidth + spacing);
+                    const y = startY;
+                    const isSelected = index === this.selectedIndex;
+
+                    // Character card background
+                    ctx.save();
+                    if (isSelected) {
+                        ctx.shadowColor = char.color;
+                        ctx.shadowBlur = 30;
+                        const pulseScale = 1 + Math.sin(this.time * 3) * 0.02;
+                        ctx.translate(x + charWidth/2, y + charHeight/2);
+                        ctx.scale(pulseScale, pulseScale);
+                        ctx.translate(-(x + charWidth/2), -(y + charHeight/2));
+                    }
+
+                    // Card gradient
+                    const cardGradient = ctx.createLinearGradient(x, y, x, y + charHeight);
+                    cardGradient.addColorStop(0, isSelected ? char.color + '40' : 'rgba(255,255,255,0.1)');
+                    cardGradient.addColorStop(1, 'rgba(0,0,0,0.2)');
+                    ctx.fillStyle = cardGradient;
+                    ctx.fillRect(x, y, charWidth, charHeight);
+
+                    // Card border
+                    ctx.strokeStyle = isSelected ? char.color : 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = isSelected ? 4 : 2;
+                    ctx.strokeRect(x, y, charWidth, charHeight);
+                    ctx.restore();
+
+                    // Draw character sprite
+                    this.drawCharacter(x + charWidth/2, y + 150, char, isSelected);
+
+                    // Character name
+                    ctx.font = 'bold 36px Arial';
+                    ctx.fillStyle = isSelected ? char.color : '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(char.name, x + charWidth/2, y + 250);
+
+                    // Character title
+                    ctx.font = '20px Arial';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fillText(char.title, x + charWidth/2, y + 280);
+
+                    // Description
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    const words = char.description.split(' ');
+                    let line = '';
+                    let lineY = y + 320;
+                    words.forEach(word => {
+                        const testLine = line + word + ' ';
+                        const metrics = ctx.measureText(testLine);
+                        if (metrics.width > charWidth - 40) {
+                            ctx.fillText(line, x + charWidth/2, lineY);
+                            line = word + ' ';
+                            lineY += 20;
+                        } else {
+                            line = testLine;
+                        }
+                    });
+                    ctx.fillText(line, x + charWidth/2, lineY);
+
+                    // Stats
+                    const statsY = y + 380;
+                    const statsList = [
+                        { name: '❤️', value: char.stats.health, max: 120 },
+                        { name: '⚡', value: char.stats.energy, max: 100 },
+                        { name: '🏃', value: char.stats.speed, max: 100 },
+                        { name: '💪', value: char.stats.strength, max: 100 }
+                    ];
+
+                    statsList.forEach((stat, i) => {
+                        const statY = statsY + i * 25;
+                        ctx.font = '14px Arial';
+                        ctx.fillStyle = '#fff';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(stat.name, x + 20, statY);
+
+                        // Stat bar
+                        const barX = x + 50;
+                        const barWidth = charWidth - 70;
+                        const barHeight = 12;
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.fillRect(barX, statY - 10, barWidth, barHeight);
+
+                        const fillWidth = (stat.value / stat.max) * barWidth;
+                        const statGradient = ctx.createLinearGradient(barX, 0, barX + fillWidth, 0);
+                        statGradient.addColorStop(0, char.color);
+                        statGradient.addColorStop(1, char.color + 'aa');
+                        ctx.fillStyle = statGradient;
+                        ctx.fillRect(barX, statY - 10, fillWidth, barHeight);
+                    });
+
+                    // Selection indicator
+                    if (isSelected) {
+                        const indicatorY = y - 30;
+                        const indicatorSize = 8 + Math.sin(this.time * 5) * 3;
+                        ctx.fillStyle = char.color;
+                        ctx.beginPath();
+                        ctx.arc(x + charWidth/2, indicatorY, indicatorSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Instructions
+                ctx.font = '18px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.textAlign = 'center';
+                ctx.fillText('← → Seleccionar  |  ENTER Confirmar', canvas.width / 2, canvas.height - 30);
+            },
+
+            drawCharacter(x, y, char, isSelected) {
+                const scale = isSelected ? 1.1 : 1;
+                const bounce = Math.sin(this.time * 2) * 5;
+
+                ctx.save();
+                ctx.translate(x, y + bounce);
+                ctx.scale(scale, scale);
+
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(0, 35, 20, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Body
+                ctx.fillStyle = char.color;
+                ctx.fillRect(-15, 0, 30, 40);
+
+                // Head
+                ctx.fillStyle = '#FFD1B3';
+                ctx.beginPath();
+                ctx.arc(0, -10, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Hair
+                if (char.id === 'luna') {
+                    // Long hair for Luna
+                    ctx.fillStyle = '#3d2817';
+                    ctx.beginPath();
+                    ctx.arc(-8, -10, 12, 0, Math.PI * 2);
+                    ctx.arc(8, -10, 12, 0, Math.PI * 2);
+                    ctx.arc(0, -15, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Short hair for Sol
+                    ctx.fillStyle = '#2d1810';
+                    ctx.beginPath();
+                    ctx.arc(0, -15, 15, 0, Math.PI);
+                    ctx.fill();
+                }
+
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-6, -8, 2, 0, Math.PI * 2);
+                ctx.arc(6, -8, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Smile
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, -5, 8, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+
+                // Arms
+                ctx.fillStyle = '#FFD1B3';
+                ctx.fillRect(-25, 5, 10, 20);
+                ctx.fillRect(15, 5, 10, 20);
+
+                // Legs
+                ctx.fillStyle = char.color;
+                ctx.fillRect(-12, 40, 10, 25);
+                ctx.fillRect(2, 40, 10, 25);
+
+                // Shoes
+                ctx.fillStyle = '#333';
+                ctx.fillRect(-12, 63, 10, 6);
+                ctx.fillRect(2, 63, 10, 6);
+
+                ctx.restore();
+            },
+
+            handleInput(key) {
+                if (key === 'ArrowLeft') {
+                    this.selectedIndex = (this.selectedIndex - 1 + this.characters.length) % this.characters.length;
+                    playSound('menu_move');
+                }
+
+                if (key === 'ArrowRight') {
+                    this.selectedIndex = (this.selectedIndex + 1) % this.characters.length;
+                    playSound('menu_move');
+                }
+
+                if (key === 'Enter') {
+                    const selected = this.characters[this.selectedIndex];
+                    Game.saveData.character = selected.id;
+                    Game.saveData.stats.maxHealth = selected.stats.health;
+                    Game.saveData.stats.maxEnergy = selected.stats.energy;
+                    Game.saveData.stats.speed = selected.stats.speed;
+                    Game.saveData.stats.strength = selected.stats.strength;
+
+                    playSound('menu_select');
+                    saveGame();
+                    showNotification(
+                        `¡${selected.name} Seleccionado!`,
+                        `Comenzando tu aventura como ${selected.title}`
+                    );
+
+                    setTimeout(() => {
+                        startGame();
+                    }, 1000);
+                }
+
+                if (key === 'Escape') {
+                    Game.state = GameStates.MAIN_MENU;
+                    MainMenuScene.init();
+                }
+            }
+        };
+
         function startCharacterSelect() {
-            showNotification('🎨 Selección de Personaje', 'Esta función se implementará en la Parte 2');
-            // Will be implemented in Part 2
+            Game.state = GameStates.CHARACTER_SELECT;
+            CharacterSelectScene.init();
         }
 
         function startGame() {
@@ -852,6 +1174,8 @@
 
             if (Game.state === GameStates.MAIN_MENU) {
                 MainMenuScene.handleInput(e.key);
+            } else if (Game.state === GameStates.CHARACTER_SELECT) {
+                CharacterSelectScene.handleInput(e.key);
             }
         });
 
@@ -872,11 +1196,15 @@
             // Update
             if (Game.state === GameStates.MAIN_MENU) {
                 MainMenuScene.update(Game.deltaTime);
+            } else if (Game.state === GameStates.CHARACTER_SELECT) {
+                CharacterSelectScene.update(Game.deltaTime);
             }
 
             // Draw
             if (Game.state === GameStates.MAIN_MENU) {
                 MainMenuScene.draw();
+            } else if (Game.state === GameStates.CHARACTER_SELECT) {
+                CharacterSelectScene.draw();
             }
 
             // Continue loop
