@@ -392,6 +392,11 @@
                 // Special ability system
                 specialAbilityCooldown: 0,
                 isUsingSpecial: false,
+                // PARTE 7: Spell system
+                spell1Cooldown: 0, // Light Bolt (left click)
+                spell2Cooldown: 0, // Hope Nova (right click)
+                mana: 100,
+                maxMana: 100,
                 // Power-ups
                 activeBuffs: [],
                 // Trail effect
@@ -438,6 +443,10 @@
 
             // Power-ups
             powerups: [],
+
+            // PARTE 7: Magic Spell System
+            spells: [], // Active projectiles/spells
+            spellParticles: [], // Spell visual effects
 
             // Current Level Data
             currentLevelData: null,
@@ -2069,6 +2078,13 @@
                             <span id="energy-text">100</span>
                         </div>
                         <div class="hud-stat">
+                            <span>💙 Mana</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill" id="mana-bar" style="width: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                            </div>
+                            <span id="mana-text">100</span>
+                        </div>
+                        <div class="hud-stat">
                             <span>💰</span>
                             <span id="coins-text">0</span>
                         </div>
@@ -2080,7 +2096,15 @@
                             <span>${ability.icon} ${ability.name}</span>
                             <span id="ability-cooldown" style="font-size: 12px;">Listo</span>
                         </div>
-                        <div class="hud-stat" id="combo-display" style="display: none; color: #fbbf24; font-weight: bold; font-size: 20px;">
+                        <div class="hud-stat" style="margin-top: 5px;">
+                            <span>✨ Light Bolt (Click Izq)</span>
+                            <span id="spell1-cooldown" style="font-size: 12px; color: #60a5fa;">Ready</span>
+                        </div>
+                        <div class="hud-stat" style="margin-top: 5px;">
+                            <span>💫 Hope Nova (Click Der)</span>
+                            <span id="spell2-cooldown" style="font-size: 12px; color: #fbbf24;">Ready</span>
+                        </div>
+                        <div class="hud-stat" id="combo-display" style="display: none; color: #fbbf24; font-weight: bold; font-size: 20px; margin-top: 10px;">
                             <span>🔥 COMBO</span>
                             <span id="combo-text">x0</span>
                         </div>
@@ -2128,6 +2152,38 @@
                     } else {
                         abilityCooldownText.textContent = '✓ Listo';
                         abilityCooldownText.style.color = '#10b981';
+                    }
+                }
+
+                // PARTE 7: Update mana bar
+                const manaPercent = (Game.player.mana / Game.player.maxMana) * 100;
+                const manaBar = document.getElementById('mana-bar');
+                const manaText = document.getElementById('mana-text');
+                if (manaBar) manaBar.style.width = manaPercent + '%';
+                if (manaText) manaText.textContent = Math.floor(Game.player.mana);
+
+                // PARTE 7: Update spell cooldowns
+                const spell1CooldownText = document.getElementById('spell1-cooldown');
+                if (spell1CooldownText) {
+                    if (Game.player.spell1Cooldown > 0) {
+                        const secondsLeft = (Game.player.spell1Cooldown / 60).toFixed(1);
+                        spell1CooldownText.textContent = `${secondsLeft}s`;
+                        spell1CooldownText.style.opacity = '0.5';
+                    } else {
+                        spell1CooldownText.textContent = 'Ready';
+                        spell1CooldownText.style.opacity = '1';
+                    }
+                }
+
+                const spell2CooldownText = document.getElementById('spell2-cooldown');
+                if (spell2CooldownText) {
+                    if (Game.player.spell2Cooldown > 0) {
+                        const secondsLeft = (Game.player.spell2Cooldown / 60).toFixed(1);
+                        spell2CooldownText.textContent = `${secondsLeft}s`;
+                        spell2CooldownText.style.opacity = '0.5';
+                    } else {
+                        spell2CooldownText.textContent = 'Ready';
+                        spell2CooldownText.style.opacity = '1';
                     }
                 }
 
@@ -2256,6 +2312,25 @@
                 if (Game.player.specialAbilityCooldown > 0) {
                     Game.player.specialAbilityCooldown--;
                 }
+
+                // PARTE 7: Update spell cooldowns
+                if (Game.player.spell1Cooldown > 0) {
+                    Game.player.spell1Cooldown--;
+                }
+                if (Game.player.spell2Cooldown > 0) {
+                    Game.player.spell2Cooldown--;
+                }
+
+                // PARTE 7: Mana regeneration (1 mana per 0.5 seconds)
+                if (Math.floor(this.time * 60) % 30 === 0) {
+                    Game.player.mana = Math.min(Game.player.mana + 1, Game.player.maxMana);
+                }
+
+                // PARTE 7: Update spells
+                this.updateSpells(dt);
+
+                // PARTE 7: Update spell particles
+                this.updateSpellParticles(dt);
 
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
@@ -2767,6 +2842,239 @@
                 }
             },
 
+            // PARTE 7: Update spell projectiles and effects
+            updateSpells(dt) {
+                const p = Game.player;
+
+                for (let i = Game.spells.length - 1; i >= 0; i--) {
+                    const spell = Game.spells[i];
+
+                    // Update spell lifetime
+                    spell.life -= dt;
+                    if (spell.life <= 0) {
+                        Game.spells.splice(i, 1);
+                        continue;
+                    }
+
+                    if (spell.type === 'lightbolt') {
+                        // Move projectile
+                        spell.x += spell.vx;
+                        spell.y += spell.vy;
+
+                        // Trail effect
+                        spell.trail.push({ x: spell.x, y: spell.y, life: 0.3 });
+                        if (spell.trail.length > 10) spell.trail.shift();
+
+                        // Check collision with enemies
+                        let hit = false;
+                        this.enemies.forEach(enemy => {
+                            if (enemy.isDead || hit) return;
+
+                            const dx = spell.x - (enemy.x + enemy.width / 2);
+                            const dy = spell.y - (enemy.y + enemy.height / 2);
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+
+                            if (distance < spell.radius + enemy.width / 2) {
+                                // Hit!
+                                enemy.health -= spell.damage;
+                                p.stats.damageDealt += spell.damage;
+                                p.combo++;
+                                p.comboTimer = 3;
+
+                                if (enemy.health <= 0) {
+                                    enemy.isDead = true;
+                                    p.coins += enemy.coins;
+                                    p.stats.enemiesDefeated++;
+                                    this.gainXP(enemy.xp);
+                                    playSound('enemy_death');
+                                }
+
+                                // Impact particles
+                                for (let j = 0; j < 20; j++) {
+                                    const angle = Math.random() * Math.PI * 2;
+                                    Game.spellParticles.push({
+                                        x: spell.x,
+                                        y: spell.y,
+                                        vx: Math.cos(angle) * (Math.random() * 6 + 2),
+                                        vy: Math.sin(angle) * (Math.random() * 6 + 2),
+                                        life: 0.8,
+                                        color: spell.color,
+                                        size: Math.random() * 5 + 2
+                                    });
+                                }
+
+                                hit = true;
+                                Game.spells.splice(i, 1);
+                            }
+                        });
+
+                        // Check collision with bosses
+                        if (!hit) {
+                            this.bosses.forEach(boss => {
+                                if (boss.isDefeated || !boss.isActive || hit) return;
+
+                                const dx = spell.x - (boss.x + boss.width / 2);
+                                const dy = spell.y - (boss.y + boss.height / 2);
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                if (distance < spell.radius + boss.width / 2) {
+                                    boss.health -= spell.damage;
+                                    p.stats.damageDealt += spell.damage;
+                                    boss.invulnerableTimer = 10;
+
+                                    // Check if boss defeated
+                                    if (boss.health <= 0 && !boss.isDefeated) {
+                                        boss.isDefeated = true;
+                                        p.coins += boss.type.coins;
+                                        this.gainXP(boss.type.xp);
+
+                                        const mission = this.missions.find(m => m.type === 'main' && m.description.includes(boss.type.name));
+                                        if (mission && !mission.completed) {
+                                            mission.completed = true;
+                                            if (mission.reward.coins) p.coins += mission.reward.coins;
+                                            if (mission.reward.xp) this.gainXP(mission.reward.xp);
+                                        }
+
+                                        showNotification(
+                                            `🏆 ¡${boss.type.name} Derrotado!`,
+                                            `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
+                                            5000
+                                        );
+                                    }
+
+                                    // Impact particles
+                                    for (let j = 0; j < 20; j++) {
+                                        const angle = Math.random() * Math.PI * 2;
+                                        Game.spellParticles.push({
+                                            x: spell.x,
+                                            y: spell.y,
+                                            vx: Math.cos(angle) * (Math.random() * 6 + 2),
+                                            vy: Math.sin(angle) * (Math.random() * 6 + 2),
+                                            life: 0.8,
+                                            color: spell.color,
+                                            size: Math.random() * 5 + 2
+                                        });
+                                    }
+
+                                    hit = true;
+                                    Game.spells.splice(i, 1);
+                                }
+                            });
+                        }
+
+                    } else if (spell.type === 'nova') {
+                        // Expand nova
+                        spell.radius += spell.expandSpeed;
+
+                        // Check if reached max radius
+                        if (spell.radius >= spell.maxRadius) {
+                            Game.spells.splice(i, 1);
+                            continue;
+                        }
+
+                        // Check collision with enemies
+                        this.enemies.forEach(enemy => {
+                            if (enemy.isDead) return;
+                            if (spell.hitEnemies.includes(enemy)) return; // Already hit
+
+                            const dx = spell.x - (enemy.x + enemy.width / 2);
+                            const dy = spell.y - (enemy.y + enemy.height / 2);
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+
+                            if (distance < spell.radius) {
+                                spell.hitEnemies.push(enemy);
+
+                                // Damage enemy
+                                enemy.health -= spell.damage;
+                                p.stats.damageDealt += spell.damage;
+                                p.combo++;
+                                p.comboTimer = 3;
+
+                                // Knockback
+                                const angle = Math.atan2(dy, dx);
+                                enemy.velocityX = -Math.cos(angle) * 15;
+                                enemy.velocityY = -Math.sin(angle) * 15;
+
+                                if (enemy.health <= 0) {
+                                    enemy.isDead = true;
+                                    p.coins += enemy.coins;
+                                    p.stats.enemiesDefeated++;
+                                    this.gainXP(enemy.xp);
+                                    playSound('enemy_death');
+                                }
+                            }
+                        });
+
+                        // Check collision with bosses
+                        this.bosses.forEach(boss => {
+                            if (boss.isDefeated || !boss.isActive) return;
+                            if (spell.hitEnemies.includes(boss)) return;
+
+                            const dx = spell.x - (boss.x + boss.width / 2);
+                            const dy = spell.y - (boss.y + boss.height / 2);
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+
+                            if (distance < spell.radius) {
+                                spell.hitEnemies.push(boss);
+
+                                boss.health -= spell.damage;
+                                p.stats.damageDealt += spell.damage;
+                                boss.invulnerableTimer = 10;
+
+                                if (boss.health <= 0 && !boss.isDefeated) {
+                                    boss.isDefeated = true;
+                                    p.coins += boss.type.coins;
+                                    this.gainXP(boss.type.xp);
+
+                                    const mission = this.missions.find(m => m.type === 'main' && m.description.includes(boss.type.name));
+                                    if (mission && !mission.completed) {
+                                        mission.completed = true;
+                                        if (mission.reward.coins) p.coins += mission.reward.coins;
+                                        if (mission.reward.xp) this.gainXP(mission.reward.xp);
+                                    }
+
+                                    showNotification(
+                                        `🏆 ¡${boss.type.name} Derrotado!`,
+                                        `+${boss.type.coins} 💰 +${boss.type.xp} XP`,
+                                        5000
+                                    );
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+
+            // PARTE 7: Update spell particle effects
+            updateSpellParticles(dt) {
+                for (let i = Game.spellParticles.length - 1; i >= 0; i--) {
+                    const particle = Game.spellParticles[i];
+                    particle.life -= dt;
+
+                    if (particle.life <= 0) {
+                        Game.spellParticles.splice(i, 1);
+                        continue;
+                    }
+
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.vx *= 0.98;
+                    particle.vy *= 0.98;
+                }
+
+                // Update spell trails
+                Game.spells.forEach(spell => {
+                    if (spell.trail) {
+                        for (let i = spell.trail.length - 1; i >= 0; i--) {
+                            spell.trail[i].life -= dt;
+                            if (spell.trail[i].life <= 0) {
+                                spell.trail.splice(i, 1);
+                            }
+                        }
+                    }
+                });
+            },
+
             handleJump() {
                 const p = Game.player;
                 const jumpForce = -15;
@@ -3142,6 +3450,136 @@
                 }
             },
 
+            // PARTE 7: Cast Spell 1 - Light Bolt (Left Click)
+            castSpell1() {
+                const p = Game.player;
+                const manaCost = 20;
+                const cooldown = 30; // 0.5 seconds at 60fps
+
+                // Check cooldown and mana
+                if (p.spell1Cooldown > 0) {
+                    showNotification('⏱️ Recargando', 'Spell en cooldown', 1000);
+                    return;
+                }
+                if (p.mana < manaCost) {
+                    showNotification('💙 Sin Mana', 'Necesitas más mana', 1000);
+                    return;
+                }
+
+                // Consume mana and set cooldown
+                p.mana -= manaCost;
+                p.spell1Cooldown = cooldown;
+
+                // Calculate direction to mouse
+                const worldMouseX = Game.mouseX + Game.camera.x;
+                const worldMouseY = Game.mouseY + Game.camera.y;
+                const playerCenterX = p.x + p.width / 2;
+                const playerCenterY = p.y + p.height / 2;
+
+                const dx = worldMouseX - playerCenterX;
+                const dy = worldMouseY - playerCenterY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const dirX = dx / distance;
+                const dirY = dy / distance;
+
+                const speed = 12;
+
+                // Create projectile
+                Game.spells.push({
+                    type: 'lightbolt',
+                    x: playerCenterX,
+                    y: playerCenterY,
+                    vx: dirX * speed,
+                    vy: dirY * speed,
+                    damage: 30 + Game.saveData.stats.strength * 2,
+                    radius: 10,
+                    life: 3, // seconds
+                    color: '#60a5fa',
+                    glowColor: '#3b82f6',
+                    trail: []
+                });
+
+                // Spell particle effect at cast
+                for (let i = 0; i < 15; i++) {
+                    const angle = (Math.PI * 2 * i) / 15;
+                    Game.spellParticles.push({
+                        x: playerCenterX,
+                        y: playerCenterY,
+                        vx: Math.cos(angle) * 3 + dirX * 2,
+                        vy: Math.sin(angle) * 3 + dirY * 2,
+                        life: 0.5,
+                        color: '#60a5fa',
+                        size: Math.random() * 4 + 2
+                    });
+                }
+
+                playSound('attack');
+                showNotification('✨ Light Bolt', '', 800);
+            },
+
+            // PARTE 7: Cast Spell 2 - Hope Nova (Right Click)
+            castSpell2() {
+                const p = Game.player;
+                const manaCost = 40;
+                const cooldown = 90; // 1.5 seconds at 60fps
+
+                // Check cooldown and mana
+                if (p.spell2Cooldown > 0) {
+                    showNotification('⏱️ Recargando', 'Spell en cooldown', 1000);
+                    return;
+                }
+                if (p.mana < manaCost) {
+                    showNotification('💙 Sin Mana', 'Necesitas más mana', 1000);
+                    return;
+                }
+
+                // Consume mana and set cooldown
+                p.mana -= manaCost;
+                p.spell2Cooldown = cooldown;
+
+                const playerCenterX = p.x + p.width / 2;
+                const playerCenterY = p.y + p.height / 2;
+                const damage = 50 + Game.saveData.stats.strength * 3;
+                const range = 200;
+
+                // Create expanding nova
+                Game.spells.push({
+                    type: 'nova',
+                    x: playerCenterX,
+                    y: playerCenterY,
+                    damage: damage,
+                    radius: 20,
+                    maxRadius: range,
+                    expandSpeed: 10,
+                    life: 1,
+                    color: '#fbbf24',
+                    glowColor: '#f59e0b',
+                    hitEnemies: [] // Track which enemies already hit
+                });
+
+                // Epic nova particles
+                for (let i = 0; i < 60; i++) {
+                    const angle = (Math.PI * 2 * i) / 60;
+                    const speed = 8 + Math.random() * 4;
+                    Game.spellParticles.push({
+                        x: playerCenterX,
+                        y: playerCenterY,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.2,
+                        color: '#fbbf24',
+                        size: Math.random() * 6 + 3
+                    });
+                }
+
+                // Camera shake
+                Game.camera.shake = 10;
+                Game.camera.shakeIntensity = 8;
+
+                playSound('levelup');
+                showNotification('💫 Hope Nova', 'Explosión de esperanza!', 1500);
+            },
+
             draw() {
                 // Draw parallax background
                 this.drawParallax();
@@ -3170,6 +3608,9 @@
                 // PARTE 6: Draw bosses
                 this.drawBosses();
 
+                // PARTE 7: Draw spells
+                this.drawSpells();
+
                 // PARTE 5: Draw player trail
                 this.drawTrail();
 
@@ -3178,6 +3619,9 @@
 
                 // Draw particles
                 this.drawParticles();
+
+                // PARTE 7: Draw spell particles
+                this.drawSpellParticles();
 
                 // Draw motivational message
                 this.drawMessage();
@@ -3675,6 +4119,151 @@
                 ctx.restore();
             },
 
+            // PARTE 7: Draw spell projectiles and effects
+            drawSpells() {
+                Game.spells.forEach(spell => {
+                    if (spell.type === 'lightbolt') {
+                        const screenX = spell.x - Game.camera.x;
+                        const screenY = spell.y - Game.camera.y;
+
+                        ctx.save();
+
+                        // Draw trail
+                        if (spell.trail.length > 0) {
+                            ctx.strokeStyle = spell.color;
+                            ctx.lineWidth = spell.radius * 2;
+                            ctx.lineCap = 'round';
+                            ctx.globalAlpha = 0.4;
+
+                            ctx.beginPath();
+                            spell.trail.forEach((point, i) => {
+                                const trailX = point.x - Game.camera.x;
+                                const trailY = point.y - Game.camera.y;
+                                const alpha = (i / spell.trail.length) * 0.5;
+                                ctx.globalAlpha = alpha * (point.life / 0.3);
+
+                                if (i === 0) {
+                                    ctx.moveTo(trailX, trailY);
+                                } else {
+                                    ctx.lineTo(trailX, trailY);
+                                }
+                            });
+                            ctx.stroke();
+                        }
+
+                        // Draw main projectile with epic glow
+                        ctx.globalAlpha = 1;
+                        ctx.shadowColor = spell.glowColor;
+                        ctx.shadowBlur = 25;
+
+                        // Outer glow
+                        ctx.fillStyle = spell.glowColor;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius * 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Inner bright core
+                        ctx.shadowBlur = 15;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius * 0.7, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Middle layer
+                        ctx.shadowBlur = 20;
+                        ctx.fillStyle = spell.color;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.restore();
+
+                    } else if (spell.type === 'nova') {
+                        const screenX = spell.x - Game.camera.x;
+                        const screenY = spell.y - Game.camera.y;
+
+                        ctx.save();
+
+                        // Expanding ring effect
+                        const progress = spell.radius / spell.maxRadius;
+                        ctx.globalAlpha = 1 - progress;
+
+                        // Outer ring
+                        ctx.shadowColor = spell.glowColor;
+                        ctx.shadowBlur = 30;
+                        ctx.strokeStyle = spell.glowColor;
+                        ctx.lineWidth = 8;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Middle ring
+                        ctx.strokeStyle = spell.color;
+                        ctx.lineWidth = 5;
+                        ctx.shadowBlur = 20;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius - 5, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Inner bright ring
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 3;
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius - 10, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Filled circle with gradient
+                        ctx.globalAlpha = (1 - progress) * 0.3;
+                        const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, spell.radius);
+                        gradient.addColorStop(0, spell.color);
+                        gradient.addColorStop(1, 'transparent');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, spell.radius, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Rotating energy lines
+                        ctx.globalAlpha = 1 - progress;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        const time = Date.now() * 0.01;
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (Math.PI * 2 * i) / 8 + time;
+                            const x1 = screenX + Math.cos(angle) * spell.radius * 0.5;
+                            const y1 = screenY + Math.sin(angle) * spell.radius * 0.5;
+                            const x2 = screenX + Math.cos(angle) * spell.radius;
+                            const y2 = screenY + Math.sin(angle) * spell.radius;
+
+                            ctx.beginPath();
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                            ctx.stroke();
+                        }
+
+                        ctx.restore();
+                    }
+                });
+            },
+
+            // PARTE 7: Draw spell particle effects
+            drawSpellParticles() {
+                Game.spellParticles.forEach(particle => {
+                    const screenX = particle.x - Game.camera.x;
+                    const screenY = particle.y - Game.camera.y;
+
+                    ctx.save();
+                    ctx.globalAlpha = particle.life;
+                    ctx.shadowColor = particle.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = particle.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            },
+
             drawParticles() {
                 Game.particles = Game.particles.filter(p => {
                     p.x += p.vx;
@@ -3801,15 +4390,35 @@
             Game.keys[e.key] = false;
         });
 
-        // Mouse input for character selection
-        canvas.addEventListener('click', (e) => {
+        // PARTE 7: Track mouse position
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            Game.mouseX = e.clientX - rect.left;
+            Game.mouseY = e.clientY - rect.top;
+        });
+
+        // PARTE 7: Left click - Spell 1 (Light Bolt)
+        canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
             if (Game.state === GameStates.CHARACTER_SELECT) {
                 CharacterSelectScene.handleClick(x, y);
+            } else if (Game.state === GameStates.PLAYING) {
+                if (e.button === 0) { // Left click
+                    e.preventDefault();
+                    GameScene.castSpell1();
+                } else if (e.button === 2) { // Right click
+                    e.preventDefault();
+                    GameScene.castSpell2();
+                }
             }
+        });
+
+        // PARTE 7: Prevent context menu on right click
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
         });
 
         // ============================================
