@@ -448,6 +448,57 @@
             spells: [], // Active projectiles/spells
             spellParticles: [], // Spell visual effects
 
+            // PARTE 8: Companion System
+            companion: {
+                x: 0,
+                y: 0,
+                targetX: 0,
+                targetY: 0,
+                velocityX: 0,
+                velocityY: 0,
+                size: 20,
+                form: 'spark', // spark, wisp, phoenix
+                color: '#fbbf24',
+                glowColor: '#f59e0b',
+                emotion: 'neutral', // neutral, happy, excited, calm
+                animationTime: 0,
+                orbitAngle: 0,
+                particles: [],
+                level: 1,
+                active: true
+            },
+
+            // PARTE 8: Emotion Orbs System
+            emotionOrbs: [],
+            orbTypes: [
+                { id: 'joy', name: 'Alegría', color: '#fbbf24', icon: '😊', effect: 'speed', multiplier: 1.5, duration: 300 },
+                { id: 'calm', name: 'Calma', color: '#60a5fa', icon: '😌', effect: 'mana_regen', multiplier: 3, duration: 300 },
+                { id: 'courage', name: 'Valentía', color: '#ef4444', icon: '💪', effect: 'damage_boost', multiplier: 1.8, duration: 300 },
+                { id: 'hope', name: 'Esperanza', color: '#10b981', icon: '💚', effect: 'heal_shield', value: 30, duration: 300 }
+            ],
+
+            // PARTE 8: Memory Fragments
+            memoryFragments: [],
+            collectedMemories: [],
+
+            // PARTE 8: Dream Portals
+            dreamPortals: [],
+            inDreamWorld: false,
+
+            // PARTE 8: World Transformation
+            worldProgress: 0, // 0 to 1
+            atmosphericParticles: [],
+
+            // PARTE 8: Breathing Exercise
+            breathingExercise: {
+                active: false,
+                phase: 'inhale', // inhale, hold, exhale
+                timer: 0,
+                radius: 50,
+                targetRadius: 100,
+                completedCycles: 0
+            },
+
             // Current Level Data
             currentLevelData: null,
 
@@ -1684,6 +1735,7 @@
                 Game.player.velocityY = 0;
                 Game.player.health = Game.saveData.stats.maxHealth;
                 Game.player.energy = Game.saveData.stats.maxEnergy;
+                Game.player.mana = Game.player.maxMana; // PARTE 8: Initialize mana
                 Game.player.xp = 0;
                 Game.player.level = 1;
                 Game.player.coins = 0;
@@ -1710,6 +1762,24 @@
 
                 // PARTE 6: Generate bosses
                 this.generateBosses();
+
+                // PARTE 8: Initialize companion
+                this.initCompanion();
+
+                // PARTE 8: Generate emotion orbs
+                this.generateEmotionOrbs();
+
+                // PARTE 8: Generate memory fragments
+                this.generateMemoryFragments();
+
+                // PARTE 8: Generate dream portals
+                this.generateDreamPortals();
+
+                // PARTE 8: Initialize atmospheric system
+                this.initAtmosphericSystem();
+
+                // PARTE 8: Initialize world progress
+                Game.worldProgress = 0;
 
                 // Create decorative elements
                 this.createClouds();
@@ -1741,8 +1811,8 @@
                 const ability = this.specialAbilities[Game.saveData.character];
                 showNotification(
                     '🎮 ¡Comienza tu Aventura!',
-                    `← → Movimiento | ESPACIO Saltar | Z Atacar | X ${ability.icon} ${ability.name}`,
-                    7000
+                    `← → Movimiento | ESPACIO Saltar | Z Atacar | X ${ability.icon} | Click Mouse: Magia | B Respirar`,
+                    8000
                 );
             },
 
@@ -1993,6 +2063,106 @@
                         invulnerableTimer: 0
                     });
                 });
+            },
+
+            // PARTE 8: Initialize companion
+            initCompanion() {
+                Game.companion.x = Game.player.x - 50;
+                Game.companion.y = Game.player.y - 50;
+                Game.companion.active = true;
+                Game.companion.form = 'spark';
+                Game.companion.emotion = 'neutral';
+                Game.companion.particles = [];
+            },
+
+            // PARTE 8: Generate emotion orbs
+            generateEmotionOrbs() {
+                Game.emotionOrbs = [];
+
+                // Distribute orbs throughout the level
+                for (let i = 0; i < 20; i++) {
+                    const platform = this.platforms[Math.floor(Math.random() * this.platforms.length)];
+                    if (!platform) continue;
+
+                    const orbType = Game.orbTypes[Math.floor(Math.random() * Game.orbTypes.length)];
+
+                    Game.emotionOrbs.push({
+                        x: platform.x + Math.random() * platform.width,
+                        y: platform.y - 80,
+                        width: 25,
+                        height: 25,
+                        type: orbType,
+                        collected: false,
+                        floatOffset: Math.random() * Math.PI * 2,
+                        pulseTime: 0,
+                        particles: []
+                    });
+                }
+            },
+
+            // PARTE 8: Generate memory fragments
+            generateMemoryFragments() {
+                Game.memoryFragments = [];
+
+                const memories = [
+                    { id: 1, text: '"Recuerdo cuando todo parecía imposible..."', position: 800, unlocks: 'dash_boost' },
+                    { id: 2, text: '"El primer paso fue el más difícil..."', position: 1600, unlocks: 'hope_aura' },
+                    { id: 3, text: '"Aprendí que la oscuridad no dura para siempre..."', position: 2400, unlocks: 'light_shield' },
+                    { id: 4, text: '"Cada día es una nueva oportunidad..."', position: 3200, unlocks: 'phoenix_form' },
+                    { id: 5, text: '"La esperanza siempre encuentra un camino..."', position: 4000, unlocks: 'dream_walk' }
+                ];
+
+                memories.forEach(memory => {
+                    Game.memoryFragments.push({
+                        x: memory.position,
+                        y: canvas.height - 200,
+                        width: 30,
+                        height: 30,
+                        memory: memory,
+                        collected: false,
+                        rotation: 0,
+                        glowIntensity: 1
+                    });
+                });
+            },
+
+            // PARTE 8: Generate dream portals
+            generateDreamPortals() {
+                Game.dreamPortals = [];
+
+                // Create 2 dream portals in the level
+                [1200, 3500].forEach(x => {
+                    Game.dreamPortals.push({
+                        x: x,
+                        y: canvas.height - 200,
+                        width: 80,
+                        height: 120,
+                        active: true,
+                        rotation: 0,
+                        particles: [],
+                        colors: ['#a855f7', '#ec4899', '#3b82f6', '#10b981']
+                    });
+                });
+            },
+
+            // PARTE 8: Initialize atmospheric system
+            initAtmosphericSystem() {
+                Game.atmosphericParticles = [];
+
+                // Create initial atmospheric particles
+                for (let i = 0; i < 50; i++) {
+                    Game.atmosphericParticles.push({
+                        x: Math.random() * this.worldLength,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: Math.random() * 0.5 + 0.2,
+                        size: Math.random() * 3 + 1,
+                        color: '#ffffff',
+                        type: 'sparkle', // sparkle, petal, light
+                        life: 1,
+                        opacity: Math.random() * 0.5 + 0.3
+                    });
+                }
             },
 
             // PARTE 5: Check achievements
@@ -2331,6 +2501,29 @@
 
                 // PARTE 7: Update spell particles
                 this.updateSpellParticles(dt);
+
+                // PARTE 8: Update companion
+                this.updateCompanion(dt);
+
+                // PARTE 8: Update emotion orbs
+                this.updateEmotionOrbs(dt);
+
+                // PARTE 8: Update memory fragments
+                this.updateMemoryFragments(dt);
+
+                // PARTE 8: Update dream portals
+                this.updateDreamPortals(dt);
+
+                // PARTE 8: Update atmospheric particles
+                this.updateAtmosphericParticles(dt);
+
+                // PARTE 8: Update world transformation
+                this.updateWorldTransformation();
+
+                // PARTE 8: Update breathing exercise
+                if (Game.breathingExercise.active) {
+                    this.updateBreathingExercise(dt);
+                }
 
                 // PARTE 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
@@ -3075,6 +3268,400 @@
                 });
             },
 
+            // PARTE 8: Update companion
+            updateCompanion(dt) {
+                const comp = Game.companion;
+                if (!comp.active) return;
+
+                const p = Game.player;
+                comp.animationTime += dt;
+                comp.orbitAngle += 0.05;
+
+                // Follow player with smooth movement
+                const offsetX = Math.cos(comp.orbitAngle) * 60;
+                const offsetY = Math.sin(comp.orbitAngle) * 30 - 40;
+
+                comp.targetX = p.x + p.width / 2 + offsetX;
+                comp.targetY = p.y + p.height / 2 + offsetY;
+
+                // Smooth follow
+                comp.velocityX = (comp.targetX - comp.x) * 0.1;
+                comp.velocityY = (comp.targetY - comp.y) * 0.1;
+
+                comp.x += comp.velocityX;
+                comp.y += comp.velocityY;
+
+                // Change emotion based on player state
+                if (p.health < 30) {
+                    comp.emotion = 'worried';
+                } else if (p.combo >= 5) {
+                    comp.emotion = 'excited';
+                } else if (p.isGrounded) {
+                    comp.emotion = 'happy';
+                } else {
+                    comp.emotion = 'neutral';
+                }
+
+                // Evolve form based on collected memories
+                if (Game.collectedMemories.length >= 4) {
+                    comp.form = 'phoenix';
+                } else if (Game.collectedMemories.length >= 2) {
+                    comp.form = 'wisp';
+                } else {
+                    comp.form = 'spark';
+                }
+
+                // Generate companion particles
+                if (Math.random() < 0.3) {
+                    comp.particles.push({
+                        x: comp.x,
+                        y: comp.y,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        life: 0.8,
+                        color: comp.color,
+                        size: Math.random() * 3 + 2
+                    });
+                }
+
+                // Update companion particles
+                for (let i = comp.particles.length - 1; i >= 0; i--) {
+                    comp.particles[i].life -= dt;
+                    comp.particles[i].x += comp.particles[i].vx;
+                    comp.particles[i].y += comp.particles[i].vy;
+
+                    if (comp.particles[i].life <= 0) {
+                        comp.particles.splice(i, 1);
+                    }
+                }
+            },
+
+            // PARTE 8: Update emotion orbs
+            updateEmotionOrbs(dt) {
+                const p = Game.player;
+
+                Game.emotionOrbs.forEach(orb => {
+                    if (orb.collected) return;
+
+                    // Float animation
+                    orb.floatOffset += dt * 2;
+                    orb.pulseTime += dt * 3;
+
+                    // Check collision with player
+                    if (this.checkCollision(p, orb)) {
+                        orb.collected = true;
+
+                        // Apply orb effect
+                        const buff = {
+                            type: orb.type.effect,
+                            multiplier: orb.type.multiplier,
+                            value: orb.type.value,
+                            duration: orb.type.duration,
+                            color: orb.type.color
+                        };
+
+                        // Special handling for different orb types
+                        if (orb.type.id === 'hope') {
+                            p.health = Math.min(p.health + 30, Game.saveData.stats.maxHealth);
+                            p.activeBuffs.push({ ...buff, type: 'shield' });
+                        } else if (orb.type.id === 'calm') {
+                            p.mana = Math.min(p.mana + 50, p.maxMana);
+                            // Mana regen boost - handled in update
+                        } else {
+                            p.activeBuffs.push(buff);
+                        }
+
+                        // Visual effect
+                        for (let i = 0; i < 30; i++) {
+                            const angle = (Math.PI * 2 * i) / 30;
+                            Game.particles.push({
+                                x: orb.x + orb.width / 2,
+                                y: orb.y + orb.height / 2,
+                                vx: Math.cos(angle) * 5,
+                                vy: Math.sin(angle) * 5,
+                                life: 1,
+                                color: orb.type.color,
+                                size: Math.random() * 4 + 2
+                            });
+                        }
+
+                        playSound('pickup');
+                        showNotification(
+                            `${orb.type.icon} ${orb.type.name}`,
+                            orb.type.effect === 'heal_shield' ? '+30 ❤️ +Escudo' : `Buff activado!`,
+                            2000
+                        );
+                    }
+                });
+
+                // Remove collected orbs
+                Game.emotionOrbs = Game.emotionOrbs.filter(orb => !orb.collected);
+            },
+
+            // PARTE 8: Update memory fragments
+            updateMemoryFragments(dt) {
+                const p = Game.player;
+
+                Game.memoryFragments.forEach(fragment => {
+                    if (fragment.collected) return;
+
+                    fragment.rotation += dt * 2;
+                    fragment.glowIntensity = 0.7 + Math.sin(this.time * 3) * 0.3;
+
+                    // Check collision
+                    if (this.checkCollision(p, fragment)) {
+                        fragment.collected = true;
+                        Game.collectedMemories.push(fragment.memory);
+
+                        // Epic collection effect
+                        for (let i = 0; i < 50; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = Math.random() * 8 + 2;
+                            Game.particles.push({
+                                x: fragment.x + fragment.width / 2,
+                                y: fragment.y + fragment.height / 2,
+                                vx: Math.cos(angle) * speed,
+                                vy: Math.sin(angle) * speed,
+                                life: 1.5,
+                                color: '#a855f7',
+                                size: Math.random() * 5 + 3
+                            });
+                        }
+
+                        // Companion reacts
+                        Game.companion.emotion = 'excited';
+
+                        playSound('levelup');
+                        showNotification(
+                            `💭 Memoria Recuperada (${Game.collectedMemories.length}/5)`,
+                            fragment.memory.text,
+                            5000
+                        );
+                    }
+                });
+            },
+
+            // PARTE 8: Update dream portals
+            updateDreamPortals(dt) {
+                const p = Game.player;
+
+                Game.dreamPortals.forEach(portal => {
+                    if (!portal.active) return;
+
+                    portal.rotation += dt;
+
+                    // Generate portal particles
+                    if (Math.random() < 0.5) {
+                        portal.particles.push({
+                            x: portal.x + portal.width / 2 + (Math.random() - 0.5) * portal.width,
+                            y: portal.y + portal.height,
+                            vx: (Math.random() - 0.5) * 2,
+                            vy: -Math.random() * 3 - 2,
+                            life: 1.5,
+                            color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
+                            size: Math.random() * 4 + 2
+                        });
+                    }
+
+                    // Update portal particles
+                    for (let i = portal.particles.length - 1; i >= 0; i--) {
+                        portal.particles[i].life -= dt;
+                        portal.particles[i].x += portal.particles[i].vx;
+                        portal.particles[i].y += portal.particles[i].vy;
+
+                        if (portal.particles[i].life <= 0) {
+                            portal.particles.splice(i, 1);
+                        }
+                    }
+
+                    // Check if player enters portal
+                    if (this.checkCollision(p, portal)) {
+                        this.enterDreamWorld(portal);
+                        portal.active = false;
+                    }
+                });
+            },
+
+            // PARTE 8: Enter dream world
+            enterDreamWorld(portal) {
+                showNotification(
+                    '🌀 Entrando al Mundo de los Sueños...',
+                    'Las leyes de la física no aplican aquí',
+                    4000
+                );
+
+                // Modify game state for dream world
+                Game.inDreamWorld = true;
+
+                // Give temporary dream buffs
+                Game.player.activeBuffs.push({
+                    type: 'speed',
+                    multiplier: 2,
+                    duration: 600, // 10 seconds
+                    color: '#a855f7'
+                });
+
+                Game.player.activeBuffs.push({
+                    type: 'infinite_energy',
+                    duration: 600,
+                    color: '#ec4899'
+                });
+
+                // Epic visual effect
+                for (let i = 0; i < 100; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 15 + 5;
+                    Game.particles.push({
+                        x: Game.player.x + Game.player.width / 2,
+                        y: Game.player.y + Game.player.height / 2,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 2,
+                        color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
+                        size: Math.random() * 8 + 4
+                    });
+                }
+
+                playSound('levelup');
+            },
+
+            // PARTE 8: Update atmospheric particles
+            updateAtmosphericParticles(dt) {
+                // Update existing particles
+                for (let i = Game.atmosphericParticles.length - 1; i >= 0; i--) {
+                    const particle = Game.atmosphericParticles[i];
+
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    // Wrap around
+                    if (particle.y > canvas.height) {
+                        particle.y = 0;
+                        particle.x = Math.random() * this.worldLength;
+                    }
+
+                    // Change type based on world progress
+                    if (Game.worldProgress > 0.5 && particle.type === 'sparkle') {
+                        if (Math.random() < 0.01) {
+                            particle.type = 'petal';
+                            particle.color = '#fbbf24';
+                        }
+                    }
+                }
+
+                // Add new particles based on progress
+                if (Math.random() < 0.1 && Game.atmosphericParticles.length < 100) {
+                    const type = Game.worldProgress > 0.7 ? 'petal' : Game.worldProgress > 0.4 ? 'light' : 'sparkle';
+                    const colors = {
+                        sparkle: '#ffffff',
+                        light: '#fbbf24',
+                        petal: ['#ff6b9d', '#fbbf24', '#60a5fa', '#10b981'][Math.floor(Math.random() * 4)]
+                    };
+
+                    Game.atmosphericParticles.push({
+                        x: Math.random() * this.worldLength,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: Math.random() * 0.5 + 0.2,
+                        size: Math.random() * 3 + 1,
+                        color: colors[type],
+                        type: type,
+                        life: 1,
+                        opacity: Math.random() * 0.5 + 0.3
+                    });
+                }
+            },
+
+            // PARTE 8: Update world transformation
+            updateWorldTransformation() {
+                // Calculate world progress based on player position and collectibles
+                const positionProgress = Game.player.x / this.worldLength;
+                const memoryProgress = Game.collectedMemories.length / 5;
+                const bossProgress = this.bosses.filter(b => b.isDefeated).length / this.bosses.length;
+
+                Game.worldProgress = (positionProgress * 0.5) + (memoryProgress * 0.3) + (bossProgress * 0.2);
+                Game.worldProgress = Math.min(Game.worldProgress, 1);
+            },
+
+            // PARTE 8: Update breathing exercise
+            updateBreathingExercise(dt) {
+                const ex = Game.breathingExercise;
+                ex.timer += dt;
+
+                const cycleDuration = 4; // 4 seconds per phase
+
+                if (ex.phase === 'inhale') {
+                    ex.radius = 50 + (ex.timer / cycleDuration) * 50;
+                    if (ex.timer >= cycleDuration) {
+                        ex.phase = 'hold';
+                        ex.timer = 0;
+                    }
+                } else if (ex.phase === 'hold') {
+                    ex.radius = 100;
+                    if (ex.timer >= cycleDuration * 0.5) { // Hold for 2 seconds
+                        ex.phase = 'exhale';
+                        ex.timer = 0;
+                    }
+                } else if (ex.phase === 'exhale') {
+                    ex.radius = 100 - (ex.timer / cycleDuration) * 50;
+                    if (ex.timer >= cycleDuration) {
+                        ex.phase = 'inhale';
+                        ex.timer = 0;
+                        ex.completedCycles++;
+
+                        // Complete exercise after 3 cycles
+                        if (ex.completedCycles >= 3) {
+                            this.completeBreathingExercise();
+                        }
+                    }
+                }
+            },
+
+            // PARTE 8: Complete breathing exercise
+            completeBreathingExercise() {
+                const ex = Game.breathingExercise;
+                ex.active = false;
+                ex.completedCycles = 0;
+                ex.phase = 'inhale';
+
+                const p = Game.player;
+
+                // Full restoration
+                p.health = Game.saveData.stats.maxHealth;
+                p.mana = p.maxMana;
+                p.energy = Game.saveData.stats.maxEnergy;
+
+                // Add clarity buff
+                p.activeBuffs.push({
+                    type: 'clarity',
+                    multiplier: 1.5,
+                    duration: 600, // 10 seconds
+                    color: '#60a5fa'
+                });
+
+                // Epic completion effect
+                for (let i = 0; i < 80; i++) {
+                    const angle = (Math.PI * 2 * i) / 80;
+                    const speed = 6 + Math.random() * 4;
+                    Game.particles.push({
+                        x: p.x + p.width / 2,
+                        y: p.y + p.height / 2,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.5,
+                        color: '#60a5fa',
+                        size: Math.random() * 5 + 3
+                    });
+                }
+
+                playSound('levelup');
+                showNotification(
+                    '🧘 Ejercicio Completado',
+                    '❤️ ⚡ 💙 Completamente restaurado + Buff de Claridad',
+                    4000
+                );
+            },
+
             handleJump() {
                 const p = Game.player;
                 const jumpForce = -15;
@@ -3623,8 +4210,28 @@
                 // PARTE 7: Draw spell particles
                 this.drawSpellParticles();
 
+                // PARTE 8: Draw atmospheric particles
+                this.drawAtmosphericParticles();
+
+                // PARTE 8: Draw emotion orbs
+                this.drawEmotionOrbs();
+
+                // PARTE 8: Draw memory fragments
+                this.drawMemoryFragments();
+
+                // PARTE 8: Draw dream portals
+                this.drawDreamPortals();
+
+                // PARTE 8: Draw companion
+                this.drawCompanion();
+
                 // Draw motivational message
                 this.drawMessage();
+
+                // PARTE 8: Draw breathing exercise overlay (on top of everything)
+                if (Game.breathingExercise.active) {
+                    this.drawBreathingExercise();
+                }
             },
 
             drawParallax() {
@@ -4264,6 +4871,356 @@
                 });
             },
 
+            // PARTE 8: Draw atmospheric particles
+            drawAtmosphericParticles() {
+                Game.atmosphericParticles.forEach(particle => {
+                    const screenX = particle.x - Game.camera.x;
+                    const screenY = particle.y - Game.camera.y;
+
+                    // Only draw if on screen
+                    if (screenX < -50 || screenX > canvas.width + 50 || screenY < -50 || screenY > canvas.height + 50) return;
+
+                    ctx.save();
+                    ctx.globalAlpha = particle.opacity * Game.worldProgress;
+                    ctx.shadowColor = particle.color;
+                    ctx.shadowBlur = particle.type === 'light' ? 8 : 3;
+                    ctx.fillStyle = particle.color;
+
+                    if (particle.type === 'petal') {
+                        // Draw petal shape
+                        ctx.beginPath();
+                        ctx.ellipse(screenX, screenY, particle.size, particle.size * 1.5, Math.PI / 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 8: Draw emotion orbs
+            drawEmotionOrbs() {
+                Game.emotionOrbs.forEach(orb => {
+                    if (orb.collected) return;
+
+                    const screenX = orb.x - Game.camera.x;
+                    const screenY = orb.y + Math.sin(orb.floatOffset) * 10 - Game.camera.y;
+
+                    ctx.save();
+
+                    // Pulsing glow effect
+                    const pulseScale = 1 + Math.sin(orb.pulseTime) * 0.2;
+                    ctx.shadowColor = orb.type.color;
+                    ctx.shadowBlur = 20 * pulseScale;
+
+                    // Outer glow
+                    ctx.globalAlpha = 0.4;
+                    ctx.fillStyle = orb.type.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX + orb.width / 2, screenY + orb.height / 2, orb.width * 0.7 * pulseScale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Main orb body
+                    ctx.globalAlpha = 0.9;
+                    const gradient = ctx.createRadialGradient(
+                        screenX + orb.width / 2, screenY + orb.height / 2, 0,
+                        screenX + orb.width / 2, screenY + orb.height / 2, orb.width / 2
+                    );
+                    gradient.addColorStop(0, '#ffffff');
+                    gradient.addColorStop(0.5, orb.type.color);
+                    gradient.addColorStop(1, orb.type.color);
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(screenX + orb.width / 2, screenY + orb.height / 2, orb.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Icon
+                    ctx.globalAlpha = 1;
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(orb.type.icon, screenX + orb.width / 2, screenY + orb.height / 2 + 7);
+
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 8: Draw memory fragments
+            drawMemoryFragments() {
+                Game.memoryFragments.forEach(fragment => {
+                    if (fragment.collected) return;
+
+                    const screenX = fragment.x - Game.camera.x;
+                    const screenY = fragment.y - Game.camera.y;
+
+                    ctx.save();
+                    ctx.translate(screenX + fragment.width / 2, screenY + fragment.height / 2);
+                    ctx.rotate(fragment.rotation);
+
+                    // Epic glow
+                    ctx.shadowColor = '#a855f7';
+                    ctx.shadowBlur = 25 * fragment.glowIntensity;
+
+                    // Rotating diamond shape
+                    ctx.globalAlpha = 0.9;
+                    ctx.fillStyle = '#a855f7';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -fragment.height / 2);
+                    ctx.lineTo(fragment.width / 2, 0);
+                    ctx.lineTo(0, fragment.height / 2);
+                    ctx.lineTo(-fragment.width / 2, 0);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Inner crystal
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = 0.7;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -fragment.height / 3);
+                    ctx.lineTo(fragment.width / 3, 0);
+                    ctx.lineTo(0, fragment.height / 3);
+                    ctx.lineTo(-fragment.width / 3, 0);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Memory symbol
+                    ctx.globalAlpha = 1;
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillStyle = '#a855f7';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('💭', 0, 5);
+
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 8: Draw dream portals
+            drawDreamPortals() {
+                Game.dreamPortals.forEach(portal => {
+                    if (!portal.active) return;
+
+                    const screenX = portal.x - Game.camera.x;
+                    const screenY = portal.y - Game.camera.y;
+
+                    ctx.save();
+
+                    // Swirling portal effect
+                    const time = Date.now() * 0.001;
+
+                    // Draw portal particles
+                    portal.particles.forEach(p => {
+                        const pX = p.x - Game.camera.x;
+                        const pY = p.y - Game.camera.y;
+
+                        ctx.globalAlpha = p.life;
+                        ctx.shadowColor = p.color;
+                        ctx.shadowBlur = 8;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(pX, pY, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+
+                    // Main portal vortex
+                    ctx.globalAlpha = 0.8;
+                    for (let i = 0; i < 5; i++) {
+                        const radius = (portal.width / 2) * (1 - i * 0.15);
+                        const rotation = time + i * 0.3;
+
+                        ctx.save();
+                        ctx.translate(screenX + portal.width / 2, screenY + portal.height / 2);
+                        ctx.rotate(rotation);
+
+                        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+                        gradient.addColorStop(0, 'transparent');
+                        gradient.addColorStop(0.7, portal.colors[i % portal.colors.length]);
+                        gradient.addColorStop(1, 'transparent');
+
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.restore();
+                    }
+
+                    // Portal border
+                    ctx.globalAlpha = 1;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#a855f7';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(screenX + portal.width / 2, screenY + portal.height / 2, portal.width / 2, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // "Dream" text
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.shadowBlur = 5;
+                    ctx.fillText('🌀 SUEÑO', screenX + portal.width / 2, screenY + portal.height + 30);
+
+                    ctx.restore();
+                });
+            },
+
+            // PARTE 8: Draw companion "Esperancita"
+            drawCompanion() {
+                const comp = Game.companion;
+                if (!comp.active) return;
+
+                const screenX = comp.x - Game.camera.x;
+                const screenY = comp.y - Game.camera.y;
+
+                ctx.save();
+
+                // Draw companion particles
+                comp.particles.forEach(p => {
+                    const pX = p.x - Game.camera.x;
+                    const pY = p.y - Game.camera.y;
+
+                    ctx.globalAlpha = p.life;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 6;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(pX, pY, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Draw companion based on form
+                ctx.globalAlpha = 0.95;
+                ctx.shadowColor = comp.glowColor;
+                ctx.shadowBlur = 20;
+
+                if (comp.form === 'spark') {
+                    // Simple spark - small glowing orb
+                    ctx.fillStyle = comp.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, comp.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Core
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, comp.size / 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (comp.form === 'wisp') {
+                    // Wisp - larger with trail
+                    const wobble = Math.sin(comp.animationTime * 3) * 5;
+
+                    ctx.fillStyle = comp.color;
+                    ctx.beginPath();
+                    ctx.ellipse(screenX, screenY + wobble, comp.size * 0.6, comp.size * 0.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Eyes
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(screenX - 5, screenY - 3 + wobble, 3, 0, Math.PI * 2);
+                    ctx.arc(screenX + 5, screenY - 3 + wobble, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (comp.form === 'phoenix') {
+                    // Phoenix - majestic bird form
+                    const flap = Math.sin(comp.animationTime * 5) * 3;
+
+                    // Body
+                    ctx.fillStyle = '#ff6b9d';
+                    ctx.beginPath();
+                    ctx.ellipse(screenX, screenY, comp.size * 0.7, comp.size, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wings
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.ellipse(screenX - comp.size * 0.8, screenY + flap, comp.size * 0.5, comp.size * 0.3, -0.5, 0, Math.PI * 2);
+                    ctx.ellipse(screenX + comp.size * 0.8, screenY + flap, comp.size * 0.5, comp.size * 0.3, 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Flame trail
+                    for (let i = 0; i < 3; i++) {
+                        const offset = i * 8;
+                        ctx.globalAlpha = 0.6 - i * 0.2;
+                        ctx.fillStyle = i === 0 ? '#ff6b9d' : '#fbbf24';
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY + comp.size + offset, comp.size * 0.4 - i * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Emotion indicator (small symbol above companion)
+                ctx.globalAlpha = 1;
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                let emoji = '😊';
+                if (comp.emotion === 'worried') emoji = '😟';
+                else if (comp.emotion === 'excited') emoji = '🤩';
+                else if (comp.emotion === 'calm') emoji = '😌';
+                ctx.fillText(emoji, screenX, screenY - comp.size - 10);
+
+                ctx.restore();
+            },
+
+            // PARTE 8: Draw breathing exercise overlay
+            drawBreathingExercise() {
+                const ex = Game.breathingExercise;
+
+                // Dark overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                ctx.save();
+
+                // Expanding/contracting circle
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, ex.radius);
+                gradient.addColorStop(0, '#60a5fa');
+                gradient.addColorStop(0.5, '#3b82f6');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.3)');
+
+                ctx.fillStyle = gradient;
+                ctx.shadowColor = '#60a5fa';
+                ctx.shadowBlur = 30;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ex.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner circle
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ex.radius * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Phase text
+                ctx.shadowBlur = 0;
+                ctx.font = 'bold 36px Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                let phaseText = '';
+                if (ex.phase === 'inhale') phaseText = 'Inhala...';
+                else if (ex.phase === 'hold') phaseText = 'Mantén...';
+                else if (ex.phase === 'exhale') phaseText = 'Exhala...';
+
+                ctx.fillText(phaseText, centerX, centerY + 10);
+
+                // Cycle counter
+                ctx.font = '20px Arial';
+                ctx.fillText(`Ciclo ${ex.completedCycles + 1} / 3`, centerX, centerY + 50);
+
+                // Instructions
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillText('Sigue el círculo con tu respiración', centerX, centerY - 80);
+
+                ctx.restore();
+            },
+
             drawParticles() {
                 Game.particles = Game.particles.filter(p => {
                     p.x += p.vx;
@@ -4372,6 +5329,22 @@
                 if (e.key === 'x' || e.key === 'X') {
                     e.preventDefault();
                     GameScene.handleSpecialAbility();
+                }
+
+                // PARTE 8: Breathing Exercise
+                if (e.key === 'b' || e.key === 'B') {
+                    e.preventDefault();
+                    if (!Game.breathingExercise.active) {
+                        Game.breathingExercise.active = true;
+                        Game.breathingExercise.phase = 'inhale';
+                        Game.breathingExercise.timer = 0;
+                        Game.breathingExercise.completedCycles = 0;
+                        showNotification(
+                            '🧘 Ejercicio de Respiración',
+                            'Sigue el círculo con tu respiración',
+                            3000
+                        );
+                    }
                 }
 
                 // Pause
