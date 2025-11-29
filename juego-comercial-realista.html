@@ -558,7 +558,7 @@
                 strength: 0,
                 direction: 1, // 1 = right, -1 = left
                 timer: 0,
-                nextWindTime: 0
+                nextWindTime: 10 // BUGFIX: Inicializar con valor para evitar viento inmediato
             },
 
             // PARTE 10: Parkour Combo System
@@ -2600,19 +2600,29 @@
 
             // PARTE 10: Update wind system
             updateWind(dt) {
+                if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido o muy grande
+
                 const wind = Game.wind;
 
                 // Increment timer
                 wind.timer += dt;
 
                 // Random wind gusts
-                if (!wind.active && wind.timer > wind.nextWindTime) {
+                if (!wind.active && wind.timer >= wind.nextWindTime) {
                     wind.active = true;
                     wind.strength = Math.random() * 0.3 + 0.2; // 0.2-0.5
                     wind.direction = Math.random() < 0.5 ? -1 : 1;
                     wind.timer = 0;
-                    showNotification('🌪️ ¡Viento!', wind.direction > 0 ? 'Viento hacia la derecha' : 'Viento hacia la izquierda', 2000);
-                } else if (wind.active && wind.timer > 3) { // Wind lasts 3 seconds
+
+                    // BUGFIX: Usar try-catch para notificación
+                    try {
+                        if (typeof showNotification === 'function') {
+                            showNotification('🌪️ ¡Viento!', wind.direction > 0 ? 'Viento →' : 'Viento ←', 2000);
+                        }
+                    } catch (e) {
+                        console.log('Wind notification error:', e);
+                    }
+                } else if (wind.active && wind.timer >= 3) { // Wind lasts 3 seconds
                     wind.active = false;
                     wind.timer = 0;
                     wind.nextWindTime = Math.random() * 10 + 5; // Next wind in 5-15 seconds
@@ -2621,11 +2631,14 @@
 
             // PARTE 10: Update parkour combo system
             updateParkourCombo(dt) {
+                if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido
+
                 const combo = Game.parkourCombo;
 
                 // Decrease timer
                 if (combo.timer > 0) {
                     combo.timer -= dt;
+                    if (combo.timer < 0) combo.timer = 0; // BUGFIX: No permitir timer negativo
                 }
 
                 // Reset combo if timer runs out
@@ -2643,9 +2656,14 @@
 
             // PARTE 10: Update checkpoints
             updateCheckpoints(dt) {
+                if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido
+
                 const p = Game.player;
+                if (!p || !Game.checkpoints) return; // BUGFIX: Verificar que existan
 
                 Game.checkpoints.forEach(checkpoint => {
+                    if (!checkpoint) return; // BUGFIX: Verificar checkpoint válido
+
                     // Check if player touches checkpoint
                     if (!checkpoint.activated) {
                         const dx = Math.abs((p.x + p.width / 2) - checkpoint.x);
@@ -2654,12 +2672,24 @@
                         if (dx < 30 && dy < 50) {
                             checkpoint.activated = true;
                             Game.lastCheckpoint = checkpoint;
-                            playSound('coin');
-                            showNotification('🏁 ¡Checkpoint!', 'Progreso guardado', 3000);
+
+                            // BUGFIX: Usar try-catch para funciones externas
+                            try {
+                                if (typeof playSound === 'function') playSound('coin');
+                                if (typeof showNotification === 'function') {
+                                    showNotification('🏁 ¡Checkpoint!', 'Progreso guardado', 3000);
+                                }
+                            } catch (e) {
+                                console.log('Checkpoint notification error:', e);
+                            }
 
                             // Create particles
-                            for (let i = 0; i < 20; i++) {
-                                this.createParticles(checkpoint.x, checkpoint.y, 1, '#fbbf24');
+                            try {
+                                for (let i = 0; i < 20; i++) {
+                                    this.createParticles(checkpoint.x, checkpoint.y, 1, '#fbbf24');
+                                }
+                            } catch (e) {
+                                console.log('Checkpoint particles error:', e);
                             }
                         }
                     }
@@ -3082,14 +3112,7 @@
                     }
                 }
 
-                // Check for checkpoint messages
-                this.checkpoints.forEach((checkpoint, index) => {
-                    if (Game.player.x > checkpoint && Game.player.x < checkpoint + 50) {
-                        if (!this.currentMessage) {
-                            this.showRandomMessage();
-                        }
-                    }
-                });
+                // BUGFIX: Código viejo de checkpoints removido - ahora usa updateCheckpoints()
 
                 // Update HUD
                 this.updateHUD();
@@ -3189,24 +3212,51 @@
                                 if (Game.parkourCombo.count >= 3) {
                                     const bonus = Math.floor(Game.parkourCombo.count * 5);
                                     p.coins += bonus;
-                                    showNotification(`🏃 Parkour Combo x${Game.parkourCombo.count}!`, `+${bonus} monedas`, 2000);
+
+                                    // BUGFIX: Try-catch para notificación
+                                    try {
+                                        if (typeof showNotification === 'function') {
+                                            showNotification(`🏃 Parkour Combo x${Game.parkourCombo.count}!`, `+${bonus} monedas`, 2000);
+                                        }
+                                    } catch (e) {
+                                        console.log('Parkour notification error:', e);
+                                    }
                                 }
                             }
 
                             // PARTE 10: Plataforma trampolín - super salto
-                            if (platform.type === 'trampoline') {
+                            if (platform.type === 'trampoline' && !p.lastBouncePlatform) {
                                 p.velocityY = -platform.trampolinePower;
                                 p.isGrounded = false;
-                                playSound('jump');
-                                this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#10b981');
+                                p.lastBouncePlatform = platform;
+                                setTimeout(() => p.lastBouncePlatform = null, 100);
+
+                                // BUGFIX: Try-catch para sonido
+                                try {
+                                    if (typeof playSound === 'function') playSound('jump');
+                                } catch (e) {}
+
+                                try {
+                                    this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#10b981');
+                                } catch (e) {}
                             }
 
-                            // PARTE 10: Plataforma de impulso - velocidad horizontal
-                            if (platform.type === 'boost') {
-                                if (p.velocityX > 0) p.velocityX += platform.boostPower;
-                                else if (p.velocityX < 0) p.velocityX -= platform.boostPower;
-                                else p.velocityX = p.isFacingRight ? platform.boostPower : -platform.boostPower;
-                                this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#f97316');
+                            // PARTE 10: Plataforma de impulso - velocidad horizontal (BUGFIX: solo una vez por aterrizaje)
+                            if (platform.type === 'boost' && !p.lastBoostPlatform) {
+                                const currentSpeed = Math.abs(p.velocityX);
+                                // Solo aplicar impulso si no está ya a velocidad máxima
+                                if (currentSpeed < 15) { // BUGFIX: Limitar velocidad máxima
+                                    if (p.velocityX > 0) p.velocityX = Math.min(p.velocityX + platform.boostPower, 15);
+                                    else if (p.velocityX < 0) p.velocityX = Math.max(p.velocityX - platform.boostPower, -15);
+                                    else p.velocityX = p.isFacingRight ? platform.boostPower : -platform.boostPower;
+                                }
+
+                                p.lastBoostPlatform = platform;
+                                setTimeout(() => p.lastBoostPlatform = null, 100);
+
+                                try {
+                                    this.createParticles(p.x + p.width / 2, p.y + p.height, 10, '#f97316');
+                                } catch (e) {}
                             }
 
                             // PARTE 10: Plataforma arcoíris - buff aleatorio
@@ -3220,7 +3270,13 @@
                                 });
                                 p.lastRainbowPlatform = platform;
                                 setTimeout(() => p.lastRainbowPlatform = null, 2000);
-                                showNotification(`✨ Buff: ${randomBuff.toUpperCase()}!`, '', 2000);
+
+                                // BUGFIX: Try-catch para notificación
+                                try {
+                                    if (typeof showNotification === 'function') {
+                                        showNotification(`✨ Buff: ${randomBuff.toUpperCase()}!`, '', 2000);
+                                    }
+                                } catch (e) {}
                             }
 
                             // Break breakable platforms
