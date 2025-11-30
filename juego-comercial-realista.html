@@ -2115,20 +2115,33 @@
                     const shapes = ['rectangle', 'roundedRect', 'ellipse', 'hexagon', 'diamond'];
                     const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
 
+                    // VARIEDAD: Colores variados para plataformas normales
+                    const normalColors = [
+                        '#5a4a7b', // Morado oscuro
+                        '#4a5a7b', // Azul oscuro
+                        '#5a7b4a', // Verde oscuro
+                        '#7b5a4a', // Marrón
+                        '#7b4a5a', // Rosa oscuro
+                        '#4a7b7b', // Turquesa oscuro
+                        '#6a5a8b', // Morado medio
+                        '#5a6a8b'  // Azul medio
+                    ];
+                    const randomNormalColor = normalColors[Math.floor(Math.random() * normalColors.length)];
+
                     this.platforms.push({
                         x: lastX,
                         y: lastY,
                         width: width,
                         height: 30,
                         type: type,
-                        shape: randomShape, // Nueva propiedad!
+                        shape: randomShape, // ¡Forma aleatoria!
                         color: type === 'moving' ? '#667eea' :
                                type === 'breakable' ? '#f59e0b' :
                                type === 'trampoline' ? '#10b981' :
                                type === 'cloud' ? '#e0f2fe' :
                                type === 'magnetic' ? '#ec4899' :
                                type === 'boost' ? '#f97316' :
-                               type === 'rainbow' ? '#a855f7' : '#5a4a7b',
+                               type === 'rainbow' ? '#a855f7' : randomNormalColor, // ¡Color aleatorio!
                         originalY: lastY,
                         moveSpeed: type === 'moving' ? Math.random() * 2 + 1 : 0,
                         moveRange: 100,
@@ -5705,10 +5718,31 @@
                         ctx.lineTo(screenX + platform.width * 0.5, screenY + platform.height - 8);
                         ctx.fill();
                     }
-                    // Normal platform - CON FORMAS VARIADAS! 🎨
+                    // Normal platform - CON FORMAS Y GRADIENTES VARIADOS! 🎨✨
                     else {
-                        ctx.fillStyle = platform.color;
+                        // Gradiente vertical para más profundidad
+                        const gradient = ctx.createLinearGradient(screenX, screenY, screenX, screenY + platform.height);
+                        gradient.addColorStop(0, platform.color);
+                        // Color más oscuro abajo
+                        const darkerColor = platform.color.replace(/[0-9a-f]{2}(?=[0-9a-f]{2}$)/gi, match => {
+                            return Math.max(0, parseInt(match, 16) - 30).toString(16).padStart(2, '0');
+                        });
+                        gradient.addColorStop(1, darkerColor);
+
+                        ctx.fillStyle = gradient;
                         this.drawPlatformShape(ctx, screenX, screenY, platform.width, platform.height, platform.shape || 'rectangle');
+
+                        // Patrón de puntos aleatorio para más textura
+                        if (Math.random() > 0.7) { // 30% de plataformas tienen puntos
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                            for (let i = 0; i < 3; i++) {
+                                const dotX = screenX + Math.random() * platform.width;
+                                const dotY = screenY + Math.random() * platform.height;
+                                ctx.beginPath();
+                                ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
                     }
 
                     // Platform border (con la misma forma)
