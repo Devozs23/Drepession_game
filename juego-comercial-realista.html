@@ -5485,6 +5485,9 @@
                 if (Game.breathingExercise.active) {
                     this.drawBreathingExercise();
                 }
+
+                // BARRA DE VIDA VISIBLE! 💙
+                this.drawPlayerHealthBar();
             },
 
             drawParallax() {
@@ -5894,29 +5897,60 @@
                     // Don't draw if off screen
                     if (screenX + enemy.width < 0 || screenX > canvas.width) return;
 
+                    // EFECTOS VISUALES ÉPICOS! 👹
+                    const pulse = Math.sin(this.time * 3) * 3; // Pulsación
+                    const float = Math.sin(this.time * 2) * 5; // Flotación
+
                     ctx.save();
 
-                    // Glow effect
-                    ctx.shadowColor = enemy.color;
-                    ctx.shadowBlur = 15;
+                    // Aura exterior (anillos pulsantes)
+                    for (let i = 0; i < 2; i++) {
+                        ctx.globalAlpha = 0.2 - i * 0.1;
+                        ctx.strokeStyle = enemy.color;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        const ringSize = pulse + i * 15;
+                        ctx.arc(screenX + enemy.width / 2, screenY + enemy.height / 2 + float, enemy.width / 2 + ringSize, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
 
-                    // Enemy body (shadowy form)
+                    // Glow effect INTENSO
+                    ctx.shadowColor = enemy.color;
+                    ctx.shadowBlur = 25 + pulse;
+
+                    // Enemy body (shadowy form con pulsación)
                     ctx.fillStyle = enemy.color;
-                    ctx.globalAlpha = 0.8;
+                    ctx.globalAlpha = 0.9;
                     ctx.beginPath();
-                    ctx.arc(screenX + enemy.width / 2, screenY + enemy.height / 2, enemy.width / 2, 0, Math.PI * 2);
+                    ctx.arc(screenX + enemy.width / 2, screenY + enemy.height / 2 + float, enemy.width / 2 + pulse / 2, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Eyes (menacing)
+                    // Partículas orbitando
+                    for (let i = 0; i < 3; i++) {
+                        const angle = (this.time * 2 + i * (Math.PI * 2 / 3)) % (Math.PI * 2);
+                        const orbitRadius = enemy.width / 2 + 20;
+                        const particleX = screenX + enemy.width / 2 + Math.cos(angle) * orbitRadius;
+                        const particleY = screenY + enemy.height / 2 + float + Math.sin(angle) * orbitRadius;
+
+                        ctx.globalAlpha = 0.8;
+                        ctx.fillStyle = enemy.color;
+                        ctx.beginPath();
+                        ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Eyes (menacing) con brillo
                     ctx.globalAlpha = 1;
-                    ctx.fillStyle = '#fff';
-                    const eyeY = screenY + enemy.height / 2 - 5;
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = '#ff0000'; // Ojos rojos brillantes
+                    const eyeY = screenY + enemy.height / 2 - 5 + float;
                     ctx.beginPath();
-                    ctx.arc(screenX + enemy.width / 2 - 8, eyeY, 4, 0, Math.PI * 2);
-                    ctx.arc(screenX + enemy.width / 2 + 8, eyeY, 4, 0, Math.PI * 2);
+                    ctx.arc(screenX + enemy.width / 2 - 8, eyeY, 5, 0, Math.PI * 2);
+                    ctx.arc(screenX + enemy.width / 2 + 8, eyeY, 5, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Pupils
+                    ctx.shadowBlur = 0;
                     ctx.fillStyle = '#000';
                     ctx.beginPath();
                     ctx.arc(screenX + enemy.width / 2 - 8, eyeY, 2, 0, Math.PI * 2);
@@ -5961,37 +5995,69 @@
 
                     if (screenX + boss.width < -100 || screenX > canvas.width + 100) return;
 
+                    // EFECTOS ÉPICOS DE BOSS! 👑💀
+                    const pulse = Math.sin(this.time * 2) * 8; // Pulsación intensa
+                    const float = Math.sin(this.time * 1.5) * 10; // Flotación grande
+                    const breathe = Math.sin(this.time * 4) * 5; // Respiración
+
                     ctx.save();
 
-                    // Massive glow effect
-                    ctx.shadowColor = boss.type.color;
-                    ctx.shadowBlur = 30;
+                    // Anillos de poder múltiples
+                    for (let i = 0; i < 4; i++) {
+                        ctx.globalAlpha = 0.3 - i * 0.05;
+                        ctx.strokeStyle = boss.type.color;
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        const ringSize = pulse + i * 25 + breathe;
+                        ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2 + float, boss.width / 2 + ringSize, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
 
-                    // Boss body
+                    // Massive glow effect ÉPICO
+                    ctx.shadowColor = boss.type.color;
+                    ctx.shadowBlur = 40 + pulse;
+
+                    // Boss body con fase
                     const currentPhase = boss.type.phases[boss.currentPhase];
                     const color = currentPhase?.color || boss.type.color;
 
                     ctx.fillStyle = color;
-                    ctx.globalAlpha = 0.9;
+                    ctx.globalAlpha = 0.95;
                     ctx.beginPath();
-                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2, boss.width / 2, 0, Math.PI * 2);
+                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2 + float, boss.width / 2 + breathe / 2, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Aura
-                    ctx.globalAlpha = 0.3;
+                    // Aura INTENSA
+                    ctx.globalAlpha = 0.4;
                     ctx.beginPath();
-                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2, boss.width / 2 + 20, 0, Math.PI * 2);
+                    ctx.arc(screenX + boss.width / 2, screenY + boss.height / 2 + float, boss.width / 2 + 30 + pulse / 2, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Eyes (glowing red)
+                    // Partículas orbitando (más que enemigos normales)
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (this.time * 1.5 + i * (Math.PI * 2 / 6)) % (Math.PI * 2);
+                        const orbitRadius = boss.width / 2 + 40;
+                        const particleX = screenX + boss.width / 2 + Math.cos(angle) * orbitRadius;
+                        const particleY = screenY + boss.height / 2 + float + Math.sin(angle) * orbitRadius;
+
+                        ctx.globalAlpha = 0.9;
+                        ctx.fillStyle = boss.type.color;
+                        ctx.shadowBlur = 10;
+                        ctx.beginPath();
+                        ctx.arc(particleX, particleY, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Eyes (glowing red INTENSO)
                     ctx.globalAlpha = 1;
                     ctx.fillStyle = '#ff0000';
-                    const eyeY = screenY + boss.height / 2 - 10;
+                    const eyeY = screenY + boss.height / 2 - 10 + float;
                     ctx.shadowColor = '#ff0000';
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = 25;
                     ctx.beginPath();
-                    ctx.arc(screenX + boss.width / 2 - 20, eyeY, 8, 0, Math.PI * 2);
-                    ctx.arc(screenX + boss.width / 2 + 20, eyeY, 8, 0, Math.PI * 2);
+                    const eyeSize = 10 + breathe / 3;
+                    ctx.arc(screenX + boss.width / 2 - 20, eyeY, eyeSize, 0, Math.PI * 2);
+                    ctx.arc(screenX + boss.width / 2 + 20, eyeY, eyeSize, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.restore();
@@ -6232,6 +6298,75 @@
                 }
 
                 ctx.restore();
+            },
+
+            // BARRA DE VIDA GRANDE Y VISIBLE! 💙
+            drawPlayerHealthBar() {
+                const p = Game.player;
+                const maxHealth = Game.saveData.stats.maxHealth;
+
+                // Posición fija en la pantalla (esquina superior izquierda)
+                const barX = 20;
+                const barY = 20;
+                const barWidth = 300;
+                const barHeight = 30;
+
+                // Fondo negro semi-transparente
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(barX - 5, barY - 5, barWidth + 10, barHeight + 10);
+
+                // Borde dorado
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(barX - 5, barY - 5, barWidth + 10, barHeight + 10);
+
+                // Barra de fondo (gris)
+                ctx.fillStyle = '#333';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                // Barra de vida (color según salud)
+                const healthPercent = p.health / maxHealth;
+                const currentWidth = barWidth * healthPercent;
+
+                // Color según porcentaje de vida
+                let healthColor;
+                if (healthPercent > 0.6) {
+                    healthColor = '#10b981'; // Verde
+                } else if (healthPercent > 0.3) {
+                    healthColor = '#f59e0b'; // Naranja
+                } else {
+                    healthColor = '#ef4444'; // Rojo
+                }
+
+                // Gradiente para la barra de vida
+                const healthGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+                healthGradient.addColorStop(0, healthColor);
+                healthGradient.addColorStop(1, healthColor + '88'); // Más transparente abajo
+
+                ctx.fillStyle = healthGradient;
+                ctx.fillRect(barX, barY, currentWidth, barHeight);
+
+                // Efecto de brillo si está en Transcendence
+                if (p.flowLevel === 3) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.5 + Math.sin(this.time * 5) * 0.3;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(barX, barY, currentWidth, barHeight);
+                    ctx.restore();
+                }
+
+                // Texto de vida (grande y claro)
+                ctx.font = 'bold 20px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 4;
+                ctx.fillText(`${Math.floor(p.health)} / ${maxHealth}`, barX + barWidth / 2, barY + barHeight / 2 + 7);
+                ctx.shadowBlur = 0;
+
+                // Icono de corazón
+                ctx.font = '24px Arial';
+                ctx.fillText('❤️', barX - 15, barY + barHeight / 2 + 7);
             },
 
             // PARTE 7: Draw spell projectiles and effects
