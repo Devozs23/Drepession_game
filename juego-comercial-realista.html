@@ -3757,7 +3757,13 @@
 
                 // Decrease cooldowns
                 if (p.attackCooldown > 0) p.attackCooldown--;
-                if (p.invulnerabilityTime > 0) p.invulnerabilityTime--;
+                if (p.invulnerabilityTime > 0) {
+                    p.invulnerabilityTime--;
+                    p.isInvulnerable = true; // Invulnerable mientras hay tiempo de invuln
+                } else if (p.flowLevel !== 3) {
+                    // Solo desactivar invuln si NO estamos en Transcendence
+                    p.isInvulnerable = false;
+                }
             },
 
             updateCamera() {
@@ -6013,6 +6019,14 @@
                     ctx.translate(screenX + p.width, screenY);
                     ctx.scale(-1, 1);
                     ctx.translate(-(screenX + p.width), -screenY);
+                }
+
+                // BUGFIX PARTE 13: Parpadeo cuando invulnerable (para que se vea el efecto)
+                if (p.isInvulnerable && p.flowLevel !== 3) {
+                    // Parpadeo cada 4 frames
+                    if (Math.floor(this.time * 60) % 8 < 4) {
+                        ctx.globalAlpha = 0.4;
+                    }
                 }
 
                 // Shadow
