@@ -481,10 +481,6 @@
             memoryFragments: [],
             collectedMemories: [],
 
-            // PARTE 8: Dream Portals
-            dreamPortals: [],
-            inDreamWorld: false,
-
             // PARTE 8: World Transformation
             worldProgress: 0, // 0 to 1
             atmosphericParticles: [],
@@ -1874,7 +1870,7 @@
             messageTimer: 0,
 
             // World progress
-            worldLength: 5000,
+            worldLength: 15000, // Mundo 3x más largo para más desafío
             checkpoints: [],
 
             // Visual effects
@@ -1936,9 +1932,6 @@
 
                 // PARTE 8: Generate memory fragments
                 this.generateMemoryFragments();
-
-                // PARTE 8: Generate dream portals
-                this.generateDreamPortals();
 
                 // PARTE 8: Initialize atmospheric system
                 this.initAtmosphericSystem();
@@ -2065,7 +2058,7 @@
                 let lastY = canvas.height - 40;
                 let verticalSection = false;
 
-                for (let i = 0; i < 120; i++) { // Aumentado de 50 a 120 plataformas
+                for (let i = 0; i < 400; i++) { // 400 plataformas para mundo más largo
                     // PARTE 10: Gaps más grandes para más desafío
                     let gapX = Math.random() * 180 + 150;  // 150-330px (más separadas)
                     let gapY = (Math.random() - 0.5) * 140; // -70 to +70px (más variación vertical)
@@ -2359,25 +2352,6 @@
                         collected: false,
                         rotation: 0,
                         glowIntensity: 1
-                    });
-                });
-            },
-
-            // PARTE 8: Generate dream portals
-            generateDreamPortals() {
-                Game.dreamPortals = [];
-
-                // Create 2 dream portals in the level
-                [1200, 3500].forEach(x => {
-                    Game.dreamPortals.push({
-                        x: x,
-                        y: canvas.height - 200,
-                        width: 80,
-                        height: 120,
-                        active: true,
-                        rotation: 0,
-                        particles: [],
-                        colors: ['#a855f7', '#ec4899', '#3b82f6', '#10b981']
                     });
                 });
             },
@@ -3409,9 +3383,6 @@
 
                 // PARTE 8: Update memory fragments
                 this.updateMemoryFragments(dt);
-
-                // PARTE 8: Update dream portals
-                this.updateDreamPortals(dt);
 
                 // PARTE 8: Update atmospheric particles
                 this.updateAtmosphericParticles(dt);
@@ -4497,112 +4468,6 @@
                 });
             },
 
-            // PARTE 8: Update dream portals
-            updateDreamPortals(dt) {
-                if (!dt || dt > 1) return; // BUGFIX: Guard dt
-
-                const p = Game.player;
-                if (!Game.dreamPortals) return; // BUGFIX: Verificar existe
-
-                Game.dreamPortals.forEach(portal => {
-                    if (!portal || !portal.active) return;
-
-                    portal.rotation += dt;
-
-                    // Generate portal particles (BUGFIX: Limitar cantidad)
-                    if (Math.random() < 0.5 && portal.particles.length < 50) {
-                        portal.particles.push({
-                            x: portal.x + portal.width / 2 + (Math.random() - 0.5) * portal.width,
-                            y: portal.y + portal.height,
-                            vx: (Math.random() - 0.5) * 2,
-                            vy: -Math.random() * 3 - 2,
-                            life: 1.5,
-                            color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
-                            size: Math.random() * 4 + 2
-                        });
-                    }
-
-                    // Update portal particles
-                    for (let i = portal.particles.length - 1; i >= 0; i--) {
-                        portal.particles[i].life -= dt;
-                        portal.particles[i].x += portal.particles[i].vx;
-                        portal.particles[i].y += portal.particles[i].vy;
-
-                        if (portal.particles[i].life <= 0) {
-                            portal.particles.splice(i, 1);
-                        }
-                    }
-
-                    // Check if player enters portal
-                    if (this.checkCollision(p, portal)) {
-                        this.enterDreamWorld(portal);
-                        portal.active = false;
-                        // BUGFIX: Resetear después de un tiempo
-                        setTimeout(() => {
-                            Game.inDreamWorld = false;
-                            portal.active = true;
-                        }, 10000); // 10 segundos en mundo de ensueño
-                    }
-                });
-            },
-
-            // PARTE 8: Enter dream world
-            enterDreamWorld(portal) {
-                // BUGFIX: Try-catch para notificación
-                try {
-                    if (typeof showNotification === 'function') {
-                        showNotification(
-                            '🌀 Entrando al Mundo de los Sueños...',
-                            'Las leyes de la física no aplican aquí',
-                            4000
-                        );
-                    }
-                } catch (e) {
-                    console.log('Dream world notification error:', e);
-                }
-
-                // Modify game state for dream world
-                Game.inDreamWorld = true;
-
-                // Give temporary dream buffs
-                Game.player.activeBuffs.push({
-                    type: 'speed',
-                    multiplier: 2,
-                    duration: 600, // 10 seconds
-                    color: '#a855f7'
-                });
-
-                Game.player.activeBuffs.push({
-                    type: 'infinite_energy',
-                    duration: 600,
-                    color: '#ec4899'
-                });
-
-                // Epic visual effect
-                try {
-                    for (let i = 0; i < 100; i++) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = Math.random() * 15 + 5;
-                        Game.particles.push({
-                            x: Game.player.x + Game.player.width / 2,
-                            y: Game.player.y + Game.player.height / 2,
-                            vx: Math.cos(angle) * speed,
-                            vy: Math.sin(angle) * speed,
-                            life: 2,
-                            color: portal.colors[Math.floor(Math.random() * portal.colors.length)],
-                            size: Math.random() * 8 + 4
-                        });
-                    }
-                } catch (e) {
-                    console.log('Dream world particles error:', e);
-                }
-
-                // BUGFIX: Try-catch para sonido
-                try {
-                    if (typeof playSound === 'function') playSound('levelup');
-                } catch (e) {}
-            },
-
             // PARTE 8: Update atmospheric particles
             updateAtmosphericParticles(dt) {
                 // Update existing particles
@@ -5307,9 +5172,6 @@
 
                 // PARTE 8: Draw memory fragments
                 this.drawMemoryFragments();
-
-                // PARTE 8: Draw dream portals
-                this.drawDreamPortals();
 
                 // PARTE 8: Draw companion
                 this.drawCompanion();
@@ -6205,77 +6067,6 @@
                     ctx.fillStyle = '#a855f7';
                     ctx.textAlign = 'center';
                     ctx.fillText('💭', 0, 5);
-
-                    ctx.restore();
-                });
-            },
-
-            // PARTE 8: Draw dream portals
-            drawDreamPortals() {
-                Game.dreamPortals.forEach(portal => {
-                    if (!portal.active) return;
-
-                    const screenX = portal.x - Game.camera.x;
-                    const screenY = portal.y - Game.camera.y;
-
-                    ctx.save();
-
-                    // Swirling portal effect
-                    const time = Date.now() * 0.001;
-
-                    // Draw portal particles
-                    portal.particles.forEach(p => {
-                        const pX = p.x - Game.camera.x;
-                        const pY = p.y - Game.camera.y;
-
-                        ctx.globalAlpha = p.life;
-                        ctx.shadowColor = p.color;
-                        ctx.shadowBlur = 8;
-                        ctx.fillStyle = p.color;
-                        ctx.beginPath();
-                        ctx.arc(pX, pY, p.size, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-
-                    // Main portal vortex
-                    ctx.globalAlpha = 0.8;
-                    for (let i = 0; i < 5; i++) {
-                        const radius = (portal.width / 2) * (1 - i * 0.15);
-                        const rotation = time + i * 0.3;
-
-                        ctx.save();
-                        ctx.translate(screenX + portal.width / 2, screenY + portal.height / 2);
-                        ctx.rotate(rotation);
-
-                        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-                        gradient.addColorStop(0, 'transparent');
-                        gradient.addColorStop(0.7, portal.colors[i % portal.colors.length]);
-                        gradient.addColorStop(1, 'transparent');
-
-                        ctx.fillStyle = gradient;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.restore();
-                    }
-
-                    // Portal border
-                    ctx.globalAlpha = 1;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 3;
-                    ctx.shadowColor = '#a855f7';
-                    ctx.shadowBlur = 15;
-                    ctx.beginPath();
-                    ctx.arc(screenX + portal.width / 2, screenY + portal.height / 2, portal.width / 2, 0, Math.PI * 2);
-                    ctx.stroke();
-
-                    // "Dream" text
-                    ctx.font = 'bold 16px Arial';
-                    ctx.fillStyle = '#ffffff';
-                    ctx.textAlign = 'center';
-                    ctx.shadowBlur = 5;
-                    ctx.fillText('🌀 SUEÑO', screenX + portal.width / 2, screenY + portal.height + 30);
 
                     ctx.restore();
                 });
