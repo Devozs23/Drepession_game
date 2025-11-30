@@ -3614,10 +3614,12 @@
                             }
 
                             // Break breakable platforms
-                            if (platform.type === 'breakable') {
+                            if (platform.type === 'breakable' && !platform.breaking) {
+                                platform.breaking = true; // Marcar que está en proceso
+                                // BUGFIX PARTE 13: Dar 1.5 segundos antes de romperse (era 500ms = muy poco)
                                 setTimeout(() => {
                                     platform.broken = true;
-                                }, 500);
+                                }, 1500); // 1.5 segundos para que puedas saltar
                             }
 
                             // Victory platform
@@ -3745,8 +3747,19 @@
                     p.velocityY = 0;
                     playSound('damage');
 
+                    // BUGFIX PARTE 13: Resetear plataformas rotas cuando respawneas 🔧
+                    // Si caíste porque una plataforma se rompió, las regeneramos
+                    this.platforms.forEach(platform => {
+                        if (platform.broken || platform.breaking) {
+                            platform.broken = false; // Restaurar plataforma
+                            platform.breaking = false; // Resetear estado de rotura
+                        }
+                    });
+
                     if (p.health <= 0) {
                         this.gameOver();
+                    } else {
+                        showNotification('⚠️ ¡Ten cuidado!', 'Las plataformas se han restaurado', 2000);
                     }
                 }
 
@@ -5630,6 +5643,29 @@
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(screenX, screenY, platform.width, platform.height);
+
+                    // BUGFIX PARTE 13: Advertencia visual para plataformas que se van a romper ⚠️
+                    if (platform.type === 'breakable' && platform.breaking) {
+                        // Parpadeo rojo de advertencia
+                        const flashSpeed = 10; // Más rápido = más urgente
+                        if (Math.floor(this.time * 60) % flashSpeed < flashSpeed / 2) {
+                            ctx.save();
+                            ctx.globalAlpha = 0.5;
+                            ctx.fillStyle = '#ff0000';
+                            ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                            ctx.restore();
+                        }
+                        // Grietas visuales
+                        ctx.strokeStyle = '#ff0000';
+                        ctx.lineWidth = 2;
+                        for (let i = 0; i < 3; i++) {
+                            const x = screenX + (platform.width / 4) * (i + 0.5);
+                            ctx.beginPath();
+                            ctx.moveTo(x, screenY);
+                            ctx.lineTo(x + (Math.random() - 0.5) * 10, screenY + platform.height);
+                            ctx.stroke();
+                        }
+                    }
 
                     // Victory platform glow
                     if (platform.type === 'victory') {
