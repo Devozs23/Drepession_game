@@ -2111,12 +2111,17 @@
                     ];
                     const type = i % 4 === 0 ? platformTypes[Math.floor(Math.random() * platformTypes.length)] : 'normal';
 
+                    // VARIEDAD: Diferentes formas de plataformas
+                    const shapes = ['rectangle', 'roundedRect', 'ellipse', 'hexagon', 'diamond'];
+                    const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+
                     this.platforms.push({
                         x: lastX,
                         y: lastY,
                         width: width,
                         height: 30,
                         type: type,
+                        shape: randomShape, // Nueva propiedad!
                         color: type === 'moving' ? '#667eea' :
                                type === 'breakable' ? '#f59e0b' :
                                type === 'trampoline' ? '#10b981' :
@@ -3531,7 +3536,8 @@
                                     }
                                 });
 
-                                showNotification('💥 IMPACT!', 'Ground Pound Strike!', 1200);
+                                // Notificación desactivada - menos spam
+                                // showNotification('💥 IMPACT!', 'Ground Pound Strike!', 1200);
                                 try {
                                     if (typeof playSound === 'function') playSound('explosion');
                                 } catch (e) {}
@@ -4303,7 +4309,7 @@
                                         const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                         showNotification(
                                             `💙 ¡${boss.type.name} Derrotado!`,
-                                            `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                            `"${randomQuote.quote}"`,
                                             8000
                                         );
                                     }
@@ -4405,7 +4411,7 @@
                                     const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                     showNotification(
                                         `💙 ¡${boss.type.name} Derrotado!`,
-                                        `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                        `"${randomQuote.quote}"`,
                                         8000
                                     );
                                 }
@@ -4784,11 +4790,12 @@
                         });
                     }
 
-                    try {
-                        if (typeof showNotification === 'function') {
-                            showNotification('🧗 Wall Jump!', '', 800);
-                        }
-                    } catch (e) {}
+                    // Notificación desactivada - menos spam en pantalla
+                    // try {
+                    //     if (typeof showNotification === 'function') {
+                    //         showNotification('🧗 Wall Jump!', '', 800);
+                    //     }
+                    // } catch (e) {}
 
                     return; // Exit early, wall jump handled
                 }
@@ -4883,11 +4890,12 @@
                     p.isDashing = false;
                 }, 200);
 
-                try {
-                    if (typeof showNotification === 'function') {
-                        showNotification('💨 Air Dash!', '', 800);
-                    }
-                } catch (e) {}
+                // Notificación desactivada - menos spam en pantalla
+                // try {
+                //     if (typeof showNotification === 'function') {
+                //         showNotification('💨 Air Dash!', '', 800);
+                //     }
+                // } catch (e) {}
             },
 
             // PARTE 13: Ground Pound - ¡Impacto devastador desde el aire! 💥
@@ -4915,11 +4923,12 @@
                     });
                 }
 
-                try {
-                    if (typeof showNotification === 'function') {
-                        showNotification('💥 Ground Pound!', '', 800);
-                    }
-                } catch (e) {}
+                // Notificación desactivada - menos spam en pantalla
+                // try {
+                //     if (typeof showNotification === 'function') {
+                //         showNotification('💥 Ground Pound!', '', 800);
+                //     }
+                // } catch (e) {}
             },
 
             handleAttack() {
@@ -5111,7 +5120,7 @@
                             const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                             showNotification(
                                 `💙 ¡${boss.type.name} Derrotado!`,
-                                `"${randomQuote.quote}" - ${randomQuote.author}`,
+                                `"${randomQuote.quote}"`,
                                 8000
                             );
                             playSound('levelup');
@@ -5550,6 +5559,66 @@
                 });
             },
 
+            // VARIEDAD: Función para dibujar diferentes formas de plataformas 🎨
+            drawPlatformShape(ctx, x, y, w, h, shape, strokeOnly = false) {
+                ctx.beginPath();
+
+                switch(shape) {
+                    case 'roundedRect':
+                        // Rectángulo con bordes redondeados
+                        const radius = Math.min(10, h / 2);
+                        ctx.moveTo(x + radius, y);
+                        ctx.lineTo(x + w - radius, y);
+                        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+                        ctx.lineTo(x + w, y + h - radius);
+                        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+                        ctx.lineTo(x + radius, y + h);
+                        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+                        ctx.lineTo(x, y + radius);
+                        ctx.quadraticCurveTo(x, y, x + radius, y);
+                        break;
+
+                    case 'ellipse':
+                        // Óvalo/elipse
+                        ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI * 2);
+                        break;
+
+                    case 'hexagon':
+                        // Hexágono
+                        const centerX = x + w/2;
+                        const centerY = y + h/2;
+                        ctx.moveTo(centerX + w/2, centerY);
+                        ctx.lineTo(centerX + w/4, centerY + h/2);
+                        ctx.lineTo(centerX - w/4, centerY + h/2);
+                        ctx.lineTo(centerX - w/2, centerY);
+                        ctx.lineTo(centerX - w/4, centerY - h/2);
+                        ctx.lineTo(centerX + w/4, centerY - h/2);
+                        ctx.closePath();
+                        break;
+
+                    case 'diamond':
+                        // Diamante/rombo
+                        ctx.moveTo(x + w/2, y);              // Top
+                        ctx.lineTo(x + w, y + h/2);          // Right
+                        ctx.lineTo(x + w/2, y + h);          // Bottom
+                        ctx.lineTo(x, y + h/2);              // Left
+                        ctx.closePath();
+                        break;
+
+                    case 'rectangle':
+                    default:
+                        // Rectángulo normal
+                        ctx.rect(x, y, w, h);
+                        break;
+                }
+
+                if (strokeOnly) {
+                    ctx.stroke();
+                } else {
+                    ctx.fill();
+                }
+            },
+
             drawPlatforms() {
                 this.platforms.forEach(platform => {
                     if (platform.broken) return;
@@ -5633,16 +5702,16 @@
                         ctx.lineTo(screenX + platform.width * 0.5, screenY + platform.height - 8);
                         ctx.fill();
                     }
-                    // Normal platform
+                    // Normal platform - CON FORMAS VARIADAS! 🎨
                     else {
                         ctx.fillStyle = platform.color;
-                        ctx.fillRect(screenX, screenY, platform.width, platform.height);
+                        this.drawPlatformShape(ctx, screenX, screenY, platform.width, platform.height, platform.shape || 'rectangle');
                     }
 
-                    // Platform border
+                    // Platform border (con la misma forma)
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                     ctx.lineWidth = 2;
-                    ctx.strokeRect(screenX, screenY, platform.width, platform.height);
+                    this.drawPlatformShape(ctx, screenX, screenY, platform.width, platform.height, platform.shape || 'rectangle', true);
 
                     // BUGFIX PARTE 13: Advertencia visual para plataformas que se van a romper ⚠️
                     if (platform.type === 'breakable' && platform.breaking) {
