@@ -382,8 +382,8 @@
                 isAttacking: false,
                 isDashing: false,
                 isInvulnerable: false,
-                canDoubleJump: false,
-                hasDoubleJumped: false,
+                jumpsRemaining: 3, // PARTE 12: Triple salto! 🚀
+                maxJumps: 3,
                 attackCooldown: 0,
                 dashCooldown: 0,
                 invulnerabilityTime: 0,
@@ -2051,9 +2051,17 @@
                 let verticalSection = false;
 
                 for (let i = 0; i < 400; i++) { // 400 plataformas para mundo más largo
-                    // PARTE 10: Gaps más grandes para más desafío
-                    let gapX = Math.random() * 180 + 150;  // 150-330px (más separadas)
-                    let gapY = (Math.random() - 0.5) * 140; // -70 to +70px (más variación vertical)
+                    // PARTE 12: Primeras plataformas más fáciles para no perder al inicio
+                    let gapX, gapY;
+                    if (i < 5) {
+                        // Primeras 5 plataformas: gaps pequeños y fáciles
+                        gapX = Math.random() * 80 + 100;  // 100-180px (fácil)
+                        gapY = (Math.random() - 0.5) * 40; // -20 to +20px (casi plano)
+                    } else {
+                        // Resto: gaps más grandes para más desafío
+                        gapX = Math.random() * 180 + 150;  // 150-330px (más separadas)
+                        gapY = (Math.random() - 0.5) * 140; // -70 to +70px (más variación vertical)
+                    }
 
                     // Secciones verticales cada 20 plataformas
                     if (i % 20 === 10 && i > 10) {
@@ -3461,7 +3469,7 @@
                                 p.y = platform.y - p.height;
                                 p.velocityY = 0;
                                 p.isGrounded = true;
-                                p.canDoubleJump = true;
+                                p.jumpsRemaining = p.maxJumps; // PARTE 12: Reset triple salto
                             }
                             return; // No colisión lateral o desde abajo
                         }
@@ -3471,7 +3479,7 @@
                             p.y = platform.y - p.height;
                             p.velocityY = 0;
                             p.isGrounded = true;
-                            p.canDoubleJump = true;
+                            p.jumpsRemaining = p.maxJumps; // PARTE 12: Reset triple salto
 
                             // PARTE 10: Parkour combo - bonus por encadenar plataformas
                             if (Game.parkourCombo.lastPlatform !== platform && Game.parkourCombo.timeWithoutGround > 0.5) {
@@ -4515,28 +4523,93 @@
                 );
             },
 
+            // PARTE 12: Sistema de Triple Salto mejorado! 🚀
             handleJump() {
                 const p = Game.player;
                 const jumpForce = -15;
                 const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
 
-                if (p.isGrounded && (p.energy >= 10 || hasInfiniteEnergy)) {
+                // Calcular costo de energía basado en el número de salto
+                const jumpNumber = p.maxJumps - p.jumpsRemaining + 1;
+                const energyCost = 10 + (jumpNumber - 1) * 5; // 10, 15, 20 energía
+
+                // Permitir salto si hay saltos restantes y suficiente energía
+                if (p.jumpsRemaining > 0 && (p.energy >= energyCost || hasInfiniteEnergy)) {
                     p.velocityY = jumpForce;
-                    if (!hasInfiniteEnergy) p.energy -= 10;
+                    if (!hasInfiniteEnergy) p.energy -= energyCost;
+                    p.jumpsRemaining--;
                     p.isGrounded = false;
                     p.stats.jumps++;
                     playSound('jump');
-                    // PARTE 9: Play musical note
-                    this.playJumpNote(Math.abs(jumpForce));
-                } else if (p.canDoubleJump && !p.isGrounded && (p.energy >= 15 || hasInfiniteEnergy)) {
-                    p.velocityY = jumpForce;
-                    if (!hasInfiniteEnergy) p.energy -= 15;
-                    p.canDoubleJump = false;
-                    p.stats.jumps++;
-                    playSound('jump');
-                    // PARTE 9: Play higher note for double jump
-                    this.playJumpNote(Math.abs(jumpForce) + 5);
+
+                    // PARTE 9: Play musical note (más agudo con cada salto)
+                    this.playJumpNote(Math.abs(jumpForce) + jumpNumber * 3);
+
+                    // Visual feedback para triple salto
+                    if (jumpNumber === 3) {
+                        // Partículas especiales para el tercer salto
+                        for (let i = 0; i < 15; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            Game.particles.push({
+                                x: p.x + p.width / 2,
+                                y: p.y + p.height,
+                                vx: Math.cos(angle) * 4,
+                                vy: Math.sin(angle) * 4,
+                                life: 0.8,
+                                color: '#fbbf24',
+                                size: Math.random() * 4 + 2
+                            });
+                        }
+                    }
                 }
+            },
+
+            // PARTE 12: Air Dash - Impulso horizontal en el aire! 💨
+            handleAirDash() {
+                const p = Game.player;
+                const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
+
+                // Solo permite dash en el aire si hay suficiente energía y cooldown terminó
+                if (p.dashCooldown > 0 || (p.energy < 25 && !hasInfiniteEnergy)) return;
+
+                // Aplicar impulso horizontal fuerte
+                const dashSpeed = 12;
+                p.velocityX = p.isFacingRight ? dashSpeed : -dashSpeed;
+
+                // Pequeño impulso vertical para mantener altura
+                if (p.velocityY > 0) {
+                    p.velocityY = -3; // Cancelar caída
+                }
+
+                if (!hasInfiniteEnergy) p.energy -= 25;
+                p.dashCooldown = 45; // ~0.75 segundos de cooldown
+                p.isDashing = true;
+
+                playSound('jump'); // Usar sonido de salto
+
+                // Efecto visual de dash
+                for (let i = 0; i < 20; i++) {
+                    Game.particles.push({
+                        x: p.x + p.width / 2,
+                        y: p.y + p.height / 2,
+                        vx: (p.isFacingRight ? -1 : 1) * (Math.random() * 6 + 2),
+                        vy: (Math.random() - 0.5) * 4,
+                        life: 0.6,
+                        color: '#60a5fa',
+                        size: Math.random() * 5 + 2
+                    });
+                }
+
+                // Desactivar dash después de un momento
+                setTimeout(() => {
+                    p.isDashing = false;
+                }, 200);
+
+                try {
+                    if (typeof showNotification === 'function') {
+                        showNotification('💨 Air Dash!', '', 800);
+                    }
+                } catch (e) {}
             },
 
             handleAttack() {
@@ -6281,6 +6354,12 @@
                 if (e.key === 'z' || e.key === 'Z') {
                     e.preventDefault();
                     GameScene.handleAttack();
+                }
+
+                // PARTE 12: Air Dash! 💨
+                if (e.key === 'Shift') {
+                    e.preventDefault();
+                    GameScene.handleAirDash();
                 }
 
                 // PARTE 5: Special Ability
