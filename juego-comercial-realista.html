@@ -384,6 +384,7 @@
                 isInvulnerable: false,
                 jumpsRemaining: 3, // PARTE 12: Triple salto! 🚀
                 maxJumps: 3,
+                coyoteTime: 0, // PARTE 13: Coyote time (como Celeste) 🕐
                 attackCooldown: 0,
                 dashCooldown: 0,
                 invulnerabilityTime: 0,
@@ -2713,7 +2714,7 @@
                     weather.timer = 0;
                     weather.nextChangeTime = Math.random() * 30 + 30; // 30-60 segundos
 
-                    const weathers = ['clear', 'rain', 'snow', 'storm', 'fog', 'aurora'];
+                    const weathers = ['clear', 'rain', 'snow', 'fog', 'aurora']; // BUGFIX: Removido 'storm' que causaba bugs
                     const newWeather = weathers[Math.floor(Math.random() * weathers.length)];
 
                     if (newWeather !== weather.current) {
@@ -2725,7 +2726,6 @@
                                 const messages = {
                                     rain: ['🌧️ Lluvia', 'Las plataformas están resbalosas'],
                                     snow: ['❄️ Nieve', 'El frío reduce tu velocidad'],
-                                    storm: ['⛈️ Tormenta', '¡Cuidado con los rayos!'],
                                     fog: ['🌫️ Niebla', 'Visibilidad reducida'],
                                     aurora: ['🌌 Aurora Boreal', '¡Energía ilimitada!'],
                                     clear: ['☀️ Despejado', 'Clima perfecto']
@@ -2785,34 +2785,7 @@
                     }
                 }
 
-                // Lightning in storm
-                if (weather.current === 'storm' && Math.random() < 0.01 && !weather.lightning.active) {
-                    weather.lightning.active = true;
-                    weather.lightning.x = Math.random() * canvas.width + Game.camera.x;
-                    weather.lightning.timer = 0.3;
-                    weather.lightning.flash = 1;
-
-                    try {
-                        if (typeof playSound === 'function') playSound('hit');
-                    } catch (e) {}
-                }
-
-                // Update lightning
-                if (weather.lightning.active) {
-                    weather.lightning.timer -= dt;
-                    weather.lightning.flash -= dt * 3;
-
-                    if (weather.lightning.timer <= 0) {
-                        weather.lightning.active = false;
-                    }
-
-                    // Damage player if close to lightning
-                    const p = Game.player;
-                    if (Math.abs(p.x - weather.lightning.x) < 50 && Math.random() < 0.3) {
-                        p.health = Math.max(p.health - 5, 0);
-                        if (p.health <= 0) this.gameOver();
-                    }
-                }
+                // BUGFIX: Lightning code removed - was causing bugs
 
                 // Weather effects on player
                 const p = Game.player;
@@ -3445,6 +3418,8 @@
                 }
 
                 // Check platform collisions
+                // PARTE 13: Coyote time - dar buffer de 6 frames al dejar el suelo
+                const wasGrounded = p.isGrounded;
                 p.isGrounded = false;
                 this.platforms.forEach(platform => {
                     if (platform.broken) return;
@@ -3571,6 +3546,15 @@
                         }
                     }
                 });
+
+                // PARTE 13: Coyote time - Si acabamos de dejar el suelo, dar 6 frames de gracia
+                if (wasGrounded && !p.isGrounded) {
+                    p.coyoteTime = 6; // 6 frames (~0.1 segundos a 60fps)
+                } else if (p.isGrounded) {
+                    p.coyoteTime = 0;
+                } else if (p.coyoteTime > 0) {
+                    p.coyoteTime--;
+                }
 
                 // Prevent falling below screen
                 if (p.y > canvas.height + 100) {
@@ -3904,45 +3888,94 @@
 
                     // Check collision with player
                     if (this.checkCollision(Game.player, enemy)) {
-                        if (enemy.hitCooldown <= 0 && !Game.player.isInvulnerable) {
-                            // PARTE 5: Check for shield buff
-                            const shieldBuff = Game.player.activeBuffs.find(b => b.type === 'shield');
-                            const hasInfiniteEnergy = Game.player.activeBuffs.find(b => b.type === 'infinite_energy');
+                        const p = Game.player;
 
-                            if (!shieldBuff) {
-                                // Player takes damage
-                                Game.player.health -= enemy.damage;
-                                Game.player.stats.damageTaken += enemy.damage;
-                                Game.player.invulnerabilityTime = 60;
-                                playSound('damage');
+                        // PARTE 13: Enemy Bounce (estilo Mario/Hollow Knight) 🦘
+                        // Si el jugador cae desde arriba, rebota en el enemigo
+                        if (p.velocityY > 0 && p.y + p.height - p.velocityY <= enemy.y + 10) {
+                            // Rebote!
+                            p.velocityY = -10; // Rebote fuerte
+                            p.jumpsRemaining = p.maxJumps; // Reset saltos
+                            playSound('jump');
 
-                                // Knockback
-                                const knockbackDir = Game.player.x < enemy.x ? -1 : 1;
-                                Game.player.velocityX = knockbackDir * 8;
-                                Game.player.velocityY = -8;
+                            // Daño al enemigo
+                            const bounceDamage = 30;
+                            enemy.health -= bounceDamage;
+                            p.stats.damageDealt += bounceDamage;
 
-                                Game.camera.shake = 10;
-                                Game.camera.shakeIntensity = 8;
+                            // Combo counter
+                            p.combo = Math.min(p.combo + 1, 99);
+                            p.comboTimer = 180;
 
-                                if (Game.player.health <= 0) {
-                                    this.gameOver();
-                                }
-                            } else {
-                                // Shield absorbs damage - show particle effect
-                                for (let i = 0; i < 10; i++) {
-                                    Game.particles.push({
-                                        x: Game.player.x + Game.player.width / 2,
-                                        y: Game.player.y + Game.player.height / 2,
-                                        vx: (Math.random() - 0.5) * 6,
-                                        vy: (Math.random() - 0.5) * 6,
-                                        life: 0.5,
-                                        color: '#3b82f6',
-                                        size: Math.random() * 4 + 2
-                                    });
-                                }
+                            // Partículas de rebote
+                            for (let i = 0; i < 20; i++) {
+                                Game.particles.push({
+                                    x: enemy.x + enemy.width / 2,
+                                    y: enemy.y,
+                                    vx: (Math.random() - 0.5) * 8,
+                                    vy: -Math.random() * 6,
+                                    life: 1,
+                                    color: '#fbbf24',
+                                    size: Math.random() * 5 + 2
+                                });
                             }
 
-                            enemy.hitCooldown = 60;
+                            // Si mata al enemigo con el rebote
+                            if (enemy.health <= 0 && !enemy.isDead) {
+                                enemy.isDead = true;
+                                p.stats.kills++;
+
+                                // XP bonus
+                                p.xp += enemy.xp;
+                                this.checkLevelUp();
+
+                                try {
+                                    if (typeof showNotification === 'function') {
+                                        showNotification('🦘 Stomp Kill!', `+${enemy.xp} XP`, 1500);
+                                    }
+                                } catch (e) {}
+                            }
+                        } else {
+                            // Colisión normal - toma daño
+                            if (enemy.hitCooldown <= 0 && !p.isInvulnerable) {
+                                // PARTE 5: Check for shield buff
+                                const shieldBuff = p.activeBuffs.find(b => b.type === 'shield');
+
+                                if (!shieldBuff) {
+                                    // Player takes damage
+                                    p.health -= enemy.damage;
+                                    p.stats.damageTaken += enemy.damage;
+                                    p.invulnerabilityTime = 60;
+                                    playSound('damage');
+
+                                    // Knockback
+                                    const knockbackDir = p.x < enemy.x ? -1 : 1;
+                                    p.velocityX = knockbackDir * 8;
+                                    p.velocityY = -8;
+
+                                    Game.camera.shake = 10;
+                                    Game.camera.shakeIntensity = 8;
+
+                                    if (p.health <= 0) {
+                                        this.gameOver();
+                                    }
+                                } else {
+                                    // Shield absorbs damage - show particle effect
+                                    for (let i = 0; i < 10; i++) {
+                                        Game.particles.push({
+                                            x: p.x + p.width / 2,
+                                            y: p.y + p.height / 2,
+                                            vx: (Math.random() - 0.5) * 6,
+                                            vy: (Math.random() - 0.5) * 6,
+                                            life: 0.5,
+                                            color: '#3b82f6',
+                                            size: Math.random() * 4 + 2
+                                        });
+                                    }
+                                }
+
+                                enemy.hitCooldown = 60;
+                            }
                         }
                     }
 
@@ -4523,21 +4556,32 @@
                 );
             },
 
-            // PARTE 12: Sistema de Triple Salto mejorado! 🚀
+            // PARTE 12 + 13: Sistema de Triple Salto + Coyote Time! 🚀🕐
             handleJump() {
                 const p = Game.player;
-                const jumpForce = -15;
+                const jumpForce = -12; // BUGFIX: Reducido de -15 a -12 (menos exagerado)
                 const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
+
+                // PARTE 13: Coyote time - Si acabamos de dejar el suelo, aún podemos saltar
+                const canCoyoteJump = p.coyoteTime > 0 && p.jumpsRemaining === p.maxJumps;
 
                 // Calcular costo de energía basado en el número de salto
                 const jumpNumber = p.maxJumps - p.jumpsRemaining + 1;
                 const energyCost = 10 + (jumpNumber - 1) * 5; // 10, 15, 20 energía
 
-                // Permitir salto si hay saltos restantes y suficiente energía
-                if (p.jumpsRemaining > 0 && (p.energy >= energyCost || hasInfiniteEnergy)) {
+                // Permitir salto si hay saltos restantes y suficiente energía (o coyote time)
+                if ((p.jumpsRemaining > 0 || canCoyoteJump) && (p.energy >= energyCost || hasInfiniteEnergy)) {
                     p.velocityY = jumpForce;
                     if (!hasInfiniteEnergy) p.energy -= energyCost;
-                    p.jumpsRemaining--;
+
+                    // Si usamos coyote jump, restar del contador de saltos
+                    if (canCoyoteJump) {
+                        p.jumpsRemaining--; // Usar primer salto
+                        p.coyoteTime = 0; // Consumir coyote time
+                    } else {
+                        p.jumpsRemaining--;
+                    }
+
                     p.isGrounded = false;
                     p.stats.jumps++;
                     playSound('jump');
@@ -6128,35 +6172,7 @@
                     }
                 });
 
-                // Draw lightning
-                if (weather.lightning.active) {
-                    const lx = weather.lightning.x - Game.camera.x;
-
-                    ctx.globalAlpha = Math.max(weather.lightning.flash, 0);
-
-                    // Flash effect
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    // Lightning bolt
-                    ctx.strokeStyle = '#fbbf24';
-                    ctx.lineWidth = 4;
-                    ctx.shadowColor = '#fbbf24';
-                    ctx.shadowBlur = 20;
-
-                    ctx.beginPath();
-                    ctx.moveTo(lx, 0);
-                    const segments = 5 + Math.floor(Math.random() * 3);
-                    let currentX = lx;
-                    let currentY = 0;
-
-                    for (let i = 0; i < segments; i++) {
-                        currentY += canvas.height / segments;
-                        currentX += (Math.random() - 0.5) * 40;
-                        ctx.lineTo(currentX, currentY);
-                    }
-                    ctx.stroke();
-                }
+                // BUGFIX: Lightning drawing code removed
 
                 // Draw fog overlay
                 if (weather.current === 'fog') {
