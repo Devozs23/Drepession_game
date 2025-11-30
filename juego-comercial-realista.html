@@ -6134,66 +6134,102 @@
                     }
                 }
 
+                // ANIMACIONES MEJORADAS - ¡Ya no es momia! 🎭
+
+                // Variables de animación
+                const isMoving = Math.abs(p.velocityX) > 0.1;
+                const isJumping = !p.isGrounded;
+                const walkCycle = this.time * 10; // Velocidad del ciclo de caminata
+
+                // Bob de cabeza y cuerpo al caminar
+                const headBob = isMoving ? Math.sin(walkCycle) * 2 : 0;
+                const bodyLean = isMoving ? Math.sin(walkCycle * 0.5) * 1 : 0;
+
                 // Shadow
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                 ctx.beginPath();
                 ctx.ellipse(screenX + p.width/2, screenY + p.height + 2, p.width/2, 6, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Body
+                // Body (con inclinación)
                 ctx.fillStyle = p.color;
-                ctx.fillRect(screenX + 8, screenY + 20, p.width - 16, 22);
+                ctx.fillRect(screenX + 8 + bodyLean, screenY + 20 + headBob, p.width - 16, 22);
 
-                // Head
+                // Head (con bob)
                 ctx.fillStyle = '#FFD1B3';
                 ctx.beginPath();
-                ctx.arc(screenX + p.width/2, screenY + 12, 12, 0, Math.PI * 2);
+                ctx.arc(screenX + p.width/2 + bodyLean, screenY + 12 + headBob, 12, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Hair
                 if (Game.saveData.character === 'luna') {
                     ctx.fillStyle = '#3d2817';
                     ctx.beginPath();
-                    ctx.arc(screenX + p.width/2 - 6, screenY + 8, 10, 0, Math.PI * 2);
-                    ctx.arc(screenX + p.width/2 + 6, screenY + 8, 10, 0, Math.PI * 2);
-                    ctx.arc(screenX + p.width/2, screenY + 4, 12, 0, Math.PI * 2);
+                    ctx.arc(screenX + p.width/2 - 6 + bodyLean, screenY + 8 + headBob, 10, 0, Math.PI * 2);
+                    ctx.arc(screenX + p.width/2 + 6 + bodyLean, screenY + 8 + headBob, 10, 0, Math.PI * 2);
+                    ctx.arc(screenX + p.width/2 + bodyLean, screenY + 4 + headBob, 12, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
                     ctx.fillStyle = '#2d1810';
                     ctx.beginPath();
-                    ctx.arc(screenX + p.width/2, screenY + 4, 12, 0, Math.PI);
+                    ctx.arc(screenX + p.width/2 + bodyLean, screenY + 4 + headBob, 12, 0, Math.PI);
                     ctx.fill();
                 }
 
                 // Eyes
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(screenX + p.width/2 - 4, screenY + 10, 2, 0, Math.PI * 2);
-                ctx.arc(screenX + p.width/2 + 4, screenY + 10, 2, 0, Math.PI * 2);
+                ctx.arc(screenX + p.width/2 - 4 + bodyLean, screenY + 10 + headBob, 2, 0, Math.PI * 2);
+                ctx.arc(screenX + p.width/2 + 4 + bodyLean, screenY + 10 + headBob, 2, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Smile
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.arc(screenX + p.width/2, screenY + 12, 5, 0.2, Math.PI - 0.2);
+                ctx.arc(screenX + p.width/2 + bodyLean, screenY + 12 + headBob, 5, 0.2, Math.PI - 0.2);
                 ctx.stroke();
 
-                // Arms
+                // Arms ANIMADOS! (balanceo al caminar, arriba al saltar)
                 ctx.fillStyle = '#FFD1B3';
-                ctx.fillRect(screenX + 2, screenY + 22, 6, 15);
-                ctx.fillRect(screenX + p.width - 8, screenY + 22, 6, 15);
+                if (isJumping) {
+                    // Brazos arriba cuando salta
+                    ctx.fillRect(screenX + 2, screenY + 18 + headBob, 6, 12);
+                    ctx.fillRect(screenX + p.width - 8, screenY + 18 + headBob, 6, 12);
+                } else if (isMoving) {
+                    // Brazos se balancean al caminar (opuesto a las piernas)
+                    const armSwing = Math.sin(walkCycle) * 6;
+                    ctx.fillRect(screenX + 2, screenY + 22 + headBob - armSwing, 6, 15);
+                    ctx.fillRect(screenX + p.width - 8, screenY + 22 + headBob + armSwing, 6, 15);
+                } else {
+                    // Brazos normales cuando está quieto
+                    ctx.fillRect(screenX + 2, screenY + 22, 6, 15);
+                    ctx.fillRect(screenX + p.width - 8, screenY + 22, 6, 15);
+                }
 
-                // Legs
+                // Legs ANIMADAS! (movimiento más pronunciado)
                 ctx.fillStyle = p.color;
-                const legOffset = Math.abs(p.velocityX) > 0.1 ? Math.sin(this.time * 10) * 3 : 0;
-                ctx.fillRect(screenX + 10, screenY + 42 + legOffset, 6, 18);
-                ctx.fillRect(screenX + p.width - 16, screenY + 42 - legOffset, 6, 18);
+                if (isJumping) {
+                    // Piernas juntas al saltar
+                    ctx.fillRect(screenX + 10, screenY + 42 + headBob, 6, 16);
+                    ctx.fillRect(screenX + p.width - 16, screenY + 42 + headBob, 6, 16);
+                } else {
+                    // Piernas caminando (movimiento x2 más pronunciado)
+                    const legOffset = isMoving ? Math.sin(walkCycle) * 6 : 0;
+                    ctx.fillRect(screenX + 10, screenY + 42 + headBob + legOffset, 6, 18);
+                    ctx.fillRect(screenX + p.width - 16, screenY + 42 + headBob - legOffset, 6, 18);
+                }
 
-                // Shoes
+                // Shoes (se mueven con las piernas)
                 ctx.fillStyle = '#333';
-                ctx.fillRect(screenX + 10, screenY + 58, 6, 4);
-                ctx.fillRect(screenX + p.width - 16, screenY + 58, 6, 4);
+                if (isJumping) {
+                    ctx.fillRect(screenX + 10, screenY + 56 + headBob, 6, 4);
+                    ctx.fillRect(screenX + p.width - 16, screenY + 56 + headBob, 6, 4);
+                } else {
+                    const legOffset = isMoving ? Math.sin(walkCycle) * 6 : 0;
+                    ctx.fillRect(screenX + 10, screenY + 58 + headBob + legOffset, 6, 4);
+                    ctx.fillRect(screenX + p.width - 16, screenY + 58 + headBob - legOffset, 6, 4);
+                }
 
                 ctx.restore();
             },
@@ -6757,7 +6793,8 @@
 
             gameOver() {
                 Game.state = GameStates.GAME_OVER;
-                showNotification('💔 Fin del Juego', 'No te rindas, inténtalo de nuevo');
+                // Notificación desactivada - menos spam
+                // showNotification('💔 Fin del Juego', 'No te rindas, inténtalo de nuevo');
 
                 setTimeout(() => {
                     Game.state = GameStates.MAIN_MENU;
