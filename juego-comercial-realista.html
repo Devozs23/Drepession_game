@@ -385,6 +385,21 @@
                 jumpsRemaining: 3, // PARTE 12: Triple salto! 🚀
                 maxJumps: 3,
                 coyoteTime: 0, // PARTE 13: Coyote time (como Celeste) 🕐
+
+                // PARTE 13: Wall mechanics 🧗
+                isWallSliding: false,
+                wallSide: 0, // -1 = left, 1 = right, 0 = none
+                wallJumpTimer: 0,
+
+                // PARTE 13: Ground Pound 💥
+                isGroundPounding: false,
+                groundPoundVelocity: 20,
+
+                // PARTE 13: Flow State System 🌊
+                flowTime: 0, // Tiempo sin tocar suelo
+                flowLevel: 0, // 0=normal, 1=flow, 2=euphoria, 3=transcendence
+                lastFlowLevel: 0, // Para detectar cambios de nivel
+
                 attackCooldown: 0,
                 dashCooldown: 0,
                 invulnerabilityTime: 0,
@@ -3399,7 +3414,15 @@
                 }
 
                 // Apply gravity
-                p.velocityY += gravity;
+                // PARTE 13: Wall slide reduce gravedad 🧗
+                if (p.isWallSliding && !p.isGroundPounding) {
+                    p.velocityY += gravity * 0.2; // 20% de gravedad en pared
+                    p.velocityY = Math.min(p.velocityY, 2); // Velocidad máxima de deslizamiento
+                } else if (p.isGroundPounding) {
+                    p.velocityY = p.groundPoundVelocity; // Caída rápida
+                } else {
+                    p.velocityY += gravity;
+                }
 
                 // PARTE 10: Apply wind effect
                 if (Game.wind.active) {
@@ -3455,6 +3478,64 @@
                             p.velocityY = 0;
                             p.isGrounded = true;
                             p.jumpsRemaining = p.maxJumps; // PARTE 12: Reset triple salto
+
+                            // PARTE 13: Ground Pound Impact! 💥
+                            if (p.isGroundPounding) {
+                                p.isGroundPounding = false;
+
+                                // Screen shake épico
+                                Game.camera.shake = 30;
+                                Game.camera.shakeIntensity = 20;
+
+                                // Explosión de partículas rojas
+                                for (let i = 0; i < 60; i++) {
+                                    const angle = (Math.PI * 2 * i) / 60;
+                                    const speed = 8 + Math.random() * 6;
+                                    Game.particles.push({
+                                        x: p.x + p.width / 2,
+                                        y: p.y + p.height,
+                                        vx: Math.cos(angle) * speed,
+                                        vy: Math.sin(angle) * speed,
+                                        life: 1.2,
+                                        color: ['#ff0000', '#ff4400', '#ff8800', '#ffaa00'][Math.floor(Math.random() * 4)],
+                                        size: Math.random() * 8 + 4
+                                    });
+                                }
+
+                                // Daño a enemigos en área
+                                const impactRadius = 150;
+                                this.enemies.forEach(enemy => {
+                                    if (enemy.isDead) return;
+
+                                    const dx = enemy.x - (p.x + p.width / 2);
+                                    const dy = enemy.y - (p.y + p.height);
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                    if (distance < impactRadius) {
+                                        const damage = 50;
+                                        enemy.health -= damage;
+
+                                        // Knockback
+                                        const pushDir = dx > 0 ? 1 : -1;
+                                        enemy.velocityX = pushDir * 12;
+                                        enemy.velocityY = -8;
+
+                                        // Visual feedback
+                                        this.createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 15, '#ff0000');
+
+                                        if (enemy.health <= 0) {
+                                            enemy.isDead = true;
+                                            p.stats.enemiesKilled++;
+                                            showNotification('💥 Ground Pound Kill!', '+50 XP', 1500);
+                                        }
+                                    }
+                                });
+
+                                showNotification('💥 IMPACT!', 'Ground Pound Strike!', 1200);
+                                try {
+                                    if (typeof playSound === 'function') playSound('explosion');
+                                } catch (e) {}
+                            }
 
                             // PARTE 10: Parkour combo - bonus por encadenar plataformas
                             if (Game.parkourCombo.lastPlatform !== platform && Game.parkourCombo.timeWithoutGround > 0.5) {
@@ -3554,6 +3635,105 @@
                     p.coyoteTime = 0;
                 } else if (p.coyoteTime > 0) {
                     p.coyoteTime--;
+                }
+
+                // PARTE 13: Wall Slide Detection 🧗
+                p.isWallSliding = false;
+                p.wallSide = 0;
+
+                if (!p.isGrounded && p.velocityY > 0 && !p.isGroundPounding) {
+                    // Check for walls (plataformas a los lados)
+                    this.platforms.forEach(platform => {
+                        if (platform.broken) return;
+
+                        // Check if touching left side of platform (wall on right)
+                        if (p.x + p.width >= platform.x && p.x + p.width <= platform.x + 10 &&
+                            p.y + p.height > platform.y && p.y < platform.y + platform.height) {
+                            p.isWallSliding = true;
+                            p.wallSide = 1; // Wall on right
+                            p.jumpsRemaining = p.maxJumps; // Reset jumps on wall
+                        }
+                        // Check if touching right side of platform (wall on left)
+                        else if (p.x <= platform.x + platform.width && p.x >= platform.x + platform.width - 10 &&
+                            p.y + p.height > platform.y && p.y < platform.y + platform.height) {
+                            p.isWallSliding = true;
+                            p.wallSide = -1; // Wall on left
+                            p.jumpsRemaining = p.maxJumps; // Reset jumps on wall
+                        }
+                    });
+                }
+
+                // Wall slide particles
+                if (p.isWallSliding && Math.random() < 0.3) {
+                    Game.particles.push({
+                        x: p.wallSide === 1 ? p.x + p.width : p.x,
+                        y: p.y + Math.random() * p.height,
+                        vx: p.wallSide * (Math.random() * 2 + 1),
+                        vy: Math.random() * 2,
+                        life: 0.5,
+                        color: '#94a3b8',
+                        size: Math.random() * 3 + 1
+                    });
+                }
+
+                // PARTE 13: Flow State System 🌊✨
+                if (p.isGrounded) {
+                    p.flowTime = 0;
+                    p.flowLevel = 0;
+                    p.lastFlowLevel = 0;
+                } else {
+                    p.flowTime += dt;
+
+                    // Calculate flow level based on time in air
+                    if (p.flowTime > 30) {
+                        p.flowLevel = 3; // TRANSCENDENCE
+                    } else if (p.flowTime > 15) {
+                        p.flowLevel = 2; // EUPHORIA
+                    } else if (p.flowTime > 5) {
+                        p.flowLevel = 1; // FLOW
+                    } else {
+                        p.flowLevel = 0; // NORMAL
+                    }
+
+                    // Notify on flow level change!
+                    if (p.flowLevel > p.lastFlowLevel) {
+                        const flowMessages = [
+                            null, // 0 = normal
+                            { icon: '🌊', title: 'FLOW STATE!', desc: 'Speed +20%', color: '#3b82f6' },
+                            { icon: '✨', title: 'EUPHORIA!', desc: 'Speed +50%', color: '#8b5cf6' },
+                            { icon: '🌟', title: 'TRANSCENDENCE!', desc: 'Speed +80% + Invincible', color: '#ec4899' }
+                        ];
+
+                        const msg = flowMessages[p.flowLevel];
+                        if (msg) {
+                            showNotification(`${msg.icon} ${msg.title}`, msg.desc, 3000);
+
+                            // Explosion de partículas con el color del nivel
+                            for (let i = 0; i < 40; i++) {
+                                const angle = (Math.PI * 2 * i) / 40;
+                                const speed = 5 + Math.random() * 4;
+                                Game.particles.push({
+                                    x: p.x + p.width / 2,
+                                    y: p.y + p.height / 2,
+                                    vx: Math.cos(angle) * speed,
+                                    vy: Math.sin(angle) * speed,
+                                    life: 1.5,
+                                    color: msg.color,
+                                    size: Math.random() * 6 + 3
+                                });
+                            }
+                        }
+                        p.lastFlowLevel = p.flowLevel;
+                    }
+                }
+
+                // Apply flow state buffs
+                let flowSpeedMultiplier = 1;
+                if (p.flowLevel === 1) flowSpeedMultiplier = 1.2;
+                else if (p.flowLevel === 2) flowSpeedMultiplier = 1.5;
+                else if (p.flowLevel === 3) {
+                    flowSpeedMultiplier = 1.8;
+                    p.isInvulnerable = true; // Invencible en transcendence
                 }
 
                 // Prevent falling below screen
@@ -4556,11 +4736,46 @@
                 );
             },
 
-            // PARTE 12 + 13: Sistema de Triple Salto + Coyote Time! 🚀🕐
+            // PARTE 12 + 13: Sistema de Triple Salto + Coyote Time + Wall Jump! 🚀🕐🧗
             handleJump() {
                 const p = Game.player;
-                const jumpForce = -12; // BUGFIX: Reducido de -15 a -12 (menos exagerado)
+                const jumpForce = -12;
                 const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
+
+                // PARTE 13: WALL JUMP! 🧗
+                if (p.isWallSliding && p.wallJumpTimer <= 0) {
+                    // Wall jump: salta en dirección opuesta a la pared
+                    p.velocityY = jumpForce * 1.1; // 10% más fuerte
+                    p.velocityX = -p.wallSide * 8; // Impulso horizontal fuerte
+                    p.isWallSliding = false;
+                    p.wallJumpTimer = 10; // Cooldown para evitar spam
+                    p.jumpsRemaining = p.maxJumps - 1; // Le quedan 2 saltos
+                    playSound('jump');
+
+                    // Partículas de wall jump
+                    for (let i = 0; i < 15; i++) {
+                        Game.particles.push({
+                            x: p.wallSide === 1 ? p.x + p.width : p.x,
+                            y: p.y + p.height / 2,
+                            vx: p.wallSide * (Math.random() * 4 + 2),
+                            vy: (Math.random() - 0.5) * 6,
+                            life: 0.8,
+                            color: '#60a5fa',
+                            size: Math.random() * 4 + 2
+                        });
+                    }
+
+                    try {
+                        if (typeof showNotification === 'function') {
+                            showNotification('🧗 Wall Jump!', '', 800);
+                        }
+                    } catch (e) {}
+
+                    return; // Exit early, wall jump handled
+                }
+
+                // Decrease wall jump timer
+                if (p.wallJumpTimer > 0) p.wallJumpTimer--;
 
                 // PARTE 13: Coyote time - Si acabamos de dejar el suelo, aún podemos saltar
                 const canCoyoteJump = p.coyoteTime > 0 && p.jumpsRemaining === p.maxJumps;
@@ -4652,6 +4867,38 @@
                 try {
                     if (typeof showNotification === 'function') {
                         showNotification('💨 Air Dash!', '', 800);
+                    }
+                } catch (e) {}
+            },
+
+            // PARTE 13: Ground Pound - ¡Impacto devastador desde el aire! 💥
+            handleGroundPound() {
+                const p = Game.player;
+
+                // Solo en el aire
+                if (p.isGrounded || p.isGroundPounding) return;
+
+                p.isGroundPounding = true;
+                p.velocityY = 0; // Cancelar velocidad actual
+                playSound('jump');
+
+                // Efecto de carga
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    Game.particles.push({
+                        x: p.x + p.width / 2,
+                        y: p.y + p.height,
+                        vx: Math.cos(angle) * 3,
+                        vy: Math.sin(angle) * 3,
+                        life: 0.6,
+                        color: '#ef4444',
+                        size: Math.random() * 5 + 2
+                    });
+                }
+
+                try {
+                    if (typeof showNotification === 'function') {
+                        showNotification('💥 Ground Pound!', '', 800);
                     }
                 } catch (e) {}
             },
@@ -5704,6 +5951,63 @@
 
                 ctx.save();
 
+                // PARTE 13: Flow State Visual Effects! 🌊✨🌟
+                if (p.flowLevel > 0) {
+                    const flowColors = [
+                        null,
+                        '#3b82f6', // Flow = azul
+                        '#8b5cf6', // Euphoria = morado
+                        '#ec4899'  // Transcendence = rosa
+                    ];
+                    const flowColor = flowColors[p.flowLevel];
+                    const flowIntensity = [0, 15, 25, 40][p.flowLevel];
+
+                    // Aura/Glow around player
+                    ctx.shadowColor = flowColor;
+                    ctx.shadowBlur = flowIntensity;
+
+                    // Outer glow rings
+                    for (let i = 0; i < p.flowLevel; i++) {
+                        ctx.globalAlpha = 0.15 - i * 0.03;
+                        ctx.strokeStyle = flowColor;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        const pulseSize = Math.sin(this.time * 3 + i) * 8;
+                        ctx.arc(screenX + p.width/2, screenY + p.height/2, 35 + pulseSize + i * 10, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+
+                    // Trail particles for high flow levels
+                    if (p.flowLevel >= 2 && Math.random() < 0.3) {
+                        Game.particles.push({
+                            x: p.x + p.width / 2 + (Math.random() - 0.5) * p.width,
+                            y: p.y + p.height / 2 + (Math.random() - 0.5) * p.height,
+                            vx: (Math.random() - 0.5) * 2,
+                            vy: (Math.random() - 0.5) * 2,
+                            life: 0.8,
+                            color: flowColor,
+                            size: Math.random() * 4 + 2
+                        });
+                    }
+
+                    // Transcendence: extra sparkles!
+                    if (p.flowLevel === 3 && Math.random() < 0.5) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 30 + Math.random() * 20;
+                        Game.particles.push({
+                            x: p.x + p.width / 2 + Math.cos(angle) * distance,
+                            y: p.y + p.height / 2 + Math.sin(angle) * distance,
+                            vx: (Math.random() - 0.5) * 3,
+                            vy: (Math.random() - 0.5) * 3,
+                            life: 1.2,
+                            color: '#ffffff',
+                            size: Math.random() * 5 + 2
+                        });
+                    }
+
+                    ctx.globalAlpha = 1;
+                }
+
                 // Flip if facing left
                 if (!p.isFacingRight) {
                     ctx.translate(screenX + p.width, screenY);
@@ -6376,6 +6680,12 @@
                 if (e.key === 'Shift') {
                     e.preventDefault();
                     GameScene.handleAirDash();
+                }
+
+                // PARTE 13: Ground Pound! 💥
+                if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    GameScene.handleGroundPound();
                 }
 
                 // PARTE 5: Special Ability
