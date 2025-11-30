@@ -614,69 +614,43 @@
                 discovered: []
             },
 
-            // PART 11: Frases Motivacionales (para cuando derrotas bosses) 💙
+            // PART 11: Unique Boss Defeat Messages - NEVER REPEAT! 💙
+            bossDefeatMessages: {
+                'desesperanza': [
+                    "You proved that past shadows don't control your future",
+                    "Every step forward is a victory over yesterday's pain",
+                    "The past tried to hold you, but you chose to grow"
+                ],
+                'duda_suprema': [
+                    "Your courage silenced the voice of doubt",
+                    "Belief in yourself is stronger than any uncertainty",
+                    "You trusted your strength when it mattered most"
+                ],
+                'darkness_total': [
+                    "Light always finds a way through the deepest dark",
+                    "You faced the abyss and emerged victorious",
+                    "Hope is unbreakable when you protect it"
+                ]
+            },
+            bossMessagesUsed: {}, // Track used messages per boss
+
+            // General motivational quotes (for other achievements)
             motivationalQuotes: [
-                // Personas que han superado la depresión
-                {
-                    quote: "La depresión no define quién eres. Es algo que experimentas. Tú caminas bajo la lluvia, pero eso no te convierte en la lluvia.",
-                    author: "Matt Haig, autor de 'Razones para seguir viviendo'"
-                },
-                {
-                    quote: "El primer paso hacia upgrader es admitir que necesitas ayuda. Eso no te hace weak, te hace valiente.",
-                    author: "Demi Lovato, defensora de la salud mental"
-                },
-                {
-                    quote: "Está bien no estar bien. Lo importante es no quedarse solo en ese lugar oscuro.",
-                    author: "Kevin Love, atleta y activista"
-                },
-                {
-                    quote: "La recuperación es un proceso, no un evento. Sé paciente contigo mismo.",
-                    author: "Dr. Dan Siegel, neuropsiquiatra"
-                },
-                {
-                    quote: "Tus pensamientos no son hechos. La depresión miente. Tú vales más de lo que ella dice.",
-                    author: "Dra. Kristin Neff, experta en autocompasión"
-                },
-                {
-                    quote: "Cada día que eliges seguir adelante es una victoria, sin importar cuán pequeña parezca.",
-                    author: "JK Rowling, quien superó depresión severa"
-                },
-                {
-                    quote: "No tienes que ser positivo todo el tiempo. Está bien sentir todas tus emociones.",
-                    author: "Lady Gaga, activista de salud mental"
-                },
-                {
-                    quote: "La esperanza es la única cosa más fuerte que el miedo.",
-                    author: "Mensaje de sobrevivientes"
-                },
-                {
-                    quote: "Tu historia no termina aquí. El punto y coma representa una pausa, no un final.",
-                    author: "Proyecto Semicolon"
-                },
-                {
-                    quote: "Pedir ayuda no es rendirse, es negarse a rendirse.",
-                    author: "Charlie Mackesy, autor de 'El niño, el topo, el zorro y el caballo'"
-                },
-                {
-                    quote: "A veces el acto más valiente es simplemente levantarse de la cama. Y eso está bien.",
-                    author: "Comunidad de apoyo de salud mental"
-                },
-                {
-                    quote: "La curación no es lineal. Habrá días buenos y días malos, y ambos son parte del proceso.",
-                    author: "Dra. Brené Brown, investigadora"
-                },
-                {
-                    quote: "No estás roto. Estás sanando. Y eso requiere tiempo.",
-                    author: "Glennon Doyle, autora"
-                },
-                {
-                    quote: "Tu valor no disminuye por la incapacidad de alguien para ver tu valía.",
-                    author: "Mensaje de autoaceptación"
-                },
-                {
-                    quote: "Las tormentas no duran para siempre. Este es solo un capítulo, no toda tu historia.",
-                    author: "Terri Guillemets"
-                }
+                "Depression doesn't define you. It's something you experience, not who you are",
+                "The first step toward healing is admitting you need help - that's courage, not weakness",
+                "It's okay to not be okay. What matters is you don't stay alone in that dark place",
+                "Recovery is a process, not an event. Be patient with yourself",
+                "Your thoughts aren't facts. Depression lies. You're worth more than it says",
+                "Every day you choose to move forward is a victory, no matter how small it seems",
+                "You don't have to be positive all the time. It's okay to feel all your emotions",
+                "Hope is the only thing stronger than fear",
+                "Your story doesn't end here. A semicolon represents a pause, not an ending",
+                "Asking for help isn't giving up - it's refusing to give up",
+                "Sometimes the bravest act is simply getting out of bed. And that's enough",
+                "Healing isn't linear. There will be good days and bad days - both are part of the process",
+                "You're not broken. You're healing. And that takes time",
+                "Your worth doesn't decrease by someone's inability to see your value",
+                "Storms don't last forever. This is just one chapter, not your whole story"
             ],
 
             // Performance
@@ -694,12 +668,12 @@
                 savedAt: Date.now(),
                 playtime: Game.saveData.playtime
             };
-            localStorage.setItem('caminoDeHope_save', JSON.stringify(saveData));
-            showNotification('💾 Progress Guardado', 'Tu aventura ha sido guardada exitosamente');
+            localStorage.setItem('pathwaysOfLight_save', JSON.stringify(saveData));
+            showNotification('💾 Progress Saved', 'Your adventure has been saved successfully');
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('caminoDeHope_save');
+            const saved = localStorage.getItem('pathwaysOfLight_save');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
@@ -714,7 +688,7 @@
         }
 
         function deleteSave() {
-            localStorage.removeItem('caminoDeHope_save');
+            localStorage.removeItem('pathwaysOfLight_save');
         }
 
         // ============================================
@@ -1706,8 +1680,8 @@
             bossTypes: [
                 {
                     id: 'desesperanza',
-                    name: 'Desesperanza',
-                    title: 'La Sombra del Pasado',
+                    name: 'Hopelessness',
+                    title: 'Shadow of the Past',
                     position: 2000,
                     health: 200,
                     damage: 15,
@@ -1719,7 +1693,7 @@
                     phases: [
                         {
                             healthThreshold: 100,
-                            message: '"No puedes escapar de tus errores..."',
+                            message: '"You cannot escape your mistakes..."',
                             color: '#312e81',
                             speed: 1.0,
                             spawnMinions: true
@@ -1737,15 +1711,15 @@
                         { type: 'shockwave', cooldown: 180, damage: 15, range: 200 }
                     ],
                     dialogue: {
-                        intro: '"Soy the weight de todo lo que dejaste atrás..."',
-                        halfHealth: '"¿Crees que puedes vencerme? Soy eterno..."',
-                        defeat: '"La light... es más fuerte... de lo que pensaba..."'
+                        intro: '"I am the weight de todo lo que dejaste atrás..."',
+                        halfHealth: '"Do you think you can defeat me? I am eternal..."',
+                        defeat: '"The light... is stronger... than I thought..."'
                     }
                 },
                 {
                     id: 'duda_suprema',
-                    name: 'Duda Suprema',
-                    title: 'El Eco de la Incertidumbre',
+                    name: 'Supreme Doubt',
+                    title: 'Echo of Uncertainty',
                     position: 3500,
                     health: 250,
                     damage: 18,
@@ -1774,9 +1748,9 @@
                         { type: 'confusion_blast', cooldown: 200, damage: 20 }
                     ],
                     dialogue: {
-                        intro: '"¿Seguro que este es el camino correcto?"',
-                        halfHealth: '"Cada decisión que tomas... está equivocada..."',
-                        defeat: '"Quizás... quizás sí sabías lo que hacías..."'
+                        intro: '"Are you sure this is the right path?"',
+                        halfHealth: '"Every decision you make... is wrong..."',
+                        defeat: '"Perhaps... perhaps you did know what you were doing..."'
                     }
                 },
                 {
@@ -1800,14 +1774,14 @@
                         },
                         {
                             healthThreshold: 150,
-                            message: '"¡NO HAY ESPERANZA!"',
+                            message: '"THERE IS NO HOPE!"',
                             color: '#0a0a0a',
                             screenDarkness: 0.5,
                             speed: 1.2
                         },
                         {
                             healthThreshold: 50,
-                            message: '"¡FORMA FINAL: DESESPERACIÓN ABSOLUTA!"',
+                            message: '"FINAL FORM: ABSOLUTE DESPAIR!"',
                             color: '#000000',
                             screenDarkness: 0.7,
                             speed: 1.5,
@@ -1821,10 +1795,10 @@
                         { type: 'despair_rain', cooldown: 250, damage: 20, aoe: true }
                     ],
                     dialogue: {
-                        intro: '"Yo soy el fin de toda esperanza. Ríndete ahora."',
-                        phase2: '"¡LA OSCURIDAD ES INFINITA!"',
-                        phase3: '"¡ESTE ES MI PODER VERDADERO!"',
-                        defeat: '"No... la light... siempre prevalece... Recuérdalo..."'
+                        intro: '"I am the end of all hope. Surrender now."',
+                        phase2: '"THE DARKNESS IS INFINITE!"',
+                        phase3: '"THIS IS MY TRUE POWER!"',
+                        defeat: '"No... the light... always prevails... Remember that..."'
                     }
                 }
             ],
@@ -1837,21 +1811,21 @@
                 // Permanent upgrades
                 { id: 'health_up_1', name: '+20 Max Health', type: 'upgrade', stat: 'maxHealth', value: 20, cost: 50, icon: '❤️', purchased: false },
                 { id: 'health_up_2', name: '+50 Max Health', type: 'upgrade', stat: 'maxHealth', value: 50, cost: 150, icon: '❤️', purchased: false, requires: 'health_up_1' },
-                { id: 'energy_up_1', name: '+20 Energy Máxima', type: 'upgrade', stat: 'maxEnergy', value: 20, cost: 50, icon: '⚡', purchased: false },
-                { id: 'energy_up_2', name: '+50 Energy Máxima', type: 'upgrade', stat: 'maxEnergy', value: 50, cost: 150, icon: '⚡', purchased: false, requires: 'energy_up_1' },
+                { id: 'energy_up_1', name: '+20 Max Energy', type: 'upgrade', stat: 'maxEnergy', value: 20, cost: 50, icon: '⚡', purchased: false },
+                { id: 'energy_up_2', name: '+50 Max Energy', type: 'upgrade', stat: 'maxEnergy', value: 50, cost: 150, icon: '⚡', purchased: false, requires: 'energy_up_1' },
                 { id: 'strength_up_1', name: '+5 Strength', type: 'upgrade', stat: 'strength', value: 5, cost: 75, icon: '💪', purchased: false },
                 { id: 'strength_up_2', name: '+10 Strength', type: 'upgrade', stat: 'strength', value: 10, cost: 200, icon: '💪', purchased: false, requires: 'strength_up_1' },
                 { id: 'speed_up_1', name: '+10 Speed', type: 'upgrade', stat: 'speed', value: 10, cost: 60, icon: '🏃', purchased: false },
                 { id: 'defense_up_1', name: '+5 Defense', type: 'upgrade', stat: 'defense', value: 5, cost: 80, icon: '🛡️', purchased: false },
 
                 // Consumables
-                { id: 'potion_health', name: 'Poción de Vida', type: 'consumable', effect: 'heal', value: 50, cost: 30, icon: '🧪', stock: 99 },
-                { id: 'potion_energy', name: 'Poción de Energy', type: 'consumable', effect: 'energy', value: 50, cost: 30, icon: '⭐', stock: 99 },
-                { id: 'bomb', name: 'Bomba de Light', type: 'consumable', effect: 'damage_all', value: 100, cost: 50, icon: '💣', stock: 99 },
+                { id: 'potion_health', name: 'Health Potion', type: 'consumable', effect: 'heal', value: 50, cost: 30, icon: '🧪', stock: 99 },
+                { id: 'potion_energy', name: 'Energy Potion', type: 'consumable', effect: 'energy', value: 50, cost: 30, icon: '⭐', stock: 99 },
+                { id: 'bomb', name: 'Light Bomb', type: 'consumable', effect: 'damage_all', value: 100, cost: 50, icon: '💣', stock: 99 },
 
                 // Special abilities
-                { id: 'triple_jump', name: 'Salto Triple', type: 'ability', cost: 250, icon: '🦘', purchased: false, description: 'Desbloquea tercer salto' },
-                { id: 'dash_attack', name: 'Dash Upgradedo', type: 'ability', cost: 300, icon: '⚡', purchased: false, description: 'Dash más largo y rápido' }
+                { id: 'triple_jump', name: 'Triple Jump', type: 'ability', cost: 250, icon: '🦘', purchased: false, description: 'Unlocks third jump' },
+                { id: 'dash_attack', name: 'Enhanced Dash', type: 'ability', cost: 300, icon: '⚡', purchased: false, description: 'Longer and faster dash' }
             ],
 
             // PART 6: Missions system
@@ -4342,12 +4316,28 @@
                                             if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                         }
 
-                                        // PART 11: Show motivational quote on boss defeat 💙
-                                        const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
+                                        // PART 11: Show UNIQUE motivational message on boss defeat 💙
+                                        const bossId = boss.type.id;
+                                        if (!Game.bossMessagesUsed[bossId]) Game.bossMessagesUsed[bossId] = [];
+
+                                        const availableMessages = Game.bossDefeatMessages[bossId].filter(
+                                            msg => !Game.bossMessagesUsed[bossId].includes(msg)
+                                        );
+
+                                        let message;
+                                        if (availableMessages.length > 0) {
+                                            message = availableMessages[Math.floor(Math.random() * availableMessages.length)];
+                                            Game.bossMessagesUsed[bossId].push(message);
+                                        } else {
+                                            // All messages used, pick a random one without tracking
+                                            const messages = Game.bossDefeatMessages[bossId];
+                                            message = messages[Math.floor(Math.random() * messages.length)];
+                                        }
+
                                         showNotification(
-                                            `💙 ¡${boss.type.name} Defeatdo!`,
-                                            `"${randomQuote.quote}"`,
-                                            8000
+                                            `💙 ${boss.type.name} Defeated!`,
+                                            message,
+                                            6000
                                         );
                                     }
 
@@ -4444,8 +4434,18 @@
                                         if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                     }
 
-                                    // PART 11: Show motivational quote on boss defeat 💙
-                                    const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
+                                    // PART 11: Show UNIQUE motivational message on boss defeat 💙
+                                    const bossId = boss.type.id;
+                                        if (!Game.bossMessagesUsed[bossId]) Game.bossMessagesUsed[bossId] = [];
+                                        const availableMessages = Game.bossDefeatMessages[bossId].filter(msg => !Game.bossMessagesUsed[bossId].includes(msg));
+                                        let message;
+                                        if (availableMessages.length > 0) {
+                                            message = availableMessages[Math.floor(Math.random() * availableMessages.length)];
+                                            Game.bossMessagesUsed[bossId].push(message);
+                                        } else {
+                                            const messages = Game.bossDefeatMessages[bossId];
+                                            message = messages[Math.floor(Math.random() * messages.length)];
+                                        };
                                     showNotification(
                                         `💙 ¡${boss.type.name} Defeatdo!`,
                                         `"${randomQuote.quote}"`,
@@ -5154,7 +5154,17 @@
                             }
 
                             // PART 11: Show motivational quote on boss defeat 💙
-                            const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
+                            const bossId = boss.type.id;
+                                        if (!Game.bossMessagesUsed[bossId]) Game.bossMessagesUsed[bossId] = [];
+                                        const availableMessages = Game.bossDefeatMessages[bossId].filter(msg => !Game.bossMessagesUsed[bossId].includes(msg));
+                                        let message;
+                                        if (availableMessages.length > 0) {
+                                            message = availableMessages[Math.floor(Math.random() * availableMessages.length)];
+                                            Game.bossMessagesUsed[bossId].push(message);
+                                        } else {
+                                            const messages = Game.bossDefeatMessages[bossId];
+                                            message = messages[Math.floor(Math.random() * messages.length)];
+                                        };
                             showNotification(
                                 `💙 ¡${boss.type.name} Defeatdo!`,
                                 `"${randomQuote.quote}"`,
