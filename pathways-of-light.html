@@ -320,7 +320,7 @@
 
     <script>
         // ============================================
-        // GAME ENGINE - PARTE 1: Estructura Base
+        // GAME ENGINE - PART 1: Estructura Base
         // ============================================
 
         const canvas = document.getElementById('gameCanvas');
@@ -388,23 +388,23 @@
                 isAttacking: false,
                 isDashing: false,
                 isInvulnerable: false,
-                jumpsRemaining: 3, // PARTE 12: Triple salto! 🚀
+                jumpsRemaining: 3, // PART 12: Triple salto! 🚀
                 maxJumps: 3,
-                coyoteTime: 0, // PARTE 13: Coyote time (como Celeste) 🕐
+                coyoteTime: 0, // PART 13: Coyote time (como Celeste) 🕐
 
-                // PARTE 13: Wall mechanics 🧗
+                // PART 13: Wall mechanics 🧗
                 isWallSliding: false,
                 wallSide: 0, // -1 = left, 1 = right, 0 = none
                 wallJumpTimer: 0,
 
-                // PARTE 13: Ground Pound 💥
+                // PART 13: Ground Pound 💥
                 isGroundPounding: false,
                 groundPoundVelocity: 20,
 
-                // PARTE 13: Flow State System 🌊
+                // PART 13: Flow State System 🌊
                 flowTime: 0, // Time sin tocar suelo
                 flowLevel: 0, // 0=normal, 1=flow, 2=euphoria, 3=transcendence
-                lastFlowLevel: 0, // Para detectar cambios de nivel
+                lastFlowLevel: 0, // To detect level changes
 
                 attackCooldown: 0,
                 dashCooldown: 0,
@@ -414,7 +414,7 @@
                 // Special ability system
                 specialAbilityCooldown: 0,
                 isUsingSpecial: false,
-                // PARTE 7: Spell system
+                // PART 7: Spell system
                 spell1Cooldown: 0, // Light Bolt (left click)
                 spell2Cooldown: 0, // Hope Nova (right click)
                 mana: 100,
@@ -466,11 +466,11 @@
             // Power-ups
             powerups: [],
 
-            // PARTE 7: Magic Spell System
+            // PART 7: Magic Spell System
             spells: [], // Active projectiles/spells
             spellParticles: [], // Spell visual effects
 
-            // PARTE 8: Companion System
+            // PART 8: Companion System
             companion: {
                 x: 0,
                 y: 0,
@@ -490,7 +490,7 @@
                 active: true
             },
 
-            // PARTE 8: Emotion Orbs System
+            // PART 8: Emotion Orbs System
             emotionOrbs: [],
             orbTypes: [
                 { id: 'joy', name: 'Alegría', color: '#fbbf24', icon: '😊', effect: 'speed', multiplier: 1.5, duration: 300 },
@@ -499,15 +499,15 @@
                 { id: 'hope', name: 'Hope', color: '#10b981', icon: '💚', effect: 'heal_shield', value: 30, duration: 300 }
             ],
 
-            // PARTE 8: Memory Fragments
+            // PART 8: Memory Fragments
             memoryFragments: [],
             collectedMemories: [],
 
-            // PARTE 8: World Transformation
+            // PART 8: World Transformation
             worldProgress: 0, // 0 to 1
             atmosphericParticles: [],
 
-            // PARTE 8: Breathing Exercise
+            // PART 8: Breathing Exercise
             breathingExercise: {
                 active: false,
                 phase: 'inhale', // inhale, hold, exhale
@@ -524,7 +524,7 @@
             audioContext: null,
             sounds: {},
 
-            // PARTE 9: Generative Music System
+            // PART 9: Generative Music System
             musicSystem: {
                 audioContext: null,
                 masterGain: null,
@@ -566,7 +566,7 @@
                 emotionalState: 'neutral' // neutral, calm, excited, epic
             },
 
-            // PARTE 10: Wind System
+            // PART 10: Wind System
             wind: {
                 active: false,
                 strength: 0,
@@ -575,7 +575,7 @@
                 nextWindTime: 10 // BUGFIX: Inicializar con valor para evitar viento inmediato
             },
 
-            // PARTE 10: Parkour Combo System
+            // PART 10: Parkour Combo System
             parkourCombo: {
                 count: 0,
                 lastPlatform: null,
@@ -584,7 +584,7 @@
                 timeWithoutGround: 0
             },
 
-            // PARTE 11: Weather System (Sistema de Clima Dinámico)
+            // PART 11: Weather System (Sistema de Clima Dinámico)
             weather: {
                 current: 'clear', // clear, rain, snow, storm, fog, aurora
                 intensity: 0,
@@ -599,7 +599,7 @@
                 }
             },
 
-            // PARTE 11: Player Transformations (Transformaciones del Jugador)
+            // PART 11: Player Transformations (Transformaciones del Jugador)
             transformations: {
                 current: 'normal', // normal, shadow, light, giant, speed
                 timer: 0,
@@ -607,14 +607,14 @@
                 available: ['normal'] // Unlock más con progreso
             },
 
-            // PARTE 11: Secret Rooms & Easter Eggs
+            // PART 11: Secret Rooms & Easter Eggs
             secrets: {
                 rooms: [],
                 easterEggs: [],
                 discovered: []
             },
 
-            // PARTE 11: Frases Motivacionales (para cuando derrotas bosses) 💙
+            // PART 11: Frases Motivacionales (para cuando derrotas bosses) 💙
             motivationalQuotes: [
                 // Personas que han superado la depresión
                 {
@@ -1169,7 +1169,7 @@
         }
 
         // ============================================
-        // CHARACTER SELECT SCENE - PARTE 2
+        // CHARACTER SELECT SCENE - PART 2
         // ============================================
 
         const CharacterSelectScene = {
@@ -1533,7 +1533,7 @@
         }
 
         // ============================================
-        // GAME SCENE - PARTE 3: Motor de Juego
+        // GAME SCENE - PART 3: Motor de Juego
         // ============================================
 
         const GameScene = {
@@ -1546,7 +1546,7 @@
             // Collectibles (coins, power-ups)
             coins: [],
 
-            // Enemies (negative thoughts) - PARTE 4
+            // Enemies (negative thoughts) - PART 4
             enemies: [],
             enemyTypes: [
                 {
@@ -1587,7 +1587,7 @@
                 }
             ],
 
-            // PARTE 5: Power-ups definitions
+            // PART 5: Power-ups definitions
             powerupTypes: [
                 {
                     name: 'Shield',
@@ -1702,7 +1702,7 @@
                 { id: 'master', name: 'Maestro', description: 'Usa habilidad especial 20 veces', icon: '✨', unlocked: false, requirement: 20 }
             ],
 
-            // PARTE 6: Boss Fights definitions
+            // PART 6: Boss Fights definitions
             bossTypes: [
                 {
                     id: 'desesperanza',
@@ -1832,7 +1832,7 @@
             // Active bosses in world
             bosses: [],
 
-            // PARTE 6: Shop system
+            // PART 6: Shop system
             shopItems: [
                 // Permanent upgrades
                 { id: 'health_up_1', name: '+20 Max Health', type: 'upgrade', stat: 'maxHealth', value: 20, cost: 50, icon: '❤️', purchased: false },
@@ -1854,7 +1854,7 @@
                 { id: 'dash_attack', name: 'Dash Upgradedo', type: 'ability', cost: 300, icon: '⚡', purchased: false, description: 'Dash más largo y rápido' }
             ],
 
-            // PARTE 6: Missions system
+            // PART 6: Missions system
             missions: [
                 // Main missions (story)
                 { id: 'main_1', name: 'Primer Despertar', type: 'main', description: 'Defeat a Desesperanza', completed: false, reward: { coins: 100, xp: 100 }, icon: '🎯' },
@@ -1907,14 +1907,14 @@
                 Game.player.velocityY = 0;
                 Game.player.health = Game.saveData.stats.maxHealth;
                 Game.player.energy = Game.saveData.stats.maxEnergy;
-                Game.player.mana = Game.player.maxMana; // PARTE 8: Initialize mana
+                Game.player.mana = Game.player.maxMana; // PART 8: Initialize mana
                 Game.player.xp = 0;
                 Game.player.level = 1;
                 Game.player.coins = 0;
                 Game.player.isGrounded = false;
                 Game.player.color = charColor;
 
-                // PARTE 11: Unlock all transformations
+                // PART 11: Unlock all transformations
                 Game.transformations.available = ['normal', 'shadow', 'light', 'giant', 'speed'];
                 Game.transformations.current = 'normal';
                 Game.transformations.timer = 0;
@@ -1929,34 +1929,34 @@
                 // Generate coins
                 this.generateCoins();
 
-                // Generate enemies - PARTE 4
+                // Generate enemies - PART 4
                 this.generateEnemies();
 
-                // PARTE 5: Generate power-ups
+                // PART 5: Generate power-ups
                 this.generatePowerups();
 
-                // PARTE 5: Generate NPCs
+                // PART 5: Generate NPCs
                 this.generateNPCs();
 
-                // PARTE 6: Generate bosses
+                // PART 6: Generate bosses
                 this.generateBosses();
 
-                // PARTE 8: Initialize companion
+                // PART 8: Initialize companion
                 this.initCompanion();
 
-                // PARTE 8: Generate emotion orbs
+                // PART 8: Generate emotion orbs
                 this.generateEmotionOrbs();
 
-                // PARTE 8: Generate memory fragments
+                // PART 8: Generate memory fragments
                 this.generateMemoryFragments();
 
-                // PARTE 8: Initialize atmospheric system
+                // PART 8: Initialize atmospheric system
                 this.initAtmosphericSystem();
 
-                // PARTE 8: Initialize world progress
+                // PART 8: Initialize world progress
                 Game.worldProgress = 0;
 
-                // PARTE 9: Initialize generative music system
+                // PART 9: Initialize generative music system
                 this.initMusicSystem();
 
                 // Create decorative elements
@@ -2067,13 +2067,13 @@
                     color: '#4a3f6b'
                 });
 
-                // Generate platforms progressively (PARTE 10: Más plataformas y más separadas)
+                // Generate platforms progressively (PART 10: Más plataformas y más separadas)
                 let lastX = 300;
                 let lastY = canvas.height - 40;
                 let verticalSection = false;
 
                 for (let i = 0; i < 400; i++) { // 400 plataformas para mundo más largo
-                    // PARTE 12: Primeras plataformas más fáciles para no perder al inicio
+                    // PART 12: Primeras plataformas más fáciles para no perder al inicio
                     let gapX, gapY;
                     if (i < 5) {
                         // Primeras 5 plataformas: gaps moderados y fáciles
@@ -2104,7 +2104,7 @@
                     lastX += gapX;
                     lastY = Math.max(100, Math.min(canvas.height - 100, lastY + gapY)); // Ahora pueden llegar hasta y=100
 
-                    // PARTE 10: Nuevos tipos de plataformas
+                    // PART 10: Nuevos tipos de plataformas
                     const platformTypes = [
                         'normal', 'normal', 'normal', // Más probabilidad de normales
                         'moving',
@@ -2223,7 +2223,7 @@
                 }
             },
 
-            // PARTE 5: Generate power-ups in world
+            // PART 5: Generate power-ups in world
             generatePowerups() {
                 this.powerups = [];
 
@@ -2246,7 +2246,7 @@
                 }
             },
 
-            // PARTE 5: Generate NPCs (wise helpers)
+            // PART 5: Generate NPCs (wise helpers)
             generateNPCs() {
                 this.npcs = [];
 
@@ -2266,12 +2266,12 @@
                 });
             },
 
-            // PARTE 6: Generate bosses (PARTE 10: Bosses en plataformas elevadas)
+            // PART 6: Generate bosses (PART 10: Bosses en plataformas elevadas)
             generateBosses() {
                 this.bosses = [];
 
                 this.bossTypes.forEach(bossType => {
-                    // PARTE 10: Encontrar plataforma cercana a la posición del boss
+                    // PART 10: Encontrar plataforma cercana a la posición del boss
                     const nearbyPlatforms = this.platforms.filter(p =>
                         Math.abs(p.x - bossType.position) < 500 &&
                         p.y < canvas.height - 200 // Solo plataformas elevadas
@@ -2284,7 +2284,7 @@
 
                     this.bosses.push({
                         x: bossType.position,
-                        y: targetY, // PARTE 10: Ahora en plataformas elevadas
+                        y: targetY, // PART 10: Ahora en plataformas elevadas
                         width: bossType.size,
                         height: bossType.size,
                         type: bossType,
@@ -2302,12 +2302,12 @@
                         minions: [],
                         duplicates: [],
                         invulnerableTimer: 0,
-                        isGrounded: false // PARTE 10: Para aplicar gravedad a bosses
+                        isGrounded: false // PART 10: Para aplicar gravedad a bosses
                     });
                 });
             },
 
-            // PARTE 8: Initialize companion
+            // PART 8: Initialize companion
             initCompanion() {
                 Game.companion.x = Game.player.x - 50;
                 Game.companion.y = Game.player.y - 50;
@@ -2317,7 +2317,7 @@
                 Game.companion.particles = [];
             },
 
-            // PARTE 8: Generate emotion orbs
+            // PART 8: Generate emotion orbs
             generateEmotionOrbs() {
                 Game.emotionOrbs = [];
 
@@ -2342,7 +2342,7 @@
                 }
             },
 
-            // PARTE 8: Generate memory fragments
+            // PART 8: Generate memory fragments
             generateMemoryFragments() {
                 Game.memoryFragments = [];
 
@@ -2368,7 +2368,7 @@
                 });
             },
 
-            // PARTE 8: Initialize atmospheric system
+            // PART 8: Initialize atmospheric system
             initAtmosphericSystem() {
                 Game.atmosphericParticles = [];
 
@@ -2388,7 +2388,7 @@
                 }
             },
 
-            // PARTE 9: Initialize Music System
+            // PART 9: Initialize Music System
             initMusicSystem() {
                 try {
                     const MS = Game.musicSystem;
@@ -2426,7 +2426,7 @@
                 }
             },
 
-            // PARTE 9: Play note on jump
+            // PART 9: Play note on jump
             playJumpNote(velocity) {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2458,7 +2458,7 @@
                 if (MS.recentNotes.length > 4) MS.recentNotes.shift();
             },
 
-            // PARTE 9: Play kick drum
+            // PART 9: Play kick drum
             playKick() {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2479,7 +2479,7 @@
                 osc.stop(MS.audioContext.currentTime + 0.4);
             },
 
-            // PARTE 9: Play snare
+            // PART 9: Play snare
             playSnare() {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2510,7 +2510,7 @@
                 noise.stop(MS.audioContext.currentTime + 0.15);
             },
 
-            // PARTE 9: Play hihat
+            // PART 9: Play hihat
             playHihat() {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2541,7 +2541,7 @@
                 noise.stop(MS.audioContext.currentTime + 0.05);
             },
 
-            // PARTE 9: Play bass note
+            // PART 9: Play bass note
             playBass(freq) {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2564,7 +2564,7 @@
                 osc.stop(MS.audioContext.currentTime + 0.4);
             },
 
-            // PARTE 9: Epic drop effect
+            // PART 9: Epic drop effect
             playEpicDrop() {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2592,7 +2592,7 @@
                 this.fadeInLayer('melody', 0.3, 0.5);
             },
 
-            // PARTE 9: Fade in a musical layer
+            // PART 9: Fade in a musical layer
             fadeInLayer(layer, targetVolume, duration) {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2609,7 +2609,7 @@
                 gain.gain.linearRampToValueAtTime(targetVolume, MS.audioContext.currentTime + duration);
             },
 
-            // PARTE 9: Fade out a musical layer
+            // PART 9: Fade out a musical layer
             fadeOutLayer(layer, duration) {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2628,7 +2628,7 @@
                 }, duration * 1000);
             },
 
-            // PARTE 9: Update music based on gameplay
+            // PART 9: Update music based on gameplay
             updateMusicSystem(dt) {
                 const MS = Game.musicSystem;
                 if (!MS.audioContext) return;
@@ -2685,7 +2685,7 @@
                 }
             },
 
-            // PARTE 10: Update wind system
+            // PART 10: Update wind system
             updateWind(dt) {
                 if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido o muy grande
 
@@ -2716,7 +2716,7 @@
                 }
             },
 
-            // PARTE 10: Update parkour combo system
+            // PART 10: Update parkour combo system
             updateParkourCombo(dt) {
                 if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido
 
@@ -2741,7 +2741,7 @@
                 else combo.bonusMultiplier = 1;
             },
 
-            // PARTE 11: Update weather system 🌧️❄️⛈️
+            // PART 11: Update weather system 🌧️❄️⛈️
             updateWeather(dt) {
                 if (!dt || dt > 1) return;
 
@@ -2838,7 +2838,7 @@
                 // BUGFIX: Ya se limitan arriba, este era redundante
             },
 
-            // PARTE 11: Transform player 🔮
+            // PART 11: Transform player 🔮
             transformPlayer(transformType) {
                 const trans = Game.transformations;
 
@@ -2896,7 +2896,7 @@
                 } catch (e) {}
             },
 
-            // PARTE 11: Update transformations
+            // PART 11: Update transformations
             updateTransformations(dt) {
                 if (!dt || dt > 1) return;
 
@@ -2946,7 +2946,7 @@
                 }
             },
 
-            // BUGFIX PARTE 11: Update particle system (fix frame-rate dependent bug) 💫
+            // BUGFIX PART 11: Update particle system (fix frame-rate dependent bug) 💫
             updateParticles(dt) {
                 if (!dt || dt > 1) return; // Guard against invalid dt
 
@@ -2973,7 +2973,7 @@
                 }
             },
 
-            // PARTE 5: Check achievements
+            // PART 5: Check achievements
             checkAchievements() {
                 const p = Game.player;
 
@@ -3120,7 +3120,7 @@
                 if (coinsText) coinsText.textContent = Game.player.coins;
                 if (progressText) progressText.textContent = progress + '%';
 
-                // PARTE 5: Update special ability cooldown
+                // PART 5: Update special ability cooldown
                 const abilityCooldownText = document.getElementById('ability-cooldown');
                 if (abilityCooldownText) {
                     if (Game.player.specialAbilityCooldown > 0) {
@@ -3133,14 +3133,14 @@
                     }
                 }
 
-                // PARTE 7: Update mana bar
+                // PART 7: Update mana bar
                 const manaPercent = (Game.player.mana / Game.player.maxMana) * 100;
                 const manaBar = document.getElementById('mana-bar');
                 const manaText = document.getElementById('mana-text');
                 if (manaBar) manaBar.style.width = manaPercent + '%';
                 if (manaText) manaText.textContent = Math.floor(Game.player.mana);
 
-                // PARTE 7: Update spell cooldowns
+                // PART 7: Update spell cooldowns
                 const spell1CooldownText = document.getElementById('spell1-cooldown');
                 if (spell1CooldownText) {
                     if (Game.player.spell1Cooldown > 0) {
@@ -3165,7 +3165,7 @@
                     }
                 }
 
-                // PARTE 5: Update combo display
+                // PART 5: Update combo display
                 const comboDisplay = document.getElementById('combo-display');
                 const comboText = document.getElementById('combo-text');
                 if (comboDisplay && comboText) {
@@ -3177,7 +3177,7 @@
                     }
                 }
 
-                // PARTE 5: Update active buffs display
+                // PART 5: Update active buffs display
                 const buffsDisplay = document.getElementById('buffs-display');
                 if (buffsDisplay) {
                     buffsDisplay.innerHTML = Game.player.activeBuffs.map(buff => {
@@ -3263,22 +3263,22 @@
                 // Update enemies
                 this.updateEnemies(dt);
 
-                // PARTE 5: Update power-ups
+                // PART 5: Update power-ups
                 this.updatePowerups(dt);
 
-                // PARTE 5: Update NPCs
+                // PART 5: Update NPCs
                 this.updateNPCs(dt);
 
-                // PARTE 6: Update bosses
+                // PART 6: Update bosses
                 this.updateBosses(dt);
 
-                // PARTE 6: Update missions
+                // PART 6: Update missions
                 this.updateMissions();
 
-                // PARTE 5: Update active buffs
+                // PART 5: Update active buffs
                 this.updateBuffs(dt);
 
-                // PARTE 5: Update combo timer
+                // PART 5: Update combo timer
                 if (Game.player.comboTimer > 0) {
                     Game.player.comboTimer -= dt;
                     if (Game.player.comboTimer <= 0) {
@@ -3286,12 +3286,12 @@
                     }
                 }
 
-                // PARTE 5: Update ability cooldown
+                // PART 5: Update ability cooldown
                 if (Game.player.specialAbilityCooldown > 0) {
                     Game.player.specialAbilityCooldown--;
                 }
 
-                // PARTE 7: Update spell cooldowns
+                // PART 7: Update spell cooldowns
                 if (Game.player.spell1Cooldown > 0) {
                     Game.player.spell1Cooldown--;
                 }
@@ -3299,56 +3299,56 @@
                     Game.player.spell2Cooldown--;
                 }
 
-                // PARTE 7: Mana regeneration (1 mana per 0.5 seconds)
+                // PART 7: Mana regeneration (1 mana per 0.5 seconds)
                 if (Math.floor(this.time * 60) % 30 === 0) {
                     Game.player.mana = Math.min(Game.player.mana + 1, Game.player.maxMana);
                 }
 
-                // PARTE 7: Update spells
+                // PART 7: Update spells
                 this.updateSpells(dt);
 
-                // PARTE 7: Update spell particles
+                // PART 7: Update spell particles
                 this.updateSpellParticles(dt);
 
-                // PARTE 8: Update companion
+                // PART 8: Update companion
                 this.updateCompanion(dt);
 
-                // PARTE 8: Update emotion orbs
+                // PART 8: Update emotion orbs
                 this.updateEmotionOrbs(dt);
 
-                // PARTE 8: Update memory fragments
+                // PART 8: Update memory fragments
                 this.updateMemoryFragments(dt);
 
-                // PARTE 8: Update atmospheric particles
+                // PART 8: Update atmospheric particles
                 this.updateAtmosphericParticles(dt);
 
-                // PARTE 8: Update world transformation
+                // PART 8: Update world transformation
                 this.updateWorldTransformation();
 
-                // PARTE 8: Update breathing exercise
+                // PART 8: Update breathing exercise
                 if (Game.breathingExercise.active) {
                     this.updateBreathingExercise(dt);
                 }
 
-                // PARTE 9: Update generative music system
+                // PART 9: Update generative music system
                 this.updateMusicSystem(dt);
 
-                // PARTE 10: Update wind system
+                // PART 10: Update wind system
                 this.updateWind(dt);
 
-                // PARTE 10: Update parkour combo system
+                // PART 10: Update parkour combo system
                 this.updateParkourCombo(dt);
 
-                // PARTE 11: Update weather system
+                // PART 11: Update weather system
                 this.updateWeather(dt);
 
-                // PARTE 11: Update transformations
+                // PART 11: Update transformations
                 this.updateTransformations(dt);
 
-                // BUGFIX PARTE 11: Update main particle system 💫
+                // BUGFIX PART 11: Update main particle system 💫
                 this.updateParticles(dt);
 
-                // PARTE 5: Update trail effect
+                // PART 5: Update trail effect
                 if (Math.abs(Game.player.velocityX) > 1 || Math.abs(Game.player.velocityY) > 1) {
                     Game.player.trail.push({
                         x: Game.player.x + Game.player.width / 2,
@@ -3361,7 +3361,7 @@
                     }
                 }
 
-                // PARTE 5: Check achievements
+                // PART 5: Check achievements
                 this.checkAchievements();
 
                 // Update clouds
@@ -3399,13 +3399,13 @@
                 let gravity = 0.8;
                 let moveSpeed = 5 * (Game.saveData.stats.speed / 100);
 
-                // PARTE 5: Apply speed buff
+                // PART 5: Apply speed buff
                 const speedBuff = p.activeBuffs.find(b => b.type === 'speed');
                 if (speedBuff) {
                     moveSpeed *= speedBuff.multiplier;
                 }
 
-                // PARTE 11: Apply transformation effects 🔮
+                // PART 11: Apply transformation effects 🔮
                 const trans = Game.transformations;
                 if (trans.current === 'speed') {
                     moveSpeed *= 3; // Triple speed
@@ -3417,7 +3417,7 @@
                     // Shadow form doesn't affect speed
                 }
 
-                // PARTE 11: Weather effects on movement
+                // PART 11: Weather effects on movement
                 if (Game.weather.current === 'snow') {
                     moveSpeed *= 0.7; // Slower in snow
                 } else if (Game.weather.current === 'storm') {
@@ -3448,7 +3448,7 @@
                 }
 
                 // Apply gravity
-                // PARTE 13: Wall slide reduce gravedad 🧗
+                // PART 13: Wall slide reduce gravedad 🧗
                 if (p.isWallSliding && !p.isGroundPounding) {
                     p.velocityY += gravity * 0.2; // 20% de gravedad en pared
                     p.velocityY = Math.min(p.velocityY, 2); // Speed máxima de deslizamiento
@@ -3458,7 +3458,7 @@
                     p.velocityY += gravity;
                 }
 
-                // PARTE 10: Apply wind effect
+                // PART 10: Apply wind effect
                 if (Game.wind.active) {
                     p.velocityX += Game.wind.direction * Game.wind.strength;
                 }
@@ -3467,7 +3467,7 @@
                 p.x += p.velocityX;
                 p.y += p.velocityY;
 
-                // PARTE 10: Parkour combo system
+                // PART 10: Parkour combo system
                 if (!p.isGrounded) {
                     Game.parkourCombo.timeWithoutGround += dt;
                 } else if (Game.parkourCombo.timeWithoutGround > 0) {
@@ -3475,13 +3475,13 @@
                 }
 
                 // Check platform collisions
-                // PARTE 13: Coyote time - dar buffer de 6 frames al dejar el suelo
+                // PART 13: Coyote time - dar buffer de 6 frames al dejar el suelo
                 const wasGrounded = p.isGrounded;
                 p.isGrounded = false;
                 this.platforms.forEach(platform => {
                     if (platform.broken) return;
 
-                    // PARTE 10: Plataformas magnéticas atraen al jugador
+                    // PART 10: Plataformas magnéticas atraen al jugador
                     if (platform.type === 'magnetic' && !p.isGrounded) {
                         const dx = (platform.x + platform.width / 2) - (p.x + p.width / 2);
                         const dy = (platform.y - 20) - (p.y + p.height / 2);
@@ -3494,14 +3494,14 @@
                     }
 
                     if (this.checkCollision(p, platform)) {
-                        // PARTE 10: Plataformas nube - atravesables desde abajo
+                        // PART 10: Plataformas nube - atravesables desde abajo
                         if (platform.type === 'cloud') {
                             // Solo colisión si cayendo desde arriba
                             if (p.velocityY > 0 && p.y + p.height - p.velocityY <= platform.y + 5) {
                                 p.y = platform.y - p.height;
                                 p.velocityY = 0;
                                 p.isGrounded = true;
-                                p.jumpsRemaining = p.maxJumps; // PARTE 12: Reset triple salto
+                                p.jumpsRemaining = p.maxJumps; // PART 12: Reset triple salto
                             }
                             return; // No colisión lateral o desde abajo
                         }
@@ -3511,9 +3511,9 @@
                             p.y = platform.y - p.height;
                             p.velocityY = 0;
                             p.isGrounded = true;
-                            p.jumpsRemaining = p.maxJumps; // PARTE 12: Reset triple salto
+                            p.jumpsRemaining = p.maxJumps; // PART 12: Reset triple salto
 
-                            // PARTE 13: Ground Pound Impact! 💥
+                            // PART 13: Ground Pound Impact! 💥
                             if (p.isGroundPounding) {
                                 p.isGroundPounding = false;
 
@@ -3565,14 +3565,14 @@
                                     }
                                 });
 
-                                // Notificación desactivada - menos spam
+                                // Notification disabled - less spam
                                 // showNotification('💥 IMPACT!', 'Ground Pound Strike!', 1200);
                                 try {
                                     if (typeof playSound === 'function') playSound('explosion');
                                 } catch (e) {}
                             }
 
-                            // PARTE 10: Parkour combo - bonus por encadenar plataformas
+                            // PART 10: Parkour combo - bonus por encadenar plataformas
                             if (Game.parkourCombo.lastPlatform !== platform && Game.parkourCombo.timeWithoutGround > 0.5) {
                                 Game.parkourCombo.count++;
                                 Game.parkourCombo.lastPlatform = platform;
@@ -3593,7 +3593,7 @@
                                 }
                             }
 
-                            // PARTE 10: Plataforma trampolín - super salto
+                            // PART 10: Plataforma trampolín - super salto
                             if (platform.type === 'trampoline' && !p.lastBouncePlatform) {
                                 p.velocityY = -platform.trampolinePower;
                                 p.isGrounded = false;
@@ -3610,7 +3610,7 @@
                                 } catch (e) {}
                             }
 
-                            // PARTE 10: Plataforma de impulso - velocidad horizontal (BUGFIX: solo una vez por aterrizaje)
+                            // PART 10: Plataforma de impulso - velocidad horizontal (BUGFIX: solo una vez por aterrizaje)
                             if (platform.type === 'boost' && !p.lastBoostPlatform) {
                                 const currentSpeed = Math.abs(p.velocityX);
                                 // Solo aplicar impulso si no está ya a velocidad máxima
@@ -3628,7 +3628,7 @@
                                 } catch (e) {}
                             }
 
-                            // PARTE 10: Plataforma arcoíris - buff aleatorio
+                            // PART 10: Plataforma arcoíris - buff aleatorio
                             if (platform.type === 'rainbow' && !p.lastRainbowPlatform) {
                                 const buffs = ['speed', 'infinite_energy', 'shield', 'damage'];
                                 const randomBuff = buffs[Math.floor(Math.random() * buffs.length)];
@@ -3651,7 +3651,7 @@
                             // Break breakable platforms
                             if (platform.type === 'breakable' && !platform.breaking) {
                                 platform.breaking = true; // Marcar que está en proceso
-                                // BUGFIX PARTE 13: Dar 1.5 segundos antes de romperse (era 500ms = muy poco)
+                                // BUGFIX PART 13: Dar 1.5 segundos antes de romperse (era 500ms = muy poco)
                                 setTimeout(() => {
                                     platform.broken = true;
                                 }, 1500); // 1.5 segundos para que puedas saltar
@@ -3665,7 +3665,7 @@
                     }
                 });
 
-                // PARTE 13: Coyote time - Si acabamos de dejar el suelo, dar 6 frames de gracia
+                // PART 13: Coyote time - Si acabamos de dejar el suelo, dar 6 frames de gracia
                 if (wasGrounded && !p.isGrounded) {
                     p.coyoteTime = 6; // 6 frames (~0.1 segundos a 60fps)
                 } else if (p.isGrounded) {
@@ -3674,7 +3674,7 @@
                     p.coyoteTime--;
                 }
 
-                // PARTE 13: Wall Slide Detection 🧗
+                // PART 13: Wall Slide Detection 🧗
                 p.isWallSliding = false;
                 p.wallSide = 0;
 
@@ -3713,7 +3713,7 @@
                     });
                 }
 
-                // PARTE 13: Flow State System 🌊✨
+                // PART 13: Flow State System 🌊✨
                 if (p.isGrounded) {
                     p.flowTime = 0;
                     p.flowLevel = 0;
@@ -3770,7 +3770,7 @@
                 else if (p.flowLevel === 2) flowSpeedMultiplier = 1.5;
                 else if (p.flowLevel === 3) {
                     flowSpeedMultiplier = 1.8;
-                    p.isInvulnerable = true; // Invencible en transcendence
+                    p.isInvulnerable = true; // Invincible in transcendence
                 }
 
                 // Prevent falling below screen
@@ -3782,7 +3782,7 @@
                     p.velocityY = 0;
                     playSound('damage');
 
-                    // BUGFIX PARTE 13: Resetear plataformas rotas cuando respawneas 🔧
+                    // BUGFIX PART 13: Resetear plataformas rotas cuando respawneas 🔧
                     // Si caíste porque una plataforma se rompió, las regeneramos
                     this.platforms.forEach(platform => {
                         if (platform.broken || platform.breaking) {
@@ -3807,7 +3807,7 @@
                 if (p.attackCooldown > 0) p.attackCooldown--;
                 if (p.invulnerabilityTime > 0) {
                     p.invulnerabilityTime--;
-                    p.isInvulnerable = true; // Invulnerable mientras hay tiempo de invuln
+                    p.isInvulnerable = true; // Invulnerable while invuln time active
                 } else if (p.flowLevel !== 3) {
                     // Solo desactivar invuln si NO estamos en Transcendence
                     p.isInvulnerable = false;
@@ -3839,7 +3839,7 @@
                     if (platform.type === 'moving') {
                         platform.y = platform.originalY + Math.sin(this.time * platform.moveSpeed) * platform.moveRange;
                     }
-                    // PARTE 10: Animar plataformas arcoíris
+                    // PART 10: Animar plataformas arcoíris
                     if (platform.type === 'rainbow') {
                         platform.rainbowHue = (platform.rainbowHue + dt * 50) % 360;
                     }
@@ -3867,7 +3867,7 @@
                 });
             },
 
-            // PARTE 5: Update power-ups
+            // PART 5: Update power-ups
             updatePowerups(dt) {
                 this.powerups.forEach(powerup => {
                     if (!powerup.collected) {
@@ -3887,7 +3887,7 @@
                 });
             },
 
-            // PARTE 5: Apply power-up effect
+            // PART 5: Apply power-up effect
             applyPowerup(powerupType) {
                 const p = Game.player;
 
@@ -3919,7 +3919,7 @@
                 }
             },
 
-            // PARTE 5: Update NPCs
+            // PART 5: Update NPCs
             updateNPCs(dt) {
                 this.npcs.forEach(npc => {
                     npc.floatOffset += dt * 2;
@@ -3954,7 +3954,7 @@
                 });
             },
 
-            // PARTE 5: Update active buffs
+            // PART 5: Update active buffs
             updateBuffs(dt) {
                 Game.player.activeBuffs = Game.player.activeBuffs.filter(buff => {
                     buff.duration--;
@@ -3962,7 +3962,7 @@
                 });
             },
 
-            // PARTE 6: Update bosses
+            // PART 6: Update bosses
             updateBosses(dt) {
                 this.bosses.forEach(boss => {
                     if (boss.isDefeated) return;
@@ -4043,7 +4043,7 @@
                 });
             },
 
-            // PARTE 6: Update missions
+            // PART 6: Update missions
             updateMissions() {
                 const p = Game.player;
 
@@ -4127,15 +4127,15 @@
                     if (this.checkCollision(Game.player, enemy)) {
                         const p = Game.player;
 
-                        // PARTE 13: Enemy Bounce (estilo Mario/Hollow Knight) 🦘
-                        // Si el jugador cae desde arriba, rebota en el enemigo
+                        // PART 13: Enemy Bounce (Mario/Hollow Knight style) 🦘
+                        // If player falls from above, bounce on enemy
                         if (p.velocityY > 0 && p.y + p.height - p.velocityY <= enemy.y + 10) {
-                            // Rebote!
-                            p.velocityY = -10; // Rebote fuerte
-                            p.jumpsRemaining = p.maxJumps; // Reset saltos
+                            // Bounce!
+                            p.velocityY = -10; // Strong bounce
+                            p.jumpsRemaining = p.maxJumps; // Reset jumps
                             playSound('jump');
 
-                            // Daño al enemigo
+                            // Damage to enemy
                             const bounceDamage = 30;
                             enemy.health -= bounceDamage;
                             p.stats.damageDealt += bounceDamage;
@@ -4144,7 +4144,7 @@
                             p.combo = Math.min(p.combo + 1, 99);
                             p.comboTimer = 180;
 
-                            // Partículas de rebote
+                            // Bounce particles
                             for (let i = 0; i < 20; i++) {
                                 Game.particles.push({
                                     x: enemy.x + enemy.width / 2,
@@ -4157,7 +4157,7 @@
                                 });
                             }
 
-                            // Si mata al enemigo con el rebote
+                            // If kills enemy with bounce
                             if (enemy.health <= 0 && !enemy.isDead) {
                                 enemy.isDead = true;
                                 p.stats.kills++;
@@ -4173,16 +4173,20 @@
                                 } catch (e) {}
                             }
                         } else {
-                            // Colisión normal - toma daño
+                            // Normal collision - take damage
                             if (enemy.hitCooldown <= 0 && !p.isInvulnerable) {
-                                // PARTE 5: Check for shield buff
+                                // PART 5: Check for shield buff
                                 const shieldBuff = p.activeBuffs.find(b => b.type === 'shield');
 
                                 if (!shieldBuff) {
+                                    // BUGFIX: Activate invulnerability IMMEDIATELY to prevent multiple hits
+                                    p.isInvulnerable = true;
+                                    p.invulnerabilityTime = 60;
+
                                     // Player takes damage
                                     p.health -= enemy.damage;
+                                    p.health = Math.max(0, p.health); // Ensure health doesn't go negative
                                     p.stats.damageTaken += enemy.damage;
-                                    p.invulnerabilityTime = 60;
                                     playSound('damage');
 
                                     // Knockback
@@ -4194,6 +4198,7 @@
                                     Game.camera.shakeIntensity = 8;
 
                                     if (p.health <= 0) {
+                                        p.health = 0; // Ensure health is exactly 0
                                         this.gameOver();
                                     }
                                 } else {
@@ -4242,7 +4247,7 @@
                 }
             },
 
-            // PARTE 7: Update spell projectiles and effects
+            // PART 7: Update spell projectiles and effects
             updateSpells(dt) {
                 const p = Game.player;
 
@@ -4325,7 +4330,7 @@
                                     // Check if boss defeated
                                     if (boss.health <= 0 && !boss.isDefeated) {
                                         boss.isDefeated = true;
-                                        // PARTE 9: Epic drop!
+                                        // PART 9: Epic drop!
                                         this.playEpicDrop();
                                         p.coins += boss.type.coins;
                                         this.gainXP(boss.type.xp);
@@ -4337,7 +4342,7 @@
                                             if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                         }
 
-                                        // PARTE 11: Show motivational quote on boss defeat 💙
+                                        // PART 11: Show motivational quote on boss defeat 💙
                                         const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                         showNotification(
                                             `💙 ¡${boss.type.name} Defeatdo!`,
@@ -4427,7 +4432,7 @@
 
                                 if (boss.health <= 0 && !boss.isDefeated) {
                                     boss.isDefeated = true;
-                                    // PARTE 9: Epic drop!
+                                    // PART 9: Epic drop!
                                     this.playEpicDrop();
                                     p.coins += boss.type.coins;
                                     this.gainXP(boss.type.xp);
@@ -4439,7 +4444,7 @@
                                         if (mission.reward.xp) this.gainXP(mission.reward.xp);
                                     }
 
-                                    // PARTE 11: Show motivational quote on boss defeat 💙
+                                    // PART 11: Show motivational quote on boss defeat 💙
                                     const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                                     showNotification(
                                         `💙 ¡${boss.type.name} Defeatdo!`,
@@ -4453,7 +4458,7 @@
                 }
             },
 
-            // PARTE 7: Update spell particle effects
+            // PART 7: Update spell particle effects
             updateSpellParticles(dt) {
                 for (let i = Game.spellParticles.length - 1; i >= 0; i--) {
                     const particle = Game.spellParticles[i];
@@ -4483,7 +4488,7 @@
                 });
             },
 
-            // PARTE 8: Update companion
+            // PART 8: Update companion
             updateCompanion(dt) {
                 const comp = Game.companion;
                 if (!comp.active) return;
@@ -4551,7 +4556,7 @@
                 }
             },
 
-            // PARTE 8: Update emotion orbs
+            // PART 8: Update emotion orbs
             updateEmotionOrbs(dt) {
                 const p = Game.player;
 
@@ -4613,7 +4618,7 @@
                 Game.emotionOrbs = Game.emotionOrbs.filter(orb => !orb.collected);
             },
 
-            // PARTE 8: Update memory fragments
+            // PART 8: Update memory fragments
             updateMemoryFragments(dt) {
                 const p = Game.player;
 
@@ -4656,7 +4661,7 @@
                 });
             },
 
-            // PARTE 8: Update atmospheric particles
+            // PART 8: Update atmospheric particles
             updateAtmosphericParticles(dt) {
                 // Update existing particles
                 for (let i = Game.atmosphericParticles.length - 1; i >= 0; i--) {
@@ -4703,7 +4708,7 @@
                 }
             },
 
-            // PARTE 8: Update world transformation
+            // PART 8: Update world transformation
             updateWorldTransformation() {
                 // Calculate world progress based on player position and collectibles
                 const positionProgress = Game.player.x / this.worldLength;
@@ -4714,7 +4719,7 @@
                 Game.worldProgress = Math.min(Game.worldProgress, 1);
             },
 
-            // PARTE 8: Update breathing exercise
+            // PART 8: Update breathing exercise
             updateBreathingExercise(dt) {
                 const ex = Game.breathingExercise;
                 ex.timer += dt;
@@ -4748,7 +4753,7 @@
                 }
             },
 
-            // PARTE 8: Complete breathing exercise
+            // PART 8: Complete breathing exercise
             completeBreathingExercise() {
                 const ex = Game.breathingExercise;
                 ex.active = false;
@@ -4793,13 +4798,13 @@
                 );
             },
 
-            // PARTE 12 + 13: Sistema de Triple Salto + Coyote Time + Wall Jump! 🚀🕐🧗
+            // PART 12 + 13: Sistema de Triple Salto + Coyote Time + Wall Jump! 🚀🕐🧗
             handleJump() {
                 const p = Game.player;
                 const jumpForce = -12;
                 const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
 
-                // PARTE 13: WALL JUMP! 🧗
+                // PART 13: WALL JUMP! 🧗
                 if (p.isWallSliding && p.wallJumpTimer <= 0) {
                     // Wall jump: salta en dirección opuesta a la pared
                     p.velocityY = jumpForce * 1.1; // 10% más fuerte
@@ -4822,7 +4827,7 @@
                         });
                     }
 
-                    // Notificación desactivada - menos spam en pantalla
+                    // Notification disabled - less spam en pantalla
                     // try {
                     //     if (typeof showNotification === 'function') {
                     //         showNotification('🧗 Wall Jump!', '', 800);
@@ -4835,7 +4840,7 @@
                 // Decrease wall jump timer
                 if (p.wallJumpTimer > 0) p.wallJumpTimer--;
 
-                // PARTE 13: Coyote time - Si acabamos de dejar el suelo, aún podemos saltar
+                // PART 13: Coyote time - Si acabamos de dejar el suelo, aún podemos saltar
                 const canCoyoteJump = p.coyoteTime > 0 && p.jumpsRemaining === p.maxJumps;
 
                 // Calcular costo de energía basado en el número de salto
@@ -4859,7 +4864,7 @@
                     p.stats.jumps++;
                     playSound('jump');
 
-                    // PARTE 9: Play musical note (más agudo con cada salto)
+                    // PART 9: Play musical note (más agudo con cada salto)
                     this.playJumpNote(Math.abs(jumpForce) + jumpNumber * 3);
 
                     // Visual feedback para triple salto
@@ -4881,7 +4886,7 @@
                 }
             },
 
-            // PARTE 12: Air Dash - Impulso horizontal en el aire! 💨
+            // PART 12: Air Dash - Impulso horizontal en el aire! 💨
             handleAirDash() {
                 const p = Game.player;
                 const hasInfiniteEnergy = p.activeBuffs.find(b => b.type === 'infinite_energy');
@@ -4922,7 +4927,7 @@
                     p.isDashing = false;
                 }, 200);
 
-                // Notificación desactivada - menos spam en pantalla
+                // Notification disabled - less spam en pantalla
                 // try {
                 //     if (typeof showNotification === 'function') {
                 //         showNotification('💨 Air Dash!', '', 800);
@@ -4930,7 +4935,7 @@
                 // } catch (e) {}
             },
 
-            // PARTE 13: Ground Pound - ¡Impacto devastador desde el aire! 💥
+            // PART 13: Ground Pound - ¡Impacto devastador desde el aire! 💥
             handleGroundPound() {
                 const p = Game.player;
 
@@ -4955,7 +4960,7 @@
                     });
                 }
 
-                // Notificación desactivada - menos spam en pantalla
+                // Notification disabled - less spam en pantalla
                 // try {
                 //     if (typeof showNotification === 'function') {
                 //         showNotification('💥 Ground Pound!', '', 800);
@@ -5007,7 +5012,7 @@
                     };
 
                     if (this.checkCollision(hitbox, enemy)) {
-                        // PARTE 5: Calculate damage with buffs and combo
+                        // PART 5: Calculate damage with buffs and combo
                         let damage = Game.saveData.stats.strength;
 
                         // Apply strength buff
@@ -5023,7 +5028,7 @@
                         enemy.health -= damage;
                         p.stats.damageDealt += damage;
 
-                        // PARTE 5: Update combo
+                        // PART 5: Update combo
                         p.combo++;
                         p.comboTimer = 3; // 3 seconds to continue combo
                         if (p.combo > p.stats.maxCombo) {
@@ -5055,7 +5060,7 @@
                             enemy.isDead = true;
                             p.stats.enemiesDefeated++;
 
-                            // PARTE 5: Apply XP buff if active
+                            // PART 5: Apply XP buff if active
                             let xpGain = enemy.xp;
                             const xpBuff = p.activeBuffs.find(b => b.type === 'xp_boost');
                             if (xpBuff) {
@@ -5086,7 +5091,7 @@
                     }
                 });
 
-                // PARTE 6: Check boss hits
+                // PART 6: Check boss hits
                 this.bosses.forEach(boss => {
                     if (boss.isDefeated || !boss.isActive || boss.invulnerableTimer > 0) return;
 
@@ -5135,7 +5140,7 @@
                         // Check if boss defeated
                         if (boss.health <= 0) {
                             boss.isDefeated = true;
-                            // PARTE 9: Epic drop!
+                            // PART 9: Epic drop!
                             this.playEpicDrop();
                             p.coins += boss.type.coins;
                             this.gainXP(boss.type.xp);
@@ -5148,7 +5153,7 @@
                                 if (mission.reward.xp) this.gainXP(mission.reward.xp);
                             }
 
-                            // PARTE 11: Show motivational quote on boss defeat 💙
+                            // PART 11: Show motivational quote on boss defeat 💙
                             const randomQuote = Game.motivationalQuotes[Math.floor(Math.random() * Game.motivationalQuotes.length)];
                             showNotification(
                                 `💙 ¡${boss.type.name} Defeatdo!`,
@@ -5178,7 +5183,7 @@
                 }, 200);
             },
 
-            // PARTE 5: Handle special ability
+            // PART 5: Handle special ability
             handleSpecialAbility() {
                 const p = Game.player;
                 const ability = this.specialAbilities[Game.saveData.character];
@@ -5322,7 +5327,7 @@
                 }
             },
 
-            // PARTE 7: Cast Spell 1 - Light Bolt (Left Click)
+            // PART 7: Cast Spell 1 - Light Bolt (Left Click)
             castSpell1() {
                 const p = Game.player;
                 const manaCost = 20;
@@ -5389,7 +5394,7 @@
                 showNotification('✨ Light Bolt', '', 800);
             },
 
-            // PARTE 7: Cast Spell 2 - Hope Nova (Right Click)
+            // PART 7: Cast Spell 2 - Hope Nova (Right Click)
             castSpell2() {
                 const p = Game.player;
                 const manaCost = 40;
@@ -5468,22 +5473,22 @@
                 // Draw coins
                 this.drawCoins();
 
-                // PARTE 5: Draw power-ups
+                // PART 5: Draw power-ups
                 this.drawPowerups();
 
-                // PARTE 5: Draw NPCs
+                // PART 5: Draw NPCs
                 this.drawNPCs();
 
                 // Draw enemies
                 this.drawEnemies();
 
-                // PARTE 6: Draw bosses
+                // PART 6: Draw bosses
                 this.drawBosses();
 
-                // PARTE 7: Draw spells
+                // PART 7: Draw spells
                 this.drawSpells();
 
-                // PARTE 5: Draw player trail
+                // PART 5: Draw player trail
                 this.drawTrail();
 
                 // Draw player
@@ -5492,28 +5497,28 @@
                 // Draw particles
                 this.drawParticles();
 
-                // PARTE 7: Draw spell particles
+                // PART 7: Draw spell particles
                 this.drawSpellParticles();
 
-                // PARTE 8: Draw atmospheric particles
+                // PART 8: Draw atmospheric particles
                 this.drawAtmosphericParticles();
 
-                // PARTE 8: Draw emotion orbs
+                // PART 8: Draw emotion orbs
                 this.drawEmotionOrbs();
 
-                // PARTE 8: Draw memory fragments
+                // PART 8: Draw memory fragments
                 this.drawMemoryFragments();
 
-                // PARTE 8: Draw companion
+                // PART 8: Draw companion
                 this.drawCompanion();
 
-                // PARTE 11: Draw weather effects
+                // PART 11: Draw weather effects
                 this.drawWeather();
 
                 // Draw motivational message
                 this.drawMessage();
 
-                // PARTE 8: Draw breathing exercise overlay (on top of everything)
+                // PART 8: Draw breathing exercise overlay (on top of everything)
                 if (Game.breathingExercise.active) {
                     this.drawBreathingExercise();
                 }
@@ -5668,7 +5673,7 @@
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                     ctx.fillRect(screenX + 5, screenY + 5, platform.width, platform.height);
 
-                    // PARTE 10: Rainbow platform - animated color
+                    // PART 10: Rainbow platform - animated color
                     if (platform.type === 'rainbow') {
                         ctx.fillStyle = `hsl(${platform.rainbowHue}, 70%, 60%)`;
                         ctx.save();
@@ -5677,7 +5682,7 @@
                         ctx.fillRect(screenX, screenY, platform.width, platform.height);
                         ctx.restore();
                     }
-                    // PARTE 10: Trampoline platform - spring effect
+                    // PART 10: Trampoline platform - spring effect
                     else if (platform.type === 'trampoline') {
                         ctx.fillStyle = platform.color;
                         ctx.fillRect(screenX, screenY, platform.width, platform.height);
@@ -5692,7 +5697,7 @@
                             ctx.stroke();
                         }
                     }
-                    // PARTE 10: Cloud platform - fluffy appearance
+                    // PART 10: Cloud platform - fluffy appearance
                     else if (platform.type === 'cloud') {
                         ctx.save();
                         ctx.globalAlpha = 0.7;
@@ -5706,7 +5711,7 @@
                         ctx.fill();
                         ctx.restore();
                     }
-                    // PARTE 10: Magnetic platform - magnetic field lines
+                    // PART 10: Magnetic platform - magnetic field lines
                     else if (platform.type === 'magnetic') {
                         ctx.fillStyle = platform.color;
                         ctx.save();
@@ -5725,7 +5730,7 @@
                         }
                         ctx.restore();
                     }
-                    // PARTE 10: Boost platform - arrow indicator
+                    // PART 10: Boost platform - arrow indicator
                     else if (platform.type === 'boost') {
                         ctx.fillStyle = platform.color;
                         ctx.fillRect(screenX, screenY, platform.width, platform.height);
@@ -5769,7 +5774,7 @@
                     ctx.lineWidth = 2;
                     this.drawPlatformShape(ctx, screenX, screenY, platform.width, platform.height, platform.shape || 'rectangle', true);
 
-                    // BUGFIX PARTE 13: Advertencia visual para plataformas que se van a romper ⚠️
+                    // BUGFIX PART 13: Advertencia visual para plataformas que se van a romper ⚠️
                     if (platform.type === 'breakable' && platform.breaking) {
                         // Parpadeo rojo de advertencia
                         const flashSpeed = 10; // Más rápido = más urgente
@@ -5838,7 +5843,7 @@
                 });
             },
 
-            // PARTE 5: Draw power-ups
+            // PART 5: Draw power-ups
             drawPowerups() {
                 this.powerups.forEach(powerup => {
                     if (powerup.collected) return;
@@ -5872,7 +5877,7 @@
                 });
             },
 
-            // PARTE 5: Draw NPCs
+            // PART 5: Draw NPCs
             drawNPCs() {
                 this.npcs.forEach(npc => {
                     const screenX = npc.x - Game.camera.x;
@@ -5919,7 +5924,7 @@
                 });
             },
 
-            // PARTE 5: Draw player trail
+            // PART 5: Draw player trail
             drawTrail() {
                 Game.player.trail = Game.player.trail.filter(t => {
                     t.life -= 0.03;
@@ -6038,7 +6043,7 @@
                 });
             },
 
-            // PARTE 6: Draw bosses
+            // PART 6: Draw bosses
             drawBosses() {
                 this.bosses.forEach(boss => {
                     if (boss.isDefeated) return;
@@ -6181,7 +6186,7 @@
 
                 ctx.save();
 
-                // PARTE 13: Flow State Visual Effects! 🌊✨🌟
+                // PART 13: Flow State Visual Effects! 🌊✨🌟
                 if (p.flowLevel > 0) {
                     const flowColors = [
                         null,
@@ -6245,7 +6250,7 @@
                     ctx.translate(-(screenX + p.width), -screenY);
                 }
 
-                // BUGFIX PARTE 13: Parpadeo cuando invulnerable (para que se vea el efecto)
+                // BUGFIX PART 13: Parpadeo cuando invulnerable (para que se vea el efecto)
                 if (p.isInvulnerable && p.flowLevel !== 3) {
                     // Parpadeo cada 4 frames
                     if (Math.floor(this.time * 60) % 8 < 4) {
@@ -6422,7 +6427,7 @@
                 ctx.fillText('❤️', barX - 15, barY + barHeight / 2 + 7);
             },
 
-            // PARTE 7: Draw spell projectiles and effects
+            // PART 7: Draw spell projectiles and effects
             drawSpells() {
                 Game.spells.forEach(spell => {
                     if (spell.type === 'lightbolt') {
@@ -6549,7 +6554,7 @@
                 });
             },
 
-            // PARTE 7: Draw spell particle effects
+            // PART 7: Draw spell particle effects
             drawSpellParticles() {
                 Game.spellParticles.forEach(particle => {
                     const screenX = particle.x - Game.camera.x;
@@ -6567,7 +6572,7 @@
                 });
             },
 
-            // PARTE 8: Draw atmospheric particles
+            // PART 8: Draw atmospheric particles
             drawAtmosphericParticles() {
                 Game.atmosphericParticles.forEach(particle => {
                     const screenX = particle.x - Game.camera.x;
@@ -6596,7 +6601,7 @@
                 });
             },
 
-            // PARTE 8: Draw emotion orbs
+            // PART 8: Draw emotion orbs
             drawEmotionOrbs() {
                 Game.emotionOrbs.forEach(orb => {
                     if (orb.collected) return;
@@ -6642,7 +6647,7 @@
                 });
             },
 
-            // PARTE 8: Draw memory fragments
+            // PART 8: Draw memory fragments
             drawMemoryFragments() {
                 Game.memoryFragments.forEach(fragment => {
                     if (fragment.collected) return;
@@ -6691,7 +6696,7 @@
                 });
             },
 
-            // PARTE 8: Draw companion "Esperancita"
+            // PART 8: Draw companion "Esperancita"
             drawCompanion() {
                 const comp = Game.companion;
                 if (!comp.active) return;
@@ -6790,7 +6795,7 @@
                 ctx.restore();
             },
 
-            // PARTE 11: Draw weather effects 🌧️❄️⛈️
+            // PART 11: Draw weather effects 🌧️❄️⛈️
             drawWeather() {
                 const weather = Game.weather;
                 if (!weather || weather.current === 'clear') return;
@@ -6866,7 +6871,7 @@
                 ctx.restore();
             },
 
-            // PARTE 8: Draw breathing exercise overlay
+            // PART 8: Draw breathing exercise overlay
             drawBreathingExercise() {
                 const ex = Game.breathingExercise;
 
@@ -6922,7 +6927,7 @@
                 ctx.restore();
             },
 
-            // BUGFIX PARTE 11: Only draw particles (update moved to updateParticles)
+            // BUGFIX PART 11: Only draw particles (update moved to updateParticles)
             drawParticles() {
                 Game.particles.forEach(p => {
                     const screenX = p.x - Game.camera.x;
@@ -6981,8 +6986,8 @@
 
             gameOver() {
                 Game.state = GameStates.GAME_OVER;
-                // Notificación desactivada - menos spam
-                // showNotification('💔 Fin del Juego', 'No te rindas, inténtalo de nuevo');
+                // Notification disabled - less spam
+                // showNotification('💔 Game Over', 'Don't give up, try again');
 
                 setTimeout(() => {
                     Game.state = GameStates.MAIN_MENU;
@@ -7020,25 +7025,25 @@
                     GameScene.handleAttack();
                 }
 
-                // PARTE 12: Air Dash! 💨
+                // PART 12: Air Dash! 💨
                 if (e.key === 'Shift') {
                     e.preventDefault();
                     GameScene.handleAirDash();
                 }
 
-                // PARTE 13: Ground Pound! 💥
+                // PART 13: Ground Pound! 💥
                 if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
                     e.preventDefault();
                     GameScene.handleGroundPound();
                 }
 
-                // PARTE 5: Special Ability
+                // PART 5: Special Ability
                 if (e.key === 'x' || e.key === 'X') {
                     e.preventDefault();
                     GameScene.handleSpecialAbility();
                 }
 
-                // PARTE 8: Breathing Exercise
+                // PART 8: Breathing Exercise
                 if (e.key === 'b' || e.key === 'B') {
                     e.preventDefault();
                     if (!Game.breathingExercise.active) {
@@ -7054,7 +7059,7 @@
                     }
                 }
 
-                // PARTE 11: Transformations (Teclas 1-4) 🔮
+                // PART 11: Transformations (Teclas 1-4) 🔮
                 if (e.key === '1') {
                     e.preventDefault();
                     GameScene.transformPlayer('shadow'); // Forma Sombra - Invisible
@@ -7088,14 +7093,14 @@
             Game.keys[e.key] = false;
         });
 
-        // PARTE 7: Track mouse position
+        // PART 7: Track mouse position
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             Game.mouseX = e.clientX - rect.left;
             Game.mouseY = e.clientY - rect.top;
         });
 
-        // PARTE 7: Left click - Spell 1 (Light Bolt)
+        // PART 7: Left click - Spell 1 (Light Bolt)
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -7114,7 +7119,7 @@
             }
         });
 
-        // PARTE 7: Prevent context menu on right click
+        // PART 7: Prevent context menu on right click
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
         });
