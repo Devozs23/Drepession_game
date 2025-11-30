@@ -544,10 +544,6 @@
                 emotionalState: 'neutral' // neutral, calm, excited, epic
             },
 
-            // PARTE 10: Checkpoint System
-            checkpoints: [],
-            lastCheckpoint: null,
-
             // PARTE 10: Wind System
             wind: {
                 active: false,
@@ -1871,7 +1867,6 @@
 
             // World progress
             worldLength: 15000, // Mundo 3x más largo para más desafío
-            checkpoints: [],
 
             // Visual effects
             clouds: [],
@@ -1941,9 +1936,6 @@
 
                 // PARTE 9: Initialize generative music system
                 this.initMusicSystem();
-
-                // PARTE 10: Generate checkpoints
-                this.generateCheckpoints();
 
                 // Create decorative elements
                 this.createClouds();
@@ -2265,34 +2257,6 @@
                         isGrounded: false // PARTE 10: Para aplicar gravedad a bosses
                     });
                 });
-            },
-
-            // PARTE 10: Generate checkpoints
-            generateCheckpoints() {
-                Game.checkpoints = [];
-
-                // Place checkpoints every 1000 pixels
-                for (let x = 1000; x < this.worldLength; x += 1000) {
-                    // Find a safe platform near this x position
-                    const nearbyPlatforms = this.platforms.filter(p =>
-                        Math.abs(p.x - x) < 300 &&
-                        p.type !== 'breakable' &&
-                        p.type !== 'moving'
-                    );
-
-                    if (nearbyPlatforms.length > 0) {
-                        const platform = nearbyPlatforms[0];
-                        Game.checkpoints.push({
-                            x: platform.x + platform.width / 2,
-                            y: platform.y - 80,
-                            width: 40,
-                            height: 80,
-                            activated: false,
-                            animationTime: 0,
-                            particles: []
-                        });
-                    }
-                }
             },
 
             // PARTE 8: Initialize companion
@@ -2727,55 +2691,6 @@
                 if (combo.count >= 10) combo.bonusMultiplier = 3;
                 else if (combo.count >= 5) combo.bonusMultiplier = 2;
                 else combo.bonusMultiplier = 1;
-            },
-
-            // PARTE 10: Update checkpoints
-            updateCheckpoints(dt) {
-                if (!dt || dt > 1) return; // BUGFIX: Prevenir dt inválido
-
-                const p = Game.player;
-                if (!p || !Game.checkpoints) return; // BUGFIX: Verificar que existan
-
-                Game.checkpoints.forEach(checkpoint => {
-                    if (!checkpoint) return; // BUGFIX: Verificar checkpoint válido
-
-                    // Check if player touches checkpoint
-                    if (!checkpoint.activated) {
-                        const dx = Math.abs((p.x + p.width / 2) - checkpoint.x);
-                        const dy = Math.abs((p.y + p.height / 2) - checkpoint.y);
-
-                        if (dx < 30 && dy < 50) {
-                            checkpoint.activated = true;
-                            Game.lastCheckpoint = checkpoint;
-
-                            // BUGFIX: Usar try-catch para funciones externas
-                            try {
-                                if (typeof playSound === 'function') playSound('coin');
-                                if (typeof showNotification === 'function') {
-                                    showNotification('🏁 ¡Checkpoint!', 'Progreso guardado', 3000);
-                                }
-                            } catch (e) {
-                                console.log('Checkpoint notification error:', e);
-                            }
-
-                            // Create particles
-                            try {
-                                for (let i = 0; i < 20; i++) {
-                                    this.createParticles(checkpoint.x, checkpoint.y, 1, '#fbbf24');
-                                }
-                            } catch (e) {
-                                console.log('Checkpoint particles error:', e);
-                            }
-                        }
-                    }
-
-                    // Animate checkpoint
-                    if (checkpoint.activated) {
-                        checkpoint.animationTime += dt * 5;
-                    } else {
-                        checkpoint.animationTime += dt * 2;
-                    }
-                });
             },
 
             // PARTE 11: Update weather system 🌧️❄️⛈️
@@ -3404,9 +3319,6 @@
                 // PARTE 10: Update parkour combo system
                 this.updateParkourCombo(dt);
 
-                // PARTE 10: Update checkpoints
-                this.updateCheckpoints(dt);
-
                 // PARTE 11: Update weather system
                 this.updateWeather(dt);
 
@@ -3452,8 +3364,6 @@
                         this.currentMessage = null;
                     }
                 }
-
-                // BUGFIX: Código viejo de checkpoints removido - ahora usa updateCheckpoints()
 
                 // Update HUD
                 this.updateHUD();
@@ -5134,9 +5044,6 @@
                 // Draw coins
                 this.drawCoins();
 
-                // PARTE 10: Draw checkpoints
-                this.drawCheckpoints();
-
                 // PARTE 5: Draw power-ups
                 this.drawPowerups();
 
@@ -5397,58 +5304,6 @@
                     ctx.fill();
 
                     ctx.restore();
-                });
-            },
-
-            // PARTE 10: Draw checkpoints
-            drawCheckpoints() {
-                Game.checkpoints.forEach(checkpoint => {
-                    const screenX = checkpoint.x - Game.camera.x;
-                    const screenY = checkpoint.y - Game.camera.y;
-
-                    // Don't draw if off screen
-                    if (screenX < -100 || screenX > canvas.width + 100) return;
-
-                    ctx.save();
-
-                    // Checkpoint flag pole
-                    ctx.strokeStyle = checkpoint.activated ? '#fbbf24' : '#9ca3af';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.moveTo(screenX, screenY + checkpoint.height);
-                    ctx.lineTo(screenX, screenY);
-                    ctx.stroke();
-
-                    // Checkpoint flag
-                    const flagWave = Math.sin(checkpoint.animationTime) * 5;
-                    ctx.fillStyle = checkpoint.activated ? '#fbbf24' : '#6b7280';
-
-                    if (checkpoint.activated) {
-                        ctx.shadowColor = '#fbbf24';
-                        ctx.shadowBlur = 20;
-                    }
-
-                    ctx.beginPath();
-                    ctx.moveTo(screenX, screenY);
-                    ctx.lineTo(screenX + 30 + flagWave, screenY + 10);
-                    ctx.lineTo(screenX + 25 + flagWave, screenY + 20);
-                    ctx.lineTo(screenX, screenY + 25);
-                    ctx.fill();
-
-                    // Checkpoint icon
-                    if (checkpoint.activated) {
-                        ctx.font = '20px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillStyle = '#fff';
-                        ctx.fillText('✓', screenX + 15, screenY + 12);
-                    }
-
-                    ctx.restore();
-
-                    // Animated particles if activated
-                    if (checkpoint.activated && Math.random() < 0.1) {
-                        this.createParticles(checkpoint.x, checkpoint.y + 40, 1, '#fbbf24');
-                    }
                 });
             },
 
