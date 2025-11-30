@@ -2070,13 +2070,13 @@
                     // PARTE 12: Primeras plataformas más fáciles para no perder al inicio
                     let gapX, gapY;
                     if (i < 5) {
-                        // Primeras 5 plataformas: gaps pequeños y fáciles
-                        gapX = Math.random() * 80 + 100;  // 100-180px (fácil)
-                        gapY = (Math.random() - 0.5) * 40; // -20 to +20px (casi plano)
+                        // Primeras 5 plataformas: gaps moderados y fáciles
+                        gapX = Math.random() * 100 + 150;  // 150-250px (más espaciadas que antes)
+                        gapY = (Math.random() - 0.5) * 60; // -30 to +30px (un poco más de variación)
                     } else {
-                        // Resto: gaps más grandes para más desafío
-                        gapX = Math.random() * 180 + 150;  // 150-330px (más separadas)
-                        gapY = (Math.random() - 0.5) * 140; // -70 to +70px (más variación vertical)
+                        // Resto: gaps MUCHO más grandes para más espacio y desafío
+                        gapX = Math.random() * 200 + 200;  // 200-400px (bastante más separadas!)
+                        gapY = (Math.random() - 0.5) * 200; // -100 to +100px (más variación vertical!)
                     }
 
                     // Secciones verticales cada 20 plataformas
@@ -2088,9 +2088,9 @@
                         verticalSection = false;
                     }
 
-                    // Si va hacia arriba, reducir gap horizontal un poco
-                    if (gapY < -30) {
-                        gapX = Math.random() * 120 + 120; // 120-240px para saltos ascendentes
+                    // Si va hacia arriba, ajustar gap horizontal
+                    if (gapY < -50) {
+                        gapX = Math.random() * 100 + 150; // 150-250px para saltos ascendentes (más espaciado)
                     }
 
                     const width = Math.random() * 150 + 100;
@@ -3418,17 +3418,27 @@
                     moveSpeed *= 0.85; // Slightly slower in storm
                 }
 
-                const jumpForce = -15;
+                const jumpForce = -12; // Reducido de -15 para saltos más realistas
 
-                // Horizontal movement
+                // Horizontal movement - CON ACELERACIÓN REALISTA! 🏃
+                const acceleration = 0.6; // Aceleración gradual
+                const maxSpeed = moveSpeed; // Velocidad máxima
+
                 if (Game.keys['ArrowLeft'] || Game.keys['a'] || Game.keys['A']) {
-                    p.velocityX = -moveSpeed;
+                    // Acelerar hacia la izquierda gradualmente
+                    p.velocityX -= acceleration;
+                    p.velocityX = Math.max(p.velocityX, -maxSpeed); // Limitar velocidad máxima
                     p.isFacingRight = false;
                 } else if (Game.keys['ArrowRight'] || Game.keys['d'] || Game.keys['D']) {
-                    p.velocityX = moveSpeed;
+                    // Acelerar hacia la derecha gradualmente
+                    p.velocityX += acceleration;
+                    p.velocityX = Math.min(p.velocityX, maxSpeed); // Limitar velocidad máxima
                     p.isFacingRight = true;
                 } else {
-                    p.velocityX *= 0.8; // Friction
+                    // Fricción más fuerte para detenerse más rápido
+                    p.velocityX *= 0.85;
+                    // Detener completamente si la velocidad es muy baja
+                    if (Math.abs(p.velocityX) < 0.1) p.velocityX = 0;
                 }
 
                 // Apply gravity
@@ -4004,9 +4014,12 @@
                     if (this.checkCollision(Game.player, boss) && !Game.player.isInvulnerable) {
                         const shieldBuff = Game.player.activeBuffs.find(b => b.type === 'shield');
                         if (!shieldBuff) {
+                            // BUGFIX: Activar invulnerabilidad INMEDIATAMENTE para evitar múltiples hits
+                            Game.player.invulnerabilityTime = 60;
+                            Game.player.isInvulnerable = true;
+
                             Game.player.health -= boss.type.damage;
                             Game.player.stats.damageTaken += boss.type.damage;
-                            Game.player.invulnerabilityTime = 60;
                             playSound('damage');
 
                             const knockbackDir = Game.player.x < boss.x ? -1 : 1;
