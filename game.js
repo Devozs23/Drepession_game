@@ -717,9 +717,13 @@ function displayScene(sceneId) {
 
     gameState.currentScene = sceneId;
 
-    // Update story text
+    // Update story text with fade in effect
     const storyText = document.getElementById('story-text');
-    storyText.textContent = scene.text;
+    storyText.style.opacity = '0';
+    setTimeout(() => {
+        storyText.textContent = scene.text;
+        storyText.style.opacity = '1';
+    }, 150);
 
     // Update choices
     const choicesContainer = document.getElementById('choices-container');
@@ -728,6 +732,7 @@ function displayScene(sceneId) {
     scene.choices.forEach((choice, index) => {
         const button = document.createElement('button');
         button.className = 'choice-button';
+        button.style.opacity = '0';
         if (choice.skill || choice.hope >= 15) {
             button.classList.add('positive');
         }
@@ -736,8 +741,8 @@ function displayScene(sceneId) {
 
         // Stagger animation
         setTimeout(() => {
-            button.style.animation = 'fadeIn 0.5s ease forwards';
-        }, index * 100);
+            button.style.opacity = '1';
+        }, 300 + (index * 150));
 
         choicesContainer.appendChild(button);
     });
@@ -748,6 +753,12 @@ function displayScene(sceneId) {
 
 // Make Choice
 function makeChoice(choice) {
+    // Fade out current scene
+    const storyText = document.getElementById('story-text');
+    const choicesContainer = document.getElementById('choices-container');
+    storyText.style.opacity = '0';
+    choicesContainer.style.opacity = '0';
+
     // Reset game if needed
     if (choice.reset) {
         gameState.hope = 0;
@@ -772,10 +783,11 @@ function makeChoice(choice) {
         updateSkills();
     }
 
-    // Move to next scene
+    // Move to next scene after fade out
     setTimeout(() => {
+        choicesContainer.style.opacity = '1';
         displayScene(choice.next);
-    }, 300);
+    }, 400);
 }
 
 // Update Hope Meter
