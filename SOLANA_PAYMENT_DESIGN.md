@@ -56,10 +56,10 @@ az62CTg4Gm7YtSxrDVvm9z9ow1j7d8mVwW4cXvdQtN3
 
 | Producto | Vidas | Precio (SOL) | Precio USD (aprox) | Descuento |
 |----------|-------|--------------|-------------------|-----------|
-| 1 Vida   | 1     | 0.001        | ~$0.10            | 0%        |
-| Pack Pequeño | 5 | 0.004     | ~$0.40            | 20%       |
-| Pack Grande | 10 | 0.007      | ~$0.70            | 30%       |
-| Pack Mega | 25   | 0.015        | ~$1.50            | 40%       |
+| 1 Vida   | 1     | 0.01         | ~$1.00            | 0%        |
+| Pack Pequeño | 5 | 0.04         | ~$4.00            | 20%       |
+| Pack Grande | 10 | 0.07         | ~$7.00            | 30%       |
+| Pack Mega | 25   | 0.15         | ~$15.00           | 40%       |
 
 *Nota: Precios basados en SOL ≈ $100 USD (ajustables)*
 
@@ -607,9 +607,9 @@ NETWORK: 'mainnet-beta'
 - Prácticamente gratis comparado con Ethereum
 
 **ROI Estimado:**
-- Si 100 jugadores compran 1 pack de 5 vidas: 100 × 0.004 = 0.4 SOL (~$40)
+- Si 100 jugadores compran 1 pack de 5 vidas: 100 × 0.04 = 4 SOL (~$400)
 - Costos de transacción: 100 × 0.000005 = 0.0005 SOL (~$0.05)
-- Ganancia neta: ~$39.95
+- Ganancia neta: ~$399.95
 
 ---
 
@@ -621,7 +621,7 @@ NETWORK: 'mainnet-beta'
 4. Si llega a 0 vidas → Game Over Screen
 5. Aparece tienda con packs de vidas
 6. Click en "Conectar Phantom Wallet"
-7. Selecciona pack (ej: 5 vidas por 0.004 SOL)
+7. Selecciona pack (ej: 5 vidas por 0.04 SOL)
 8. Confirma en Phantom Wallet
 9. ¡Transacción procesada!
 10. Recibe vidas y continúa jugando
