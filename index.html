@@ -3,56 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pathways to Light - A Journey of Hope</title>
+
+    <!-- Primary Meta Tags -->
+    <title>Pathways to Light - A Journey of Hope | Mental Health Support</title>
+    <meta name="title" content="Pathways to Light - A Journey of Hope">
+    <meta name="description" content="An interactive mental health awareness game showing that recovery is possible. If you're struggling with depression, you're not alone. Free crisis resources available 24/7.">
+    <meta name="keywords" content="mental health, depression support, suicide prevention, crisis resources, hope, recovery, therapy, counseling">
+    <meta name="author" content="Mental Health Awareness Initiative">
+    <meta name="theme-color" content="#667eea">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jabronsky.s3-website-us-east-1.amazonaws.com/">
+    <meta property="og:title" content="Pathways to Light - A Journey of Hope">
+    <meta property="og:description" content="An interactive mental health game about hope and recovery. You're not alone. Help is available.">
+    <meta property="og:image" content="https://jabronsky.s3-website-us-east-1.amazonaws.com/preview.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://jabronsky.s3-website-us-east-1.amazonaws.com/">
+    <meta property="twitter:title" content="Pathways to Light - A Journey of Hope">
+    <meta property="twitter:description" content="An interactive mental health game about hope and recovery. You're not alone. Help is available.">
+    <meta property="twitter:image" content="https://jabronsky.s3-website-us-east-1.amazonaws.com/preview.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌟</text></svg>">
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://findahelpline.com">
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Crisis Resources Banner -->
-    <div id="crisis-banner">
+    <aside id="crisis-banner" role="complementary" aria-label="Crisis Resources">
         <div class="crisis-content">
             <strong>🆘 Need immediate help?</strong>
             <div class="crisis-links">
-                <span>🇺🇸 988 Suicide & Crisis Lifeline</span>
-                <span>📱 Text "HELLO" to 741741 (Crisis Text Line)</span>
-                <span>🌍 <a href="https://findahelpline.com" target="_blank">International Helplines</a></span>
+                <span aria-label="United States crisis line">🇺🇸 988 Suicide & Crisis Lifeline</span>
+                <span aria-label="Crisis text line">📱 Text "HELLO" to 741741 (Crisis Text Line)</span>
+                <span>🌍 <a href="https://findahelpline.com" target="_blank" rel="noopener noreferrer" aria-label="Find international crisis helplines">International Helplines</a></span>
             </div>
         </div>
-    </div>
+    </aside>
 
     <!-- Game Container -->
-    <div id="game-container">
+    <main id="game-container" role="main" aria-label="Interactive mental health game">
         <!-- Hope Meter -->
-        <div id="hope-meter-container">
+        <section id="hope-meter-container" aria-label="Hope meter showing your progress">
             <div class="meter-label">Your Inner Light</div>
-            <div id="hope-meter-bar">
+            <div id="hope-meter-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Hope level progress bar">
                 <div id="hope-meter-fill"></div>
             </div>
-            <div class="meter-value"><span id="hope-value">0</span>%</div>
-        </div>
+            <div class="meter-value" aria-live="polite"><span id="hope-value">0</span>%</div>
+        </section>
 
         <!-- Coping Skills Collected -->
-        <div id="skills-container">
+        <section id="skills-container" aria-label="Coping skills you've discovered">
             <div class="skills-label">Coping Tools Discovered</div>
-            <div id="skills-list"></div>
-        </div>
+            <div id="skills-list" role="list" aria-live="polite"></div>
+        </section>
 
         <!-- Main Game Area -->
-        <div id="game-screen">
-            <div id="story-text"></div>
-            <div id="choices-container"></div>
-        </div>
+        <article id="game-screen" aria-label="Game story and choices">
+            <div id="story-text" role="article" aria-live="polite"></div>
+            <nav id="choices-container" role="navigation" aria-label="Available choices"></nav>
+        </article>
 
         <!-- Support Button (Always Visible) -->
-        <button id="support-button" class="support-btn">💙 I Need Support Right Now</button>
-    </div>
+        <button id="support-button" class="support-btn" aria-label="Get immediate crisis support and resources">💙 I Need Support Right Now</button>
+    </main>
 
     <!-- Support Modal -->
-    <div id="support-modal" class="modal hidden">
+    <div id="support-modal" class="modal hidden" role="dialog" aria-labelledby="modal-title" aria-modal="true">
         <div class="modal-content">
-            <h2>You Are Not Alone 💙</h2>
+            <h2 id="modal-title">You Are Not Alone 💙</h2>
             <p>It takes strength to reach out. Here are people who want to help:</p>
 
-            <div class="support-resources">
+            <div class="support-resources" role="list">
                 <div class="resource-card">
                     <h3>🇺🇸 United States</h3>
                     <p><strong>988 Suicide & Crisis Lifeline</strong></p>
@@ -89,7 +117,7 @@
                 <p><strong>Remember:</strong> Depression lies. It tells you there's no way out, but that's not true. These feelings are temporary. Help is available. You deserve support.</p>
             </div>
 
-            <button class="modal-close">Continue When Ready</button>
+            <button class="modal-close" aria-label="Close support resources and continue">Continue When Ready</button>
         </div>
     </div>
 
