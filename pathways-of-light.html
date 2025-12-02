@@ -1178,24 +1178,58 @@
                 }
             },
 
+            // Wait for Phantom to initialize
+            async waitForPhantom(timeout = 3000) {
+                const start = Date.now();
+                while (Date.now() - start < timeout) {
+                    if (window.solana && window.solana.isPhantom) {
+                        return true;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                return false;
+            },
+
             // Connect Phantom Wallet
             async connectWallet() {
                 try {
-                    if (!window.solana || !window.solana.isPhantom) {
-                        showNotification('Please install Phantom Wallet first!', 'error');
-                        window.open('https://phantom.app/', '_blank');
+                    showNotification('Checking for Phantom Wallet...', 'info');
+
+                    // Wait for Phantom to initialize (up to 3 seconds)
+                    const phantomFound = await this.waitForPhantom(3000);
+
+                    if (!phantomFound) {
+                        showNotification('⚠️ Phantom Wallet not detected!', 'error');
+                        const userWantsToInstall = confirm(
+                            '❌ Phantom Wallet is not installed.\n\n' +
+                            '✅ Click OK to install Phantom Wallet\n' +
+                            '❌ Click Cancel if you already have it installed'
+                        );
+
+                        if (userWantsToInstall) {
+                            window.open('https://phantom.app/', '_blank');
+                            showNotification('Please install Phantom and reload the page', 'info');
+                        } else {
+                            showNotification('Please reload the page after Phantom loads', 'info');
+                        }
                         return false;
                     }
 
+                    showNotification('Connecting to Phantom Wallet...', 'info');
                     const response = await window.solana.connect();
                     this.walletAddress = response.publicKey.toString();
 
                     console.log('✅ Wallet connected:', this.walletAddress);
-                    showNotification(`Wallet connected: ${this.walletAddress.substring(0, 8)}...`, 'success');
+                    showNotification(`✅ Wallet connected: ${this.walletAddress.substring(0, 8)}...`, 'success');
                     return true;
                 } catch (error) {
                     console.error('❌ Error connecting wallet:', error);
-                    showNotification('Failed to connect wallet: ' + error.message, 'error');
+
+                    if (error.code === 4001) {
+                        showNotification('Connection rejected by user', 'warning');
+                    } else {
+                        showNotification('Failed to connect: ' + error.message, 'error');
+                    }
                     return false;
                 }
             },
