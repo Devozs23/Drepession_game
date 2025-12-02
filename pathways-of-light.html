@@ -1216,11 +1216,36 @@
                 }
             },
 
+            // Get Phantom provider using official 2025 best practices
+            getPhantomProvider() {
+                // Method 1 (Recommended): Check window.phantom.solana first
+                if ('phantom' in window) {
+                    const provider = window.phantom?.solana;
+                    if (provider?.isPhantom) {
+                        console.log('✅ Phantom provider found via window.phantom.solana');
+                        return provider;
+                    }
+                }
+
+                // Method 2 (Fallback): Check window.solana for legacy support
+                if ('solana' in window) {
+                    const provider = window.solana;
+                    if (provider?.isPhantom) {
+                        console.log('⚠️ Phantom provider found via window.solana (legacy)');
+                        return provider;
+                    }
+                }
+
+                console.log('❌ Phantom provider not found');
+                return null;
+            },
+
             // Setup event listeners for Phantom Wallet
             setupPhantomListeners() {
-                if (window.solana) {
+                const provider = this.getPhantomProvider();
+                if (provider) {
                     // Listen for account changes
-                    window.solana.on('accountChanged', (publicKey) => {
+                    provider.on('accountChanged', (publicKey) => {
                         if (publicKey) {
                             this.walletAddress = publicKey.toString();
                             console.log('🔄 Account changed to:', this.walletAddress);
@@ -1233,14 +1258,14 @@
                     });
 
                     // Listen for disconnection
-                    window.solana.on('disconnect', () => {
+                    provider.on('disconnect', () => {
                         this.walletAddress = null;
                         console.log('👋 Wallet disconnected');
                         showNotification('👋 Wallet desconectada', 'Wallet disconnected');
                     });
 
                     // Listen for connection
-                    window.solana.on('connect', (publicKey) => {
+                    provider.on('connect', (publicKey) => {
                         this.walletAddress = publicKey.toString();
                         console.log('🔗 Wallet connected:', this.walletAddress);
                     });
@@ -1249,11 +1274,12 @@
                 }
             },
 
-            // Wait for Phantom to initialize
+            // Wait for Phantom to initialize - Enhanced detection
             async waitForPhantom(timeout = 3000) {
                 const start = Date.now();
                 while (Date.now() - start < timeout) {
-                    if (window.solana && window.solana.isPhantom) {
+                    const provider = this.getPhantomProvider();
+                    if (provider) {
                         return true;
                     }
                     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1267,9 +1293,11 @@
                     console.log('🚀 Starting Phantom Wallet connection process...');
                     showNotification('🔍 Buscando Phantom Wallet...', 'Checking for wallet connection');
 
-                    // Check for Phantom provider
-                    console.log('🔍 Checking for window.solana...', window.solana ? 'Found ✅' : 'Not found ❌');
-                    console.log('🔍 Checking for window.solana.isPhantom...', window.solana?.isPhantom ? 'Yes ✅' : 'No ❌');
+                    // Enhanced detection logging
+                    console.log('🔍 Checking for window.phantom...', 'phantom' in window ? 'Found ✅' : 'Not found ❌');
+                    console.log('🔍 Checking for window.phantom.solana...', window.phantom?.solana ? 'Found ✅' : 'Not found ❌');
+                    console.log('🔍 Checking for window.solana (legacy)...', 'solana' in window ? 'Found ✅' : 'Not found ❌');
+                    console.log('🔍 Checking isPhantom flag...', window.phantom?.solana?.isPhantom || window.solana?.isPhantom ? 'Yes ✅' : 'No ❌');
 
                     // Wait for Phantom to initialize (up to 5 seconds for better reliability)
                     const phantomFound = await this.waitForPhantom(5000);
@@ -1298,11 +1326,17 @@
                         return false;
                     }
 
+                    // Get the provider using the improved detection method
+                    const provider = this.getPhantomProvider();
+                    if (!provider) {
+                        throw new Error('Phantom provider not available');
+                    }
+
                     console.log('✅ Phantom Wallet detected! Attempting to connect...');
                     showNotification('🔗 Conectando a Phantom Wallet...', 'Connecting to wallet...');
 
                     // Request connection with { onlyIfTrusted: false } to always show the popup
-                    const response = await window.solana.connect({ onlyIfTrusted: false });
+                    const response = await provider.connect({ onlyIfTrusted: false });
                     this.walletAddress = response.publicKey.toString();
 
                     console.log('✅ Wallet connected successfully:', this.walletAddress);
@@ -1335,9 +1369,10 @@
             // Try to auto-reconnect if previously connected
             async tryAutoConnect() {
                 try {
-                    if (window.solana && window.solana.isPhantom && window.solana.isConnected) {
+                    const provider = this.getPhantomProvider();
+                    if (provider && provider.isConnected) {
                         console.log('🔄 Attempting auto-reconnect to Phantom...');
-                        const response = await window.solana.connect({ onlyIfTrusted: true });
+                        const response = await provider.connect({ onlyIfTrusted: true });
                         this.walletAddress = response.publicKey.toString();
                         console.log('✅ Auto-reconnected to wallet:', this.walletAddress);
                         return true;
@@ -1351,8 +1386,9 @@
             // Disconnect wallet
             async disconnectWallet() {
                 try {
-                    if (window.solana) {
-                        await window.solana.disconnect();
+                    const provider = this.getPhantomProvider();
+                    if (provider) {
+                        await provider.disconnect();
                         this.walletAddress = null;
                         console.log('Wallet disconnected');
                     }
@@ -1389,8 +1425,12 @@
 
                     showNotification('📝 Esperando firma...', 'Waiting for signature in Phantom');
 
-                    // Sign and send transaction
-                    const signed = await window.solana.signAndSendTransaction(transaction);
+                    // Sign and send transaction using the provider
+                    const provider = this.getPhantomProvider();
+                    if (!provider) {
+                        throw new Error('Phantom provider not available');
+                    }
+                    const signed = await provider.signAndSendTransaction(transaction);
 
                     showNotification('⏳ Confirmando transacción...', 'Confirming transaction on blockchain');
 
