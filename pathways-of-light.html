@@ -245,7 +245,14 @@
         }
 
         .game-button:active {
-            transform: translateY(0);
+            transform: translateY(0px);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Modal/Dialog */
@@ -1201,8 +1208,44 @@
 
                     this.connection = new solanaWeb3.Connection(endpoint, 'confirmed');
                     console.log('✅ Solana connection initialized');
+
+                    // Setup Phantom event listeners
+                    this.setupPhantomListeners();
                 } catch (error) {
                     console.error('❌ Failed to initialize Solana:', error);
+                }
+            },
+
+            // Setup event listeners for Phantom Wallet
+            setupPhantomListeners() {
+                if (window.solana) {
+                    // Listen for account changes
+                    window.solana.on('accountChanged', (publicKey) => {
+                        if (publicKey) {
+                            this.walletAddress = publicKey.toString();
+                            console.log('🔄 Account changed to:', this.walletAddress);
+                            showNotification('🔄 Cuenta cambiada', 'Account changed');
+                        } else {
+                            this.walletAddress = null;
+                            console.log('⚠️ Account disconnected');
+                            showNotification('⚠️ Wallet desconectada', 'Wallet disconnected');
+                        }
+                    });
+
+                    // Listen for disconnection
+                    window.solana.on('disconnect', () => {
+                        this.walletAddress = null;
+                        console.log('👋 Wallet disconnected');
+                        showNotification('👋 Wallet desconectada', 'Wallet disconnected');
+                    });
+
+                    // Listen for connection
+                    window.solana.on('connect', (publicKey) => {
+                        this.walletAddress = publicKey.toString();
+                        console.log('🔗 Wallet connected:', this.walletAddress);
+                    });
+
+                    console.log('✅ Phantom event listeners setup complete');
                 }
             },
 
@@ -1221,34 +1264,48 @@
             // Connect Phantom Wallet
             async connectWallet() {
                 try {
+                    console.log('🚀 Starting Phantom Wallet connection process...');
                     showNotification('🔍 Buscando Phantom Wallet...', 'Checking for wallet connection');
 
-                    // Wait for Phantom to initialize (up to 3 seconds)
-                    const phantomFound = await this.waitForPhantom(3000);
+                    // Check for Phantom provider
+                    console.log('🔍 Checking for window.solana...', window.solana ? 'Found ✅' : 'Not found ❌');
+                    console.log('🔍 Checking for window.solana.isPhantom...', window.solana?.isPhantom ? 'Yes ✅' : 'No ❌');
+
+                    // Wait for Phantom to initialize (up to 5 seconds for better reliability)
+                    const phantomFound = await this.waitForPhantom(5000);
 
                     if (!phantomFound) {
+                        console.error('❌ Phantom Wallet not detected after 5 seconds');
                         showNotification('⚠️ Phantom Wallet no detectada', 'Wallet not detected');
+
                         const userWantsToInstall = confirm(
-                            '❌ Phantom Wallet no está instalada.\n\n' +
+                            '❌ Phantom Wallet no está instalada o no se detectó.\n\n' +
                             '✅ Haz clic en OK para instalar Phantom Wallet\n' +
                             '❌ Haz clic en Cancelar si ya la tienes instalada\n\n' +
-                            '(Phantom is not installed. Click OK to install or Cancel if already installed)'
+                            'Si ya tienes Phantom instalada:\n' +
+                            '1. Verifica que la extensión esté activada\n' +
+                            '2. Recarga esta página (F5)\n' +
+                            '3. Intenta conectar nuevamente\n\n' +
+                            '(Phantom is not installed or detected. Click OK to install or Cancel if already installed)'
                         );
 
                         if (userWantsToInstall) {
                             window.open('https://phantom.app/', '_blank');
                             showNotification('📱 Instala Phantom y recarga la página', 'Install Phantom and reload');
                         } else {
-                            showNotification('🔄 Recarga la página después de que Phantom cargue', 'Reload after Phantom loads');
+                            showNotification('🔄 Recarga la página (F5) después de que Phantom cargue', 'Reload after Phantom loads');
                         }
                         return false;
                     }
 
+                    console.log('✅ Phantom Wallet detected! Attempting to connect...');
                     showNotification('🔗 Conectando a Phantom Wallet...', 'Connecting to wallet...');
-                    const response = await window.solana.connect();
+
+                    // Request connection with { onlyIfTrusted: false } to always show the popup
+                    const response = await window.solana.connect({ onlyIfTrusted: false });
                     this.walletAddress = response.publicKey.toString();
 
-                    console.log('✅ Wallet connected:', this.walletAddress);
+                    console.log('✅ Wallet connected successfully:', this.walletAddress);
                     showNotification(
                         `✅ ¡Wallet Conectada!`,
                         `Dirección: ${this.walletAddress.substring(0, 8)}...${this.walletAddress.substring(this.walletAddress.length - 4)}`
@@ -1256,16 +1313,39 @@
                     return true;
                 } catch (error) {
                     console.error('❌ Error connecting wallet:', error);
+                    console.error('Error details:', {
+                        code: error.code,
+                        message: error.message,
+                        stack: error.stack
+                    });
 
                     if (error.code === 4001) {
-                        showNotification('❌ Conexión rechazada', 'Connection rejected by user');
+                        showNotification('❌ Conexión rechazada por el usuario', 'Connection rejected by user');
                     } else if (error.code === -32002) {
-                        showNotification('⏳ Solicitud pendiente', 'Check your Phantom wallet for pending request');
+                        showNotification('⏳ Solicitud pendiente en Phantom', 'Check your Phantom wallet for pending request');
+                    } else if (error.message && error.message.includes('User rejected')) {
+                        showNotification('❌ Conexión rechazada', 'Connection rejected');
                     } else {
-                        showNotification('❌ Error al conectar', error.message || 'Unknown error');
+                        showNotification('❌ Error al conectar wallet', error.message || 'Unknown error. Please try again.');
                     }
                     return false;
                 }
+            },
+
+            // Try to auto-reconnect if previously connected
+            async tryAutoConnect() {
+                try {
+                    if (window.solana && window.solana.isPhantom && window.solana.isConnected) {
+                        console.log('🔄 Attempting auto-reconnect to Phantom...');
+                        const response = await window.solana.connect({ onlyIfTrusted: true });
+                        this.walletAddress = response.publicKey.toString();
+                        console.log('✅ Auto-reconnected to wallet:', this.walletAddress);
+                        return true;
+                    }
+                } catch (error) {
+                    console.log('ℹ️ Auto-reconnect not available:', error.message);
+                }
+                return false;
             },
 
             // Disconnect wallet
@@ -1470,34 +1550,98 @@
 
             showModal('💰 Life Shop', shopHTML, []);
 
-            // Setup event listeners
+            // Setup event listeners with proper timing
             setTimeout(() => {
+                console.log('🔧 Setting up Life Shop event listeners...');
+
                 const connectBtn = document.getElementById('connect-wallet-btn');
                 const closeBtn = document.getElementById('close-shop-btn');
                 const buyBtns = document.querySelectorAll('.buy-life-btn');
 
+                console.log('🔍 Connect button found:', connectBtn ? 'YES ✅' : 'NO ❌');
+                console.log('🔍 Close button found:', closeBtn ? 'YES ✅' : 'NO ❌');
+                console.log('🔍 Buy buttons found:', buyBtns.length);
+
                 if (connectBtn) {
-                    connectBtn.addEventListener('click', async () => {
-                        const connected = await SolanaPayment.connectWallet();
-                        if (connected) {
-                            connectBtn.textContent = '✅ Wallet Connected';
-                            connectBtn.disabled = true;
+                    // Try to auto-reconnect if wallet was previously connected
+                    (async () => {
+                        if (!SolanaPayment.walletAddress) {
+                            const autoConnected = await SolanaPayment.tryAutoConnect();
+                            if (autoConnected) {
+                                connectBtn.textContent = '✅ Wallet Auto-Connected';
+                                connectBtn.disabled = true;
 
-                            const addressDisplay = document.getElementById('wallet-address-display');
-                            const balanceDisplay = document.getElementById('wallet-balance-display');
+                                const addressDisplay = document.getElementById('wallet-address-display');
+                                if (addressDisplay) {
+                                    addressDisplay.textContent = `Address: ${SolanaPayment.walletAddress.substring(0, 8)}...${SolanaPayment.walletAddress.substring(SolanaPayment.walletAddress.length - 4)}`;
+                                    addressDisplay.style.display = 'block';
+                                }
 
-                            if (addressDisplay) {
-                                addressDisplay.textContent = `Address: ${SolanaPayment.walletAddress.substring(0, 8)}...${SolanaPayment.walletAddress.substring(SolanaPayment.walletAddress.length - 4)}`;
-                                addressDisplay.style.display = 'block';
-                            }
-
-                            const balance = await SolanaPayment.getBalance();
-                            if (balanceDisplay) {
-                                balanceDisplay.textContent = `Balance: ${balance.toFixed(4)} SOL`;
-                                balanceDisplay.style.display = 'block';
+                                const balance = await SolanaPayment.getBalance();
+                                const balanceDisplay = document.getElementById('wallet-balance-display');
+                                if (balanceDisplay) {
+                                    balanceDisplay.textContent = `Balance: ${balance.toFixed(4)} SOL`;
+                                    balanceDisplay.style.display = 'block';
+                                }
                             }
                         }
-                    });
+                    })();
+
+                    // Check if wallet is already connected
+                    if (SolanaPayment.walletAddress) {
+                        connectBtn.textContent = '✅ Wallet Already Connected';
+                        connectBtn.disabled = true;
+
+                        const addressDisplay = document.getElementById('wallet-address-display');
+                        if (addressDisplay) {
+                            addressDisplay.textContent = `Address: ${SolanaPayment.walletAddress.substring(0, 8)}...${SolanaPayment.walletAddress.substring(SolanaPayment.walletAddress.length - 4)}`;
+                            addressDisplay.style.display = 'block';
+                        }
+                    } else {
+                        // Add click event listener
+                        connectBtn.addEventListener('click', async (e) => {
+                            console.log('🎯 Connect Wallet button clicked!');
+
+                            // Disable button during connection to prevent multiple clicks
+                            connectBtn.disabled = true;
+                            connectBtn.textContent = '⏳ Connecting...';
+
+                            try {
+                                const connected = await SolanaPayment.connectWallet();
+
+                                if (connected) {
+                                    connectBtn.textContent = '✅ Wallet Connected';
+
+                                    const addressDisplay = document.getElementById('wallet-address-display');
+                                    const balanceDisplay = document.getElementById('wallet-balance-display');
+
+                                    if (addressDisplay) {
+                                        addressDisplay.textContent = `Address: ${SolanaPayment.walletAddress.substring(0, 8)}...${SolanaPayment.walletAddress.substring(SolanaPayment.walletAddress.length - 4)}`;
+                                        addressDisplay.style.display = 'block';
+                                    }
+
+                                    const balance = await SolanaPayment.getBalance();
+                                    if (balanceDisplay) {
+                                        balanceDisplay.textContent = `Balance: ${balance.toFixed(4)} SOL`;
+                                        balanceDisplay.style.display = 'block';
+                                    }
+                                } else {
+                                    // Re-enable button if connection failed
+                                    connectBtn.disabled = false;
+                                    connectBtn.textContent = '🔗 Conectar Phantom Wallet / Connect Wallet';
+                                }
+                            } catch (error) {
+                                console.error('❌ Error in connect button handler:', error);
+                                connectBtn.disabled = false;
+                                connectBtn.textContent = '🔗 Retry Connection';
+                                showNotification('❌ Error al conectar', 'Connection error. Please try again.');
+                            }
+                        });
+
+                        console.log('✅ Connect wallet event listener attached successfully');
+                    }
+                } else {
+                    console.error('❌ CRITICAL: Connect wallet button not found in DOM!');
                 }
 
                 buyBtns.forEach(btn => {
